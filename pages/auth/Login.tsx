@@ -4,19 +4,32 @@ import { Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { CarvedButton } from '../../components/CarvedButton';
 import { Logo } from '../../components/Logo';
 import { useApp } from '../../store/AppContext';
+import { supabase } from '../../store/supabaseClient';
+
 interface Props {
     onNavigate: (page: 'login' | 'signup' | 'forgot-password' | 'feed') => void;
 }
 
 export const Login: React.FC<Props> = ({ onNavigate }) => {
-    const { loginAsGuest, login } = useApp();
+    const { loginAsGuest, showToast } = useApp();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        login();
-        onNavigate('feed');
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) throw error;
+
+            // AppContext listener will handle state update
+            onNavigate('feed');
+        } catch (err: any) {
+            showToast(err.message || 'Login failed', 'error');
+        }
     };
 
     const handleGuest = () => {

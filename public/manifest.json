@@ -1,3 +1,8 @@
+{
+
+    "name": "STC",
+    "short_name": "STC",
+    "icons": [
         {
             "src": "logo192.png",
             "type": "image/png",

@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { CarvedButton } from '../../components/CarvedButton';
 import { Logo } from '../../components/Logo';
+import { supabase } from '../../store/supabaseClient';
+import { useApp } from '../../store/AppContext';
 
 interface Props {
     onNavigate: (page: 'login' | 'signup' | 'forgot-password' | 'feed') => void;
@@ -13,10 +15,37 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSignup = (e: React.FormEvent) => {
+    const { showToast } = useApp();
+    const routerNavigate = onNavigate; // Alias to avoid shadowing if needed, but safe here
+
+    const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Implement actual signup logic
-        onNavigate('feed');
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: name,
+                        avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+                    }
+                }
+            });
+
+            if (error) throw error;
+
+            if (data.session) {
+                showToast('Welcome! Account created.', 'success');
+                onNavigate('feed');
+            } else if (data.user) {
+                // Email confirmation required logic could go here
+                showToast('Please check your email to confirm your account.', 'info');
+                // stay here or go to login
+                onNavigate('login');
+            }
+        } catch (err: any) {
+            showToast(err.message || 'Failed to sign up', 'error');
+        }
     };
 
     return (
