@@ -1,0 +1,106 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { CarvedButton } from '../../components/CarvedButton';
+import { Logo } from '../../components/Logo';
+
+interface Props {
+    onNavigate: (page: 'login' | 'signup' | 'forgot-password' | 'feed') => void;
+}
+
+export const Signup: React.FC<Props> = ({ onNavigate }) => {
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleSignup = (e: React.FormEvent) => {
+        e.preventDefault();
+        // TODO: Implement actual signup logic
+        onNavigate('feed');
+    };
+
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-100 dark:bg-slate-900">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-md"
+            >
+                <div className="flex justify-center mb-8">
+                    <Logo size={64} />
+                </div>
+
+                <div className="bg-ceramic-base dark:bg-obsidian-surface p-8 rounded-3xl shadow-[10px_10px_20px_#bebebe,-10px_-10px_20px_#ffffff] dark:shadow-[10px_10px_20px_#151618,-10px_-10px_20px_#35363e]">
+                    <h2 className="text-2xl font-bold text-center mb-2 text-slate-800 dark:text-slate-100">Create Account</h2>
+                    <p className="text-center text-slate-500 text-sm mb-8">Join the community today</p>
+
+                    <form onSubmit={handleSignup} className="space-y-6">
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Full Name"
+                                className="w-full pl-12 pr-4 py-4 rounded-xl outline-none text-slate-700 dark:text-slate-200
+                         bg-ceramic-base dark:bg-obsidian-surface
+                         shadow-[inset_3px_3px_6px_#bebebe,inset_-3px_-3px_6px_#ffffff]
+                         dark:shadow-[inset_4px_4px_8px_#151618,inset_-4px_-4px_8px_#35363e]
+                         transition-shadow focus:shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff]"
+                                required
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Email Address"
+                                className="w-full pl-12 pr-4 py-4 rounded-xl outline-none text-slate-700 dark:text-slate-200
+                         bg-ceramic-base dark:bg-obsidian-surface
+                         shadow-[inset_3px_3px_6px_#bebebe,inset_-3px_-3px_6px_#ffffff]
+                         dark:shadow-[inset_4px_4px_8px_#151618,inset_-4px_-4px_8px_#35363e]
+                         transition-shadow focus:shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff]"
+                                required
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Password"
+                                className="w-full pl-12 pr-4 py-4 rounded-xl outline-none text-slate-700 dark:text-slate-200
+                         bg-ceramic-base dark:bg-obsidian-surface
+                         shadow-[inset_3px_3px_6px_#bebebe,inset_-3px_-3px_6px_#ffffff]
+                         dark:shadow-[inset_4px_4px_8px_#151618,inset_-4px_-4px_8px_#35363e]
+                         transition-shadow focus:shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff]"
+                                required
+                            />
+                        </div>
+
+                        <CarvedButton type="submit" className="w-full py-4 font-bold text-lg text-emerald-600 dark:text-emerald-400">
+                            Sign Up <ArrowRight className="ml-2 inline" size={20} />
+                        </CarvedButton>
+                    </form>
+                </div>
+
+                <div className="mt-8 text-center">
+                    <p className="text-slate-500 text-sm">
+                        Already have an account?{' '}
+                        <button
+                            onClick={() => onNavigate('login')}
+                            className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                        >
+                            Sign In
+                        </button>
+                    </p>
+                </div>
+            </motion.div>
+        </div>
+    );
+};

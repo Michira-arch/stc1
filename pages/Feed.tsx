@@ -1,0 +1,119 @@
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { useApp } from '../store/AppContext';
+import { StoryCard } from '../components/StoryCard';
+import { motion } from 'framer-motion';
+import { Sun, Moon, Download } from 'lucide-react';
+import { CarvedButton } from '../components/CarvedButton';
+import { Logo } from '../components/Logo';
+
+export const Feed = ({ onStoryClick }: { onStoryClick: (id: string) => void }) => {
+  const { stories, currentUser, feedScrollPosition, setFeedScrollPosition, isGuest, setAuthPage, theme, toggleTheme, deferredPrompt, installApp } = useApp();
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'following'>('all');
+
+  const visibleStories = stories.filter(s => !s.isHidden || s.authorId === currentUser.id);
+
+  // Simulate Skeleton Loading
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Scroll Persistence
+  useLayoutEffect(() => {
+    window.scrollTo(0, feedScrollPosition);
+  }, [feedScrollPosition]);
+
+  // Save scroll on click
+  const handleStoryClick = (id: string) => {
+    setFeedScrollPosition(window.scrollY);
+    onStoryClick(id);
+  };
+
+  return (
+    <div
+      className="pt-4 pb-32 px-4 max-w-2xl mx-auto min-h-screen"
+    >
+      <header className="flex justify-between items-center mb-8 py-4 px-6 sticky top-0 z-30 bg-ceramic-base/80 dark:bg-obsidian-base/80 backdrop-blur-md transition-colors duration-500 rounded-3xl">
+        <div className="flex items-center gap-3">
+          <Logo size={42} />
+          <div>
+            <motion.h1
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-white dark:to-slate-400"
+            >
+              StudentCenter
+            </motion.h1>
+            <p className="text-[10px] font-bold text-accent tracking-widest uppercase">Daily Feed</p>
+            <p className="text-[8px] text-slate-400 dark:text-slate-500 font-medium">Powered by Dispatch STC</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {isGuest && (
+            <CarvedButton onClick={() => setAuthPage('login')} className="!h-12 !px-4 font-bold text-xs">
+              Login
+            </CarvedButton>
+          )}
+          {deferredPrompt && (
+            <CarvedButton onClick={installApp} className="!w-12 !h-12 !rounded-full text-emerald-600 dark:text-emerald-400">
+              <Download size={20} />
+            </CarvedButton>
+          )}
+          <CarvedButton onClick={toggleTheme} className="!w-12 !h-12 !rounded-full">
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </CarvedButton>
+        </div>
+      </header>
+
+      {/* PWA Install Banner */}
+      {deferredPrompt && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          className="mb-6 bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 flex justify-between items-center"
+        >
+          <div>
+            <h3 className="font-bold text-emerald-700 dark:text-emerald-400 text-sm">Install App</h3>
+            <p className="text-xs text-emerald-600/80 dark:text-emerald-500/80">Add to home screen for best experience.</p>
+          </div>
+          <CarvedButton onClick={installApp} className="!h-10 !px-4 !text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            <Download size={14} className="mr-1" /> Install
+          </CarvedButton>
+        </motion.div>
+      )}
+
+      {/* Loading Skeleton or List */}
+      <div className="space-y-8 snap-y snap-mandatory">
+        {isLoading ? (
+          // SKELETAL SHIMMER
+          [1, 2].map(i => (
+            <div key={i} className="p-5 rounded-[2rem] bg-ceramic-base dark:bg-obsidian-surface shadow-[8px_8px_16px_#bebebe,-8px_-8px_16px_#ffffff] dark:shadow-[10px_10px_20px_#151618,-10px_-10px_20px_#35363e] h-96 animate-pulse-slow">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+                <div className="h-4 w-32 bg-slate-300 dark:bg-slate-700 rounded" />
+              </div>
+              <div className="w-full h-48 bg-slate-300 dark:bg-slate-700 rounded-2xl mb-4 opacity-50" />
+              <div className="h-4 w-3/4 bg-slate-300 dark:bg-slate-700 rounded mb-2" />
+              <div className="h-4 w-1/2 bg-slate-300 dark:bg-slate-700 rounded" />
+            </div>
+          ))
+        ) : (
+          <>
+            {visibleStories.map((story) => (
+              <StoryCard
+                key={story.id}
+                story={story}
+                onClick={() => handleStoryClick(story.id)}
+              />
+            ))}
+            <div className="text-center py-10 opacity-50 snap-end">
+              <p className="text-sm tracking-widest uppercase">You're all caught up</p>
+              <div className="w-2 h-2 bg-accent rounded-full mx-auto mt-4 animate-pulse"></div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};

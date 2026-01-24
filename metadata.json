@@ -1,0 +1,8 @@
+{
+  "name": "StudentCenter",
+  "description": "A highly interactive, carved-UI social feed designed for tactile satisfaction.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
