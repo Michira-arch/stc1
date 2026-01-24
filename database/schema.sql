@@ -10,6 +10,7 @@ create table public.profiles (
   -- AppSettings mapping
   font_size text default 'base' check (font_size in ('sm', 'base', 'lg')),
   is_italic boolean default false,
+  privacy_settings jsonb default '{"showBio": true, "showTimeline": true}'::jsonb,
   
   created_at timestamptz default now(),
   updated_at timestamptz default now()

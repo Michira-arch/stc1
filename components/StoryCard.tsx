@@ -1,6 +1,6 @@
 import React, { useState, useRef, memo, useCallback } from 'react';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
-import { Heart, MessageCircle, Share2, Eye, Send, CornerDownRight, Trash2, MoreHorizontal, X } from 'lucide-react';
+import { Share2, Heart, MessageCircle, Play, MoreHorizontal, Eye, CornerDownRight, Send, Trash2, X } from 'lucide-react';
 import { Story, Comment, User } from '../types';
 import { useApp } from '../store/AppContext';
 import { timeAgo, triggerHaptic } from '../utils';
@@ -11,6 +11,7 @@ import { AudioPlayer } from './AudioPlayer';
 interface StoryCardProps {
   story: Story;
   onClick: () => void;
+  onProfileClick?: (userId: string) => void;
 }
 
 // --- Extracted Components ---
@@ -179,8 +180,8 @@ const CommentNode = memo(({ comment, users, currentUser, storyAuthorId, depth = 
 
 // --- Main Component ---
 
-export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick }) => {
-  const { users, currentUser, toggleLike, incrementViews, setManagingStoryId, addComment, deleteComment, isGuest } = useApp();
+export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileClick }) => {
+  const { users, currentUser, toggleLike, incrementViews, setManagingStoryId, addComment, deleteComment, isGuest, loadPublicProfile } = useApp();
   const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);

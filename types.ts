@@ -7,6 +7,12 @@ export interface User {
   bio?: string;
   // added specifically for DB sync
   email?: string;
+  privacySettings?: PrivacySettings;
+}
+
+export interface PrivacySettings {
+  showBio: boolean;
+  showTimeline: boolean;
 }
 
 export interface Comment {
@@ -122,6 +128,7 @@ export type Database = {
           bio: string | null
           font_size: 'sm' | 'base' | 'lg' | null
           is_italic: boolean | null
+          privacy_settings: PrivacySettings | null
           created_at: string
           updated_at: string | null
         }

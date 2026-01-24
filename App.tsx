@@ -20,15 +20,17 @@ import { GuestActionModal } from './components/GuestActionModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AppContent = () => {
-  const { settings, currentUser, isGuest, authPage, setAuthPage } = useApp();
+  const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile } = useApp();
   const [activeTab, setActiveTab] = useState('feed');
   const [viewedStoryId, setViewedStoryId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Temporary: Check if user is logged in (mock)
+  // Auto-switch to profile tab when a profile is viewed
   useEffect(() => {
-    // For demo purposes, we can start at login if needed, or just add a button in settings to logout/login
-  }, []);
+    if (viewedProfile) {
+      setActiveTab('profile');
+    }
+  }, [viewedProfile]);
 
   const [showOnboarding, setShowOnboarding] = useState(() => {
     // Check if running in standalone mode (PWA)

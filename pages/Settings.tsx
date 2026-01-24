@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Type, Italic, Download, Bell, MessageSquare, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, Type, Italic, Download, Bell, MessageSquare, Moon, Sun, Shield, Check } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { CarvedButton } from '../components/CarvedButton';
 
@@ -10,7 +10,8 @@ interface Props {
 }
 
 export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
-  const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme } = useApp();
+  const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme, currentUser, updatePrivacySettings, isGuest } = useApp();
+  const privacy = currentUser.privacySettings || { showBio: true, showTimeline: true };
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const handleUpdate = (newSettings: Partial<typeof settings>) => {
@@ -41,6 +42,40 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
       </div>
 
       <div className="p-6 max-w-md mx-auto space-y-8">
+
+        {/* Privacy Settings */}
+        {!isGuest && (
+          <div className="mb-8 p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+            <div className="flex items-center gap-3 mb-6 text-emerald-600 dark:text-emerald-400">
+              <Shield size={24} />
+              <h3 className="font-bold text-lg">Privacy</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-700 dark:text-slate-300">Show Bio</span>
+                <div
+                  onClick={() => updatePrivacySettings({ showBio: !privacy.showBio })}
+                  className={`w-12 h-6 rounded-full cursor-pointer transition-colors relative ${privacy.showBio ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${privacy.showBio ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-700 dark:text-slate-300">Show Timeline</span>
+                <div
+                  onClick={() => updatePrivacySettings({ showTimeline: !privacy.showTimeline })}
+                  className={`w-12 h-6 rounded-full cursor-pointer transition-colors relative ${privacy.showTimeline ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${privacy.showTimeline ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 mt-2">
+                Control what others see when visiting your profile.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* App Section */}
         <section className="space-y-4">
