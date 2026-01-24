@@ -140,6 +140,8 @@ export type Database = {
           bio?: string | null
           font_size?: 'sm' | 'base' | 'lg' | null
           is_italic?: boolean | null
+
+          privacy_settings?: PrivacySettings | null
           created_at?: string
           updated_at?: string | null
         }
@@ -151,6 +153,8 @@ export type Database = {
           bio?: string | null
           font_size?: 'sm' | 'base' | 'lg' | null
           is_italic?: boolean | null
+
+          privacy_settings?: PrivacySettings | null
           created_at?: string
           updated_at?: string | null
         }
