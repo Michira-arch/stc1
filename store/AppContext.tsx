@@ -578,8 +578,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       authPage,
       setAuthPage,
+      authPage,
+      setAuthPage,
       editorDraft,
-      setEditorDraft
+      setEditorDraft,
+      viewedProfile,
+      loadPublicProfile,
+      clearViewedProfile,
+      updatePrivacySettings
     }}>
       {children}
     </AppContext.Provider>

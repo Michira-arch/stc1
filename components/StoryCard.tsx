@@ -194,7 +194,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
   const isMine = story.authorId === currentUser.id;
 
   const heartVariants: Variants = {
-    idle: { scale: 1, color: "currentColor" },
+    idle: { scale: 1, color: "#94a3b8" },
     liked: {
       scale: [1, 1.5, 0.9, 1.2, 1],
       color: "#10b981", // Emerald-500
@@ -212,6 +212,12 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
     } else {
       alert("Sharing is available on mobile devices.");
     }
+  };
+
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    loadPublicProfile(story.authorId);
+    if (onProfileClick) onProfileClick(story.authorId);
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -277,13 +283,13 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
       {/* Header */}
       <div className="flex justify-between items-start mb-4 px-1">
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative cursor-pointer" onClick={handleProfileClick}>
             {/* Active Glow Ring */}
             <div className="absolute inset-0 bg-accent-glow rounded-full blur opacity-50 animate-pulse"></div>
             <img src={author.avatar} alt={author.name} className="relative w-10 h-10 rounded-full object-cover border-2 border-ceramic-base dark:border-obsidian-highlight" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100">{author.name}</h3>
+            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 cursor-pointer hover:text-emerald-500 transition-colors" onClick={handleProfileClick}>{author.name}</h3>
             <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase">{timeAgo(story.timestamp)}</p>
           </div>
         </div>
