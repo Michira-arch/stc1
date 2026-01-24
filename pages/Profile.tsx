@@ -5,6 +5,7 @@ import { Settings as SettingsIcon, Edit2, Camera, User, Download, Check, MapPin,
 import { CarvedButton } from '../components/CarvedButton';
 import { timeAgo } from '../utils';
 import { StoryCard } from '../components/StoryCard';
+import { InstallAppButton } from '../components/InstallAppButton';
 
 interface Props {
   onStoryClick: (id: string) => void;
@@ -187,10 +188,8 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings }) => {
           </div>
 
           <div className="flex gap-3 mb-6">
-            {isMe && deferredPrompt && (
-              <CarvedButton onClick={installApp} className="!h-9 !px-4 !text-xs font-bold text-slate-500">
-                <Download size={14} className="mr-1" /> Install
-              </CarvedButton>
+            {isMe && (
+              <InstallAppButton className="!h-9 !px-4 !text-xs" />
             )}
             <CarvedButton className="!h-9 !px-4 !text-xs font-bold text-slate-500">
               <Share2 size={14} className="mr-1" /> Share

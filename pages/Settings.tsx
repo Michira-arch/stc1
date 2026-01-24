@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Type, Italic, Download, Bell, MessageSquare, Moon, Sun, Shield, Check } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { CarvedButton } from '../components/CarvedButton';
+import { InstallAppButton } from '../components/InstallAppButton';
 
 interface Props {
   onBack: () => void;
@@ -122,14 +123,7 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
           </CarvedButton>
 
           {/* Install App */}
-          {deferredPrompt && (
-            <CarvedButton onClick={installApp} className="w-full py-4 flex justify-between px-6 text-emerald-600 dark:text-emerald-400">
-              <div className="flex items-center gap-3">
-                <Download size={18} />
-                <span>Install as App</span>
-              </div>
-            </CarvedButton>
-          )}
+          <InstallAppButton variant="settings" className="w-full py-4 flex justify-between px-6" />
         </section>
 
         {/* Font Size Section */}
