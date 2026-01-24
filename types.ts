@@ -102,8 +102,24 @@ export interface AppContextType {
   setAuthPage: (page: 'login' | 'signup' | 'forgot-password' | null) => void;
 
   // Editor Draft (Session Only)
-  editorDraft: { title: string; description: string; content: string; isProMode: boolean };
-  setEditorDraft: (draft: { title: string; description: string; content: string; isProMode: boolean }) => void;
+  editorDraft: {
+    title: string;
+    description: string;
+    content: string;
+    isProMode: boolean;
+    imageBase64?: string;
+    audioBase64?: string;
+    imageFile?: File; // Added to store the actual file for upload
+  };
+  setEditorDraft: (draft: {
+    title: string;
+    description: string;
+    content: string;
+    isProMode: boolean;
+    imageBase64?: string;
+    audioBase64?: string;
+    imageFile?: File;
+  }) => void;
 }
 
 // --- Supabase Database Types ---

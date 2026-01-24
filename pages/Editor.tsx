@@ -13,7 +13,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
   const { addStory, currentUser, isGuest, editorDraft, setEditorDraft, showToast, sanitizeInput } = useApp();
 
   // Use context state instead of local state
-  const { title, description, content, isProMode, imageBase64, audioBase64 } = editorDraft;
+  const { title, description, content, isProMode, imageBase64, audioBase64, imageFile } = editorDraft;
 
   // Helper to update draft
   const updateDraft = (updates: Partial<typeof editorDraft>) => {
@@ -129,16 +129,14 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
     const cleanTitle = sanitizeInput(title.trim() || "Untitled Post");
     const cleanDesc = sanitizeInput(description.trim());
 
-    addStory(cleanTitle, cleanDesc, cleanContent, imageBase64, audioBase64);
+    addStory(cleanTitle, cleanDesc, cleanContent, imageFile, audioBase64);
     showToast("Story published successfully!", "success");
     clearDraft();
     onNavigate('feed');
   };
 
   const clearDraft = () => {
-    setEditorDraft({ title: '', description: '', content: '', isProMode: false });
-    setImageBase64(undefined);
-    setAudioBase64(undefined);
+    setEditorDraft({ title: '', description: '', content: '', isProMode: false, imageFile: undefined, imageBase64: undefined, audioBase64: undefined });
     if (editorRef.current) editorRef.current.innerHTML = '';
   };
 
@@ -146,7 +144,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setImageBase64(reader.result as string);
+      reader.onloadend = () => updateDraft({ imageBase64: reader.result as string, imageFile: file });
       reader.readAsDataURL(file);
     }
   };
