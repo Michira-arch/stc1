@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { User, Story, AppContextType, ThemeMode, AppSettings, Comment, Toast, Database } from '../types';
+import { User, Story, AppContextType, ThemeMode, AppSettings, Comment, Toast, Database, PrivacySettings } from '../types';
 import { triggerHaptic } from '../utils';
 import { supabase } from './supabaseClient';
 
@@ -342,6 +342,47 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const [viewedProfile, setViewedProfile] = useState<User | null>(null);
+
+  const loadPublicProfile = async (userId: string) => {
+    if (userId === currentUser.id) {
+      setViewedProfile(currentUser);
+      return;
+    }
+
+    if (users[userId]?.privacySettings) {
+      setViewedProfile(users[userId]);
+    }
+
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+
+    if (data) {
+      const user: User = {
+        id: data.id,
+        name: data.full_name || 'Anonymous',
+        avatar: data.avatar_url || 'https://ui-avatars.com/api/?name=?',
+        coverPhoto: data.cover_url || undefined,
+        bio: data.bio || undefined,
+        privacySettings: (data.privacy_settings as any) || { showBio: true, showTimeline: true }
+      };
+      setViewedProfile(user);
+      setUsers(prev => ({ ...prev, [user.id]: user }));
+    } else {
+      showToast('User not found', 'error');
+    }
+  };
+
+  const clearViewedProfile = () => setViewedProfile(null);
+
+  const updatePrivacySettings = async (newSettings: Partial<PrivacySettings>) => {
+    if (isGuest) return;
+    const updated = { ...(currentUser.privacySettings || { showBio: true, showTimeline: true }), ...newSettings };
+    setCurrentUser(prev => ({ ...prev, privacySettings: updated }));
+    const { error } = await supabase.from('profiles').update({ privacy_settings: updated }).eq('id', currentUser.id);
+    if (error) showToast('Failed to update privacy', 'error');
+    else showToast('Privacy settings saved', 'success');
+  };
+
   const incrementViews = async (storyId: string) => {
     if (sessionViews.has(storyId)) return;
     setSessionViews(prev => new Set(prev).add(storyId));
@@ -576,8 +617,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       },
       isGuest,
 
-      authPage,
-      setAuthPage,
       authPage,
       setAuthPage,
       editorDraft,
