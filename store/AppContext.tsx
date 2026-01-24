@@ -59,7 +59,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [users, setUsers] = useState<Record<string, User>>({}); // Cache for user profiles
 
   // --- UI State ---
-  const [theme, setTheme] = useState<ThemeMode>('light');
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('dopamine_theme');
+      if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
+    }
+    return 'light';
+  });
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -308,7 +314,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const toggleTheme = () => {
     triggerHaptic('medium');
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setTheme(prev => {
+      const newTheme = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('dopamine_theme', newTheme);
+      return newTheme;
+    });
   };
 
   const updateSettings = async (newSettings: Partial<AppSettings>) => {
