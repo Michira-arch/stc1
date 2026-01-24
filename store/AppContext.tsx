@@ -299,37 +299,37 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const updateUserImage = async (type: 'avatar' | 'cover', base64: string) => {
+  const updateUserImage = async (type: 'avatar' | 'cover', file: File) => {
     if (isGuest) {
       showToast('Login to save profile changes', 'error');
       return;
     }
 
-    // Upload to Storage
-    // NOTE: Base64 to Blob conversion needed real impl, assuming base64 for now but Supabase needs Blob/File.
-    // Simplifying: Just calling the update assuming the base64 is actually a URL or we need a proper uploader.
-    // For this context, we'll assume the user provides a URL or we handle upload logic elsewhere. 
-    // BUT the prompt is to "link DB". 
+    try {
+      const bucket = type === 'avatar' ? 'avatars' : 'covers';
+      // Need to import uploadImage from utils, but circular dependency might be an issue if utils imports supabase from here (unlikely, it imports from client).
+      // Wait, utils imports supabase from './store/supabaseClient'. AppContext is in './store/AppContext'. 
+      // We need to import `uploadImage` from `../utils`.
 
-    // Let's assume we implement a proper upload helper later. For now, we just mock the update to DB with the string if it's short, or fail.
-    // Ideally: base64 -> Blob -> upload -> getURL -> updateProfile.
+      const publicUrl = await import('../utils').then(m => m.uploadImage(file, bucket));
 
-    // Since we can't write the huge upload logic in one go, let's just warn or try to update if it's a URL.
+      if (!publicUrl) {
+        showToast('Failed to upload image', 'error');
+        return;
+      }
 
-    if (base64.startsWith('data:')) {
-      showToast('Image uploading not fully implemented in this step. Use URL.', 'info');
-      return;
-    }
+      const updates = type === 'avatar' ? { avatar_url: publicUrl } : { cover_url: publicUrl };
+      const { error } = await supabase.from('profiles').update(updates).eq('id', currentUser.id);
 
-    const updates = type === 'avatar' ? { avatar_url: base64 } : { cover_url: base64 };
-
-    const { error } = await supabase.from('profiles').update(updates).eq('id', currentUser.id);
-
-    if (!error) {
-      setCurrentUser(prev => ({ ...prev, [type === 'avatar' ? 'avatar' : 'coverPhoto']: base64 }));
-      showToast(type === 'avatar' ? 'Avatar updated' : 'Cover photo updated', 'success');
-    } else {
-      showToast('Failed to update profile', 'error');
+      if (!error) {
+        setCurrentUser(prev => ({ ...prev, [type === 'avatar' ? 'avatar' : 'coverPhoto']: publicUrl }));
+        showToast(type === 'avatar' ? 'Avatar updated' : 'Cover photo updated', 'success');
+      } else {
+        showToast('Failed to update profile', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Error uploading image', 'error');
     }
   };
 
@@ -442,16 +442,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const addStory = async (title: string, description: string, content: string, imageUrl?: string, audioUrl?: string) => {
+  const addStory = async (title: string, description: string, content: string, imageFile?: File, audioUrl?: string) => {
     if (isGuest) return;
     triggerHaptic('success');
+
+    let uploadedImageUrl = null;
+    if (imageFile) {
+      uploadedImageUrl = await import('../utils').then(m => m.uploadImage(imageFile, 'story-content'));
+      if (!uploadedImageUrl) {
+        showToast('Failed to upload story image', 'error');
+        return;
+      }
+    }
 
     const { error } = await supabase.from('stories').insert({
       author_id: currentUser.id,
       title,
       description,
       content,
-      image_url: imageUrl,
+      image_url: uploadedImageUrl,
       audio_url: audioUrl
     });
 
@@ -495,11 +504,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const updateStory = async (storyId: string, title: string, description: string, content: string, imageUrl?: string) => {
+  const updateStory = async (storyId: string, title: string, description: string, content: string, imageFile?: File | string) => {
     triggerHaptic('success');
 
     const updates: any = { title, description, content };
-    if (imageUrl) updates.image_url = imageUrl;
+
+    // Check if new file or existing string (or undefined if no change)
+    if (imageFile && typeof imageFile !== 'string') {
+      const url = await import('../utils').then(m => m.uploadImage(imageFile as File, 'story-content'));
+      if (url) updates.image_url = url;
+    } else if (imageFile === null) {
+      // Explicit removal (if we supported removing images) - logic would go here
+    }
 
     const { error } = await supabase.from('stories').update(updates).eq('id', storyId);
 
@@ -509,7 +525,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         title,
         description,
         content,
-        imageUrl: imageUrl !== undefined ? imageUrl : s.imageUrl
+        imageUrl: updates.image_url || s.imageUrl
       } : s));
       setManagingStoryId(null);
       showToast('Story updated', 'success');

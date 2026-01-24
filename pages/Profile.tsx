@@ -25,11 +25,10 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings }) => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateUserImage(type, reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      // Optimistic preview/loading could be added here, 
+      // but for now we just pass the file to context which handles upload
+      // We might want to show a toast "Uploading..."
+      updateUserImage(type, file);
     }
   };
 
