@@ -6,9 +6,10 @@ import { CarvedButton } from './CarvedButton';
 interface Props {
   src: string;
   className?: string;
+  onPlay?: () => void;
 }
 
-export const AudioPlayer: React.FC<Props> = ({ src, className = '' }) => {
+export const AudioPlayer: React.FC<Props> = ({ src, className = '', onPlay }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -22,6 +23,7 @@ export const AudioPlayer: React.FC<Props> = ({ src, className = '' }) => {
       audioRef.current.pause();
     } else {
       audioRef.current.play().catch(e => console.error("Playback failed:", e));
+      if (onPlay) onPlay();
     }
     setIsPlaying(!isPlaying);
   };

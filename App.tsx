@@ -122,7 +122,21 @@ const AppContent = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="min-h-screen"
+          className="min-h-screen touch-pan-y"
+          onPanEnd={(e, info) => {
+            const threshold = 50;
+            if (info.offset.x < -threshold) {
+              // Swiped Left (Next)
+              if (activeTab === 'feed') setActiveTab('explore');
+              else if (activeTab === 'explore') setActiveTab('editor');
+              else if (activeTab === 'editor') setActiveTab('profile');
+            } else if (info.offset.x > threshold) {
+              // Swiped Right (Prev)
+              if (activeTab === 'profile') setActiveTab('editor');
+              else if (activeTab === 'editor') setActiveTab('explore');
+              else if (activeTab === 'explore') setActiveTab('feed');
+            }
+          }}
         >
           {renderPage()}
         </motion.main>

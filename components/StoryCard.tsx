@@ -313,11 +313,18 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
       {/* Voice Note Player */}
       {story.audioUrl && (
         <div className="mb-4 px-1" onClick={e => e.stopPropagation()}>
-          <AudioPlayer src={story.audioUrl} />
+          <AudioPlayer src={story.audioUrl} onPlay={() => incrementViews(story.id)} />
         </div>
       )}
 
-      <div className="px-1 mb-4">
+      {/* Double Tap Area (Content) */}
+      <div
+        className="px-1 mb-4"
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          toggleLike(story.id);
+        }}
+      >
         {story.title && <h2 className="text-lg font-bold mb-2 leading-tight dark:text-slate-100">{story.title}</h2>}
         <p className="text-slate-600 dark:text-[#aab2bd] text-sm leading-relaxed line-clamp-3">
           {previewText}
