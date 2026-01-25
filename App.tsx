@@ -18,6 +18,52 @@ import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { Onboarding } from './pages/Onboarding';
 import { GuestActionModal } from './components/GuestActionModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MeetHome } from './pages/realtime/MeetHome';
+import { Room } from './pages/realtime/Room';
+
+import { BlindDateHome } from './pages/realtime/BlindDateHome';
+import { BlindDateRoom } from './pages/realtime/BlindDateRoom';
+
+interface BlindDateWrapperProps {
+  onBack: () => void;
+}
+
+const BlindDateWrapper: React.FC<BlindDateWrapperProps> = ({ onBack }) => {
+  const [inRoom, setInRoom] = useState(false);
+
+  if (inRoom) {
+    return <BlindDateRoom onStop={() => setInRoom(false)} />;
+  }
+  return <BlindDateHome onStartMatching={() => setInRoom(true)} onBack={onBack} />;
+};
+
+const MeetWrapper = () => {
+  const [view, setView] = useState<'home' | 'room' | 'blind'>('home');
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+
+  if (view === 'room' && activeRoomId) {
+    return <Room roomId={activeRoomId} onLeave={() => { setActiveRoomId(null); setView('home'); }} />;
+  }
+
+  if (view === 'blind') {
+    return (
+      <BlindDateWrapper
+        onBack={() => setView('home')}
+      />
+    );
+  }
+
+  return (
+    <MeetHome
+      onJoinRoom={(id) => { setActiveRoomId(id); setView('room'); }}
+      onNavigateToBlindDate={() => setView('blind')}
+    />
+  );
+};
+
+
+
+
 
 const AppContent = () => {
   const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile } = useApp();
@@ -79,6 +125,8 @@ const AppContent = () => {
       case 'editor': return <Editor onNavigate={(path) => setActiveTab(path)} />;
       case 'profile': return <Profile onStoryClick={handleStoryClick} onOpenSettings={() => setIsSettingsOpen(true)} />;
       case 'explore': return <Explore onStoryClick={handleStoryClick} />;
+      case 'meet': return <MeetWrapper />;
+
       default: return <Feed onStoryClick={handleStoryClick} />;
     }
   };

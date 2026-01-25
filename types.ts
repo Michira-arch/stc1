@@ -308,6 +308,69 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      },
+      rooms: {
+        Row: {
+          id: string
+          created_at: string
+          created_by: string | null
+          is_active: boolean
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          created_by?: string | null
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          created_by?: string | null
+          is_active?: boolean
+        }
+
+        Relationships: [
+          {
+            foreignKeyName: "rooms_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      blind_date_preferences: {
+        Row: {
+          user_id: string
+          is_active: boolean
+          preferred_start_time: string | null
+          preferred_end_time: string | null
+          created_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          user_id: string
+          is_active?: boolean
+          preferred_start_time?: string | null
+          preferred_end_time?: string | null
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          user_id?: string
+          is_active?: boolean
+          preferred_start_time?: string | null
+          preferred_end_time?: string | null
+          created_at?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blind_date_preferences_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
