@@ -65,7 +65,7 @@ export interface AppContextType {
   installApp: () => void;
   toggleTheme: () => void;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
-  updateUserImage: (type: 'avatar' | 'cover', base64: string) => void;
+  updateUserImage: (type: 'avatar' | 'cover', file: File) => void;
   updateUserBio: (bio: string) => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   removeToast: (id: string) => void;
@@ -100,6 +100,15 @@ export interface AppContextType {
   // Auth Navigation
   authPage: 'login' | 'signup' | 'forgot-password' | null;
   setAuthPage: (page: 'login' | 'signup' | 'forgot-password' | null) => void;
+
+  // Public Profile Viewing
+  viewedProfile: User | null;
+  loadPublicProfile: (userId: string) => Promise<void>;
+  clearViewedProfile: () => void;
+  updatePrivacySettings: (settings: Partial<PrivacySettings>) => Promise<void>;
+
+  // System
+  isAppInstalled: boolean;
 
   // Editor Draft (Session Only)
   editorDraft: {

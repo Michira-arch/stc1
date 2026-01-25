@@ -23,6 +23,7 @@ import { Room } from './pages/realtime/Room';
 
 import { BlindDateHome } from './pages/realtime/BlindDateHome';
 import { BlindDateRoom } from './pages/realtime/BlindDateRoom';
+import RunnerGame from './pages/games/runner/RunnerGame';
 
 interface BlindDateWrapperProps {
   onBack: () => void;
@@ -123,9 +124,10 @@ const AppContent = () => {
     switch (activeTab) {
       case 'feed': return <Feed onStoryClick={handleStoryClick} />;
       case 'editor': return <Editor onNavigate={(path) => setActiveTab(path)} />;
-      case 'profile': return <Profile onStoryClick={handleStoryClick} onOpenSettings={() => setIsSettingsOpen(true)} />;
+      case 'profile': return <Profile onStoryClick={handleStoryClick} onOpenSettings={() => setIsSettingsOpen(true)} onPlayGame={() => setActiveTab('runner')} />;
       case 'explore': return <Explore onStoryClick={handleStoryClick} />;
       case 'meet': return <MeetWrapper />;
+      case 'runner': return <RunnerGame onBack={() => setActiveTab('profile')} />;
 
       default: return <Feed onStoryClick={handleStoryClick} />;
     }
@@ -207,7 +209,7 @@ const AppContent = () => {
       </AnimatePresence>
 
       {/* Hide navigation when viewing a story or settings */}
-      {!viewedStoryId && !isSettingsOpen && !authPage && !showOnboarding && (
+      {!viewedStoryId && !isSettingsOpen && !authPage && !showOnboarding && activeTab !== 'runner' && (
         <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
       )}
 

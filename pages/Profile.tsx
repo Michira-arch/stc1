@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useApp } from '../store/AppContext';
 import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, Edit2, Camera, User, Download, Check, MapPin, Link as LinkIcon, Share2, Eye, Heart } from 'lucide-react';
+import { Settings as SettingsIcon, Edit2, Camera, User, Download, Check, MapPin, Link as LinkIcon, Share2, Eye, Heart, Gamepad2 } from 'lucide-react';
 import { CarvedButton } from '../components/CarvedButton';
 import { timeAgo } from '../utils';
 import { StoryCard } from '../components/StoryCard';
@@ -10,9 +10,10 @@ import { InstallAppButton } from '../components/InstallAppButton';
 interface Props {
   onStoryClick: (id: string) => void;
   onOpenSettings: () => void;
+  onPlayGame: () => void;
 }
 
-export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings }) => {
+export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayGame }) => {
   const { currentUser, stories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, setAuthPage, viewedProfile, clearViewedProfile } = useApp();
 
   // Determine who we are viewing
@@ -146,7 +147,7 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings }) => {
 
           <h2 className="text-2xl font-bold mb-1">{userToDisplay.name}</h2>
           <p className="text-accent font-medium tracking-widest text-xs uppercase mb-1">
-            {isMe ? 'Pro Storyteller' : 'Storyteller'}
+            {isMe ? '🌟' : '✨'}
           </p>
           <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium mb-4">Powered by Dispatch STC</p>
 
@@ -174,7 +175,7 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings }) => {
                     {isMe && (
                       <div className="flex justify-center gap-4 mt-3 text-xs text-slate-400">
                         <div className="flex items-center gap-1"><MapPin size={12} /> Campus Center</div>
-                        <div className="flex items-center gap-1"><LinkIcon size={12} /> github.com/student</div>
+                        <div className="flex items-center gap-1"><LinkIcon size={12} /> github.com/xxxx/studentcenter</div>
                       </div>
                     )}
                   </div>
@@ -191,6 +192,12 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings }) => {
             {isMe && (
               <InstallAppButton className="!h-9 !px-4 !text-xs" />
             )}
+            <CarvedButton
+              onClick={onPlayGame}
+              className="!h-9 !px-4 !text-xs font-bold text-emerald-600 dark:text-emerald-400"
+            >
+              <Gamepad2 size={14} className="mr-1" /> Play Runner
+            </CarvedButton>
             <CarvedButton className="!h-9 !px-4 !text-xs font-bold text-slate-500">
               <Share2 size={14} className="mr-1" /> Share
             </CarvedButton>
