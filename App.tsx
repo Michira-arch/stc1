@@ -174,6 +174,11 @@ const AppContent = () => {
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="min-h-screen touch-pan-y"
           onPanEnd={(e, info) => {
+            // Disable swipe nav on desktop/laptop (mouse or large screen)
+            const isMouse = (e as PointerEvent).pointerType === 'mouse';
+            const isDesktop = window.innerWidth > 768;
+            if (isMouse || isDesktop) return;
+
             const threshold = 50;
             if (info.offset.x < -threshold) {
               // Swiped Left (Next)

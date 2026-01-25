@@ -207,6 +207,9 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
           <div className="flex items-center gap-3">
             <img src={currentUser.avatar} className="w-10 h-10 rounded-full border border-slate-400 object-cover" />
             <span className="font-semibold text-sm tracking-wide">Drafting as {currentUser.name}</span>
+            <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${isProMode ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5' : 'border-slate-300 text-slate-500'}`}>
+              {isProMode ? 'Pro Mode' : 'Standard'}
+            </div>
           </div>
           <div className="flex gap-2">
             <CarvedButton
@@ -221,9 +224,9 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
             </CarvedButton>
             <CarvedButton
               onClick={toggleProMode}
-              className={`!h-8 !px-3 !text-xs ${isProMode ? 'text-accent' : 'text-slate-400'}`}
+              className={`!h-8 !px-3 !text-xs ${!isProMode ? 'text-accent' : 'text-slate-400'}`}
             >
-              <PenTool size={12} className="mr-1" /> {isProMode ? 'Pro Mode' : 'Standard'}
+              <PenTool size={12} className="mr-1" /> {isProMode ? 'Standard' : 'Pro Mode'}
             </CarvedButton>
           </div>
         </div>
@@ -249,19 +252,28 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
         {isProMode && (
           <div className="flex gap-2 mb-4 p-2 rounded-xl bg-ceramic-surface dark:bg-obsidian-base overflow-x-auto border border-white/5">
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('bold')}
               className={`p-2 rounded-lg transition-colors ${toolbarState.bold ? 'text-emerald-500 bg-black/5 dark:bg-white/10' : 'hover:text-emerald-500'}`}
             >
               <Bold size={16} />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('italic')}
               className={`p-2 rounded-lg transition-colors ${toolbarState.italic ? 'text-emerald-500 bg-black/5 dark:bg-white/10' : 'hover:text-emerald-500'}`}
             >
               <Italic size={16} />
             </button>
-            <button onClick={() => execCommand('formatBlock', 'H2')} className="p-2 hover:text-emerald-500"><Type size={16} /></button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => execCommand('formatBlock', '<h2>')}
+              className="p-2 hover:text-emerald-500"
+            >
+              <Type size={16} />
+            </button>
+            <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('insertUnorderedList')}
               className={`p-2 rounded-lg transition-colors ${toolbarState.list ? 'text-emerald-500 bg-black/5 dark:bg-white/10' : 'hover:text-emerald-500'}`}
             >
@@ -283,7 +295,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
           ) : (
             <textarea
               placeholder="What's happening? Make it a masterpiece..."
-              className="w-full h-full bg-transparent text-lg text-slate-600 dark:text-slate-300 placeholder-slate-500/50 outline-none resize-none leading-relaxed"
+              className="w-full h-full min-h-[60vh] bg-transparent text-lg text-slate-600 dark:text-slate-300 placeholder-slate-500/50 outline-none resize-none leading-relaxed"
               value={content}
               onChange={e => setContent(e.target.value)}
             />
