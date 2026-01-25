@@ -135,26 +135,27 @@ export const useWebRTC = (roomId: string, currentUser: User): UseWebRTCReturn =>
                 const state = channelRef.current?.presenceState();
                 console.log('Presence Sync:', state);
 
-                // Simple Mesh: Connect to everyone else who is already there
-                // In a real app, we need to handle "who calls whom" carefully to avoid duplicate connections.
-                // Rule: Connect to anyone with user_id > my_user_id (or simpler: anyone already in the list)
-
-                // For this prototype, we'll let the "new joiner" initiate calls to "existing users".
-                Object.keys(state || {}).forEach(userId => {
-                    if (userId !== currentUser.id) {
-                        // If we don't have a connection, and we are the "new" one (logic handled by 'join' broadcast usually, but presense is stateful)
-                        // Let's rely on 'join' event for clarity.
+                Object.values(state || {}).flat().forEach((p: any) => {
+                    const remoteUserId = p.chat_user_ref?.userId || p.userId;
+                    if (remoteUserId && remoteUserId !== currentUser.id) {
+                        // Deterministic: If my ID is greater, I initiate.
+                        // This handles simultaneous joins (Blind Date) where both see 'sync'.
+                        if (currentUser.id > remoteUserId) {
+                            console.log(`[Sync] Initiating connection to ${remoteUserId}`);
+                            createPeerConnection(remoteUserId, true);
+                        }
                     }
                 });
             })
             .on('presence', { event: 'join' }, ({ newPresences }) => {
                 newPresences.forEach((p: any) => {
-                    if (p.chat_user_ref.userId !== currentUser.id) {
-                        console.log("User joined:", p.chat_user_ref.userId);
-                        createPeerConnection(p.chat_user_ref.userId, true); // I am active, they just joined, I'll call them?
-                        // Actually, usually the Joiner calls the Joined.
-                        // Let's stick to standard practice: 
-                        // When I join, I get a list of existing users. I call them.
+                    const remoteUserId = p.chat_user_ref?.userId || p.userId;
+                    if (remoteUserId && remoteUserId !== currentUser.id) {
+                        // Same rule: Only initiate if I'm the designated offerer
+                        if (currentUser.id > remoteUserId) {
+                            console.log(`[Join] Initiating connection to ${remoteUserId}`);
+                            createPeerConnection(remoteUserId, true);
+                        }
                     }
                 });
             })

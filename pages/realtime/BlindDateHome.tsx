@@ -28,7 +28,7 @@ export const BlindDateHome: React.FC<Props> = ({ onStartMatching, onBack }) => {
             .from('blind_date_preferences')
             .select('*')
             .eq('user_id', currentUser.id)
-            .single();
+            .maybeSingle();
 
         if (data) {
             setIsActive(data.is_active);

@@ -60,13 +60,18 @@ export const BlindDateRoom: React.FC<Props> = ({ onStop }) => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             setLocalStream(stream);
-            if (localVideoRef.current) {
-                localVideoRef.current.srcObject = stream;
-            }
         } catch (err) {
             console.error('Error accessing media:', err);
         }
     };
+
+    // Re-attach local stream when video element changes (e.g. switching views)
+    useEffect(() => {
+        if (localVideoRef.current && localStream) {
+            localVideoRef.current.srcObject = localStream;
+        }
+    }, [localVideoRef.current, localStream, matchState]);
+
 
     const joinLobby = () => {
         console.log('Joining Blind Date Lobby...');
@@ -116,7 +121,7 @@ export const BlindDateRoom: React.FC<Props> = ({ onStop }) => {
         const potentialMatches = Object.values(state).flat() as any[];
         // Filter for others who are also SEARCHING
         const candidates = potentialMatches.filter(p =>
-            p.userId !== currentUser.id && p.status === 'SEARCHING'
+            p && p.userId && p.userId !== currentUser.id && p.status === 'SEARCHING'
         );
 
         if (candidates.length > 0) {
