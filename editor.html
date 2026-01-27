@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neumorphic Social Editor</title>
+    <!-- Phosphor Icons for a clean, professional look -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Google Fonts for the Font Selector -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato&family=Merriweather&family=Montserrat&family=Open+Sans&family=Roboto&family=Playfair+Display&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* GLOBAL TRANSITIONS */
+            --transition-speed: 0.3s;
+
+            /* LIGHT THEME (Acrylic White) */
+            --bg-light: #e0e5ec;
+            --text-light: #4a5568;
+            --shadow-light-1: #a3b1c6;
+            --shadow-light-2: #ffffff;
+            --accent-light: #6d5dfc;
+
+            /* DARK THEME (Obsidian Black) */
+            --bg-dark: #1e1e1e;
+            --text-dark: #e0e0e0;
+            --shadow-dark-1: #151515;
+            --shadow-dark-2: #272727;
+            --accent-dark: #bb86fc;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color var(--transition-speed);
+        }
+
+        /* === THEME MIXINS === */
+        body.light-theme {
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            --bg-color: var(--bg-light);
+            --shadow-1: var(--shadow-light-1);
+            --shadow-2: var(--shadow-light-2);
+            --text-color: var(--text-light);
+            --accent: var(--accent-light);
+        }
+
+        body.dark-theme {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+            --bg-color: var(--bg-dark);
+            --shadow-1: var(--shadow-dark-1);
+            --shadow-2: var(--shadow-dark-2);
+            --text-color: var(--text-dark);
+            --accent: var(--accent-dark);
+        }
+
+        /* === EDITOR CONTAINER === */
+        .editor-wrapper {
+            width: 100%;
+            max-width: 650px;
+            padding: 30px;
+            border-radius: 30px;
+            background: var(--bg-color);
+            /* Flat neumorphic container shape */
+            box-shadow: 20px 20px 60px var(--shadow-1),
+                -20px -20px 60px var(--shadow-2);
+            transition: all var(--transition-speed);
+        }
+
+        /* === HEADER & TOGGLE === */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+        }
+
+        h2 {
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 5px 5px 10px var(--shadow-1),
+                -5px -5px 10px var(--shadow-2);
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:active {
+            box-shadow: inset 5px 5px 10px var(--shadow-1),
+                inset -5px -5px 10px var(--shadow-2);
+        }
+
+        /* === TOOLBAR === */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            position: relative;
+            /* For dropdown positioning */
+        }
+
+        .tool-btn {
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            outline: none;
+            position: relative;
+            /* Convex Neumorphism */
+            box-shadow: 5px 5px 10px var(--shadow-1),
+                -5px -5px 10px var(--shadow-2);
+            transition: all 0.2s ease;
+        }
+
+        .tool-btn:hover {
+            transform: translateY(-2px);
+            color: var(--accent);
+        }
+
+        .tool-btn:active,
+        .tool-btn.active {
+            box-shadow: inset 5px 5px 10px var(--shadow-1),
+                inset -5px -5px 10px var(--shadow-2);
+            color: var(--accent);
+            transform: translateY(0);
+        }
+
+        /* === SPLIT BUTTON (WORD STYLE) === */
+        .split-btn-container {
+            display: flex;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-color);
+            /* The container has the shadow */
+            box-shadow: 5px 5px 10px var(--shadow-1),
+                -5px -5px 10px var(--shadow-2);
+            overflow: hidden;
+            /* rounded corners clip children */
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .split-btn-container:hover {
+            transform: translateY(-2px);
+        }
+
+        .split-btn-main,
+        .split-btn-arrow {
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            transition: background 0.2s;
+        }
+
+        .split-btn-main {
+            width: 45px;
+            position: relative;
+            border-right: 1px solid rgba(128, 128, 128, 0.1);
+        }
+
+        .split-btn-arrow {
+            width: 25px;
+            font-size: 0.8rem;
+        }
+
+        .split-btn-main:hover,
+        .split-btn-arrow:hover {
+            background: rgba(128, 128, 128, 0.1);
+            color: var(--accent);
+        }
+
+        .split-btn-main:active,
+        .split-btn-arrow:active {
+            background: rgba(128, 128, 128, 0.2);
+        }
+
+        .color-indicator {
+            position: absolute;
+            bottom: 8px;
+            width: 20px;
+            height: 3px;
+            background-color: #6d5dfc;
+            /* Default accent */
+            border-radius: 2px;
+        }
+
+        /* === COLOR PALETTE DROPDOWN === */
+        .color-palette-dropdown {
+            position: absolute;
+            top: 55px;
+            /* pushed down slightly */
+            left: 50px;
+            /* Aligned roughly with the button */
+            width: 210px;
+            padding: 15px;
+            background: var(--bg-color);
+            border-radius: 15px;
+            box-shadow: 10px 10px 20px var(--shadow-1),
+                -10px -10px 20px var(--shadow-2);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .color-palette-dropdown.show {
+            display: flex;
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .color-swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 2px 2px 5px var(--shadow-1),
+                -2px -2px 5px var(--shadow-2);
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+            border-color: var(--text-color);
+        }
+
+        .custom-color-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid rgba(128, 128, 128, 0.1);
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        input[type="color"] {
+            appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            background: none;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 5px;
+            border: 1px solid rgba(128, 128, 128, 0.2);
+        }
+
+
+        /* === FONT SELECTOR === */
+        .tool-select {
+            appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            padding: 0 15px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 5px 5px 10px var(--shadow-1),
+                -5px -5px 10px var(--shadow-2);
+            transition: all 0.2s ease;
+            min-width: 110px;
+        }
+
+        .tool-select:hover {
+            transform: translateY(-2px);
+            color: var(--accent);
+        }
+
+        .divider {
+            width: 2px;
+            height: 30px;
+            background: rgba(128, 128, 128, 0.1);
+            border-radius: 1px;
+            margin: 0 5px;
+        }
+
+        /* === EDITABLE AREA === */
+        .editor-content {
+            min-height: 200px;
+            padding: 20px;
+            border-radius: 15px;
+            outline: none;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+            /* Inset Neumorphism for Input Field */
+            box-shadow: inset 5px 5px 10px var(--shadow-1),
+                inset -5px -5px 10px var(--shadow-2);
+            border: 1px solid transparent;
+            transition: all var(--transition-speed);
+        }
+
+        .editor-content:focus {
+            border-color: rgba(128, 128, 128, 0.1);
+        }
+
+        .editor-content:empty:before {
+            content: attr(placeholder);
+            color: gray;
+            opacity: 0.6;
+            pointer-events: none;
+            display: block;
+        }
+
+        .editor-content blockquote {
+            border-left: 4px solid var(--accent);
+            margin: 10px 0;
+            padding: 5px 0 5px 15px;
+            background: rgba(128, 128, 128, 0.05);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-color);
+            opacity: 0.9;
+        }
+
+        .editor-content code {
+            background: rgba(128, 128, 128, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: var(--accent);
+            font-size: 0.9em;
+        }
+
+        .editor-content h2 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        /* === FOOTER ACTION === */
+        .action-area {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .post-btn {
+            padding: 10px 30px;
+            border-radius: 20px;
+            border: none;
+            font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer;
+            background: var(--bg-color);
+            color: var(--accent);
+            box-shadow: 5px 5px 10px var(--shadow-1),
+                -5px -5px 10px var(--shadow-2);
+            transition: all 0.2s ease;
+        }
+
+        .post-btn:active {
+            box-shadow: inset 5px 5px 10px var(--shadow-1),
+                inset -5px -5px 10px var(--shadow-2);
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+
+    <div class="editor-wrapper">
+        <div class="header">
+            <h2>Create Post</h2>
+            <button class="theme-toggle" id="themeBtn" title="Toggle Theme">
+                <i class="ph ph-moon"></i>
+            </button>
+        </div>
+
+        <div class="toolbar">
+            <!-- Text Style -->
+            <button class="tool-btn" data-cmd="bold" title="Bold">
+                <i class="ph ph-text-b"></i>
+            </button>
+            <button class="tool-btn" data-cmd="italic" title="Italic">
+                <i class="ph ph-text-italic"></i>
+            </button>
+
+            <!-- Font Selector -->
+            <select class="tool-select" id="fontSelect" title="Font Family">
+                <option value="Segoe UI">Default</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Open Sans">Open Sans</option>
+                <option value="Montserrat">Montserrat</option>
+                <option value="Lato">Lato</option>
+                <option value="Playfair Display">Serif</option>
+                <option value="Courier New">Mono</option>
+            </select>
+
+            <!-- SPLIT COLOR BUTTON -->
+            <div class="split-btn-container" title="Text Color">
+                <!-- Main Button: Applies Current Color -->
+                <button class="split-btn-main" id="colorApplyBtn">
+                    <i class="ph ph-paint-bucket"></i>
+                    <div class="color-indicator" id="currentColorIndicator"></div>
+                </button>
+                <!-- Arrow Button: Opens Dropdown -->
+                <button class="split-btn-arrow" id="colorDropdownBtn">
+                    <i class="ph ph-caret-down"></i>
+                </button>
+            </div>
+
+            <!-- DROPDOWN (Positioned relative to toolbar) -->
+            <div class="color-palette-dropdown" id="colorPalette">
+                <div class="palette-grid" id="swatchGrid">
+                    <!-- Swatches injected via JS -->
+                </div>
+                <div class="custom-color-row">
+                    <span>Custom...</span>
+                    <input type="color" id="nativeColorPicker" value="#6d5dfc">
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Headers & Lists -->
+            <button class="tool-btn" data-cmd="formatBlock" data-val="H2" title="Heading">
+                <i class="ph ph-text-h"></i>
+            </button>
+            <button class="tool-btn" data-cmd="insertUnorderedList" title="Bullet List">
+                <i class="ph ph-list-bullets"></i>
+            </button>
+
+            <div class="divider"></div>
+
+            <!-- Inserts -->
+            <button class="tool-btn" data-cmd="createLink" title="Link">
+                <i class="ph ph-link"></i>
+            </button>
+            <button class="tool-btn" id="quoteBtn" title="Quote">
+                <i class="ph ph-quotes"></i>
+            </button>
+            <button class="tool-btn" id="codeBtn" title="Code Block">
+                <i class="ph ph-code"></i>
+            </button>
+        </div>
+
+        <div class="editor-content" id="editor" contenteditable="true"
+            placeholder="Type something to test color highlighting..."></div>
+
+        <div class="action-area">
+            <button class="post-btn" onclick="alert('Content ready for backend!')">POST</button>
+        </div>
+    </div>
+
+    <script>
+        // === DOM ELEMENTS ===
+        const editor = document.getElementById('editor');
+        const buttons = document.querySelectorAll('.tool-btn');
+        const themeBtn = document.getElementById('themeBtn');
+        const themeIcon = themeBtn.querySelector('i');
+        const quoteBtn = document.getElementById('quoteBtn');
+        const fontSelect = document.getElementById('fontSelect');
+        const body = document.body;
+
+        // Color Elements
+        const colorApplyBtn = document.getElementById('colorApplyBtn');
+        const colorDropdownBtn = document.getElementById('colorDropdownBtn');
+        const colorPalette = document.getElementById('colorPalette');
+        const swatchGrid = document.getElementById('swatchGrid');
+        const nativeColorPicker = document.getElementById('nativeColorPicker');
+        const currentColorIndicator = document.getElementById('currentColorIndicator');
+
+        // State for Selection & Color
+        let savedSelection = null;
+        let activeColor = '#6d5dfc';
+
+        // === SELECTION MANAGEMENT ===
+        // Critical for "remembering" what to color when focus leaves editor
+        const saveSelection = () => {
+            const sel = window.getSelection();
+            if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+                savedSelection = sel.getRangeAt(0);
+            }
+        };
+
+        const restoreSelection = () => {
+            editor.focus();
+            if (savedSelection) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedSelection);
+            }
+        };
+
+        // Save selection on interaction events inside editor
+        editor.addEventListener('keyup', saveSelection);
+        editor.addEventListener('mouseup', saveSelection);
+        editor.addEventListener('click', saveSelection);
+
+        // === COLOR LOGIC ===
+        const quickColors = [
+            '#000000', '#444444', '#888888', '#CCCCCC', '#FFFFFF',
+            '#D32F2F', '#E64A19', '#FBC02D', '#388E3C', '#1976D2',
+            '#7B1FA2', '#C2185B', '#512DA8', '#0097A7', '#00796B',
+            '#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE'
+        ];
+
+        // 1. Setup Swatches
+        quickColors.forEach(color => {
+            const swatch = document.createElement('div');
+            swatch.className = 'color-swatch';
+            swatch.style.backgroundColor = color;
+
+            // Interaction: Apply on Click
+            swatch.addEventListener('mousedown', (e) => {
+                e.preventDefault(); // Prevent focus loss immediately
+                applyColor(color);
+            });
+
+            swatchGrid.appendChild(swatch);
+        });
+
+        // 2. Main Button Click (Bucket)
+        colorApplyBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // Keep focus
+            restoreSelection();
+            // Apply current active color
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('foreColor', false, activeColor);
+        });
+
+        // 3. Dropdown Button Click (Arrow)
+        colorDropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            colorPalette.classList.toggle('show');
+        });
+
+        function applyColor(color) {
+            restoreSelection();
+
+            // Force CSS styling for better color handling
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('foreColor', false, color);
+
+            // Update UI State
+            activeColor = color;
+            currentColorIndicator.style.backgroundColor = color;
+
+            // Close menu
+            colorPalette.classList.remove('show');
+        }
+
+        // 5. Custom Color Input
+        nativeColorPicker.addEventListener('input', (e) => {
+            restoreSelection();
+            activeColor = e.target.value;
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('foreColor', false, activeColor);
+            currentColorIndicator.style.backgroundColor = activeColor;
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!colorPalette.contains(e.target) &&
+                !colorDropdownBtn.contains(e.target) &&
+                !colorApplyBtn.contains(e.target)) {
+                colorPalette.classList.remove('show');
+            }
+        });
+
+        // === FONT HANDLER ===
+        fontSelect.addEventListener('change', (e) => {
+            restoreSelection();
+            document.execCommand('fontName', false, e.target.value);
+            editor.focus();
+        });
+
+        // === COMMAND HANDLER ===
+        buttons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                const cmd = btn.dataset.cmd;
+                const val = btn.dataset.val || null;
+                const btnId = btn.id;
+
+                // Quote Logic
+                if (btnId === 'quoteBtn') {
+                    const currentFormat = document.queryCommandValue('formatBlock');
+                    if (currentFormat === 'blockquote') {
+                        document.execCommand('formatBlock', false, 'div');
+                    } else {
+                        document.execCommand('formatBlock', false, 'blockquote');
+                    }
+                }
+                // Code Block Logic
+                else if (btnId === 'codeBtn') {
+                    restoreSelection();
+                    const selection = document.getSelection();
+                    if (selection.rangeCount > 0) {
+                        document.execCommand('insertHTML', false, '<code>' + selection.toString() + '</code>&nbsp;');
+                    }
+                }
+                // Link Logic
+                else if (cmd === 'createLink') {
+                    const url = prompt("Enter link URL:");
+                    if (url) {
+                        restoreSelection();
+                        document.execCommand(cmd, false, url);
+                    }
+                }
+                // Standard Commands
+                else if (cmd) {
+                    restoreSelection();
+                    document.execCommand(cmd, false, val);
+                }
+
+                editor.focus();
+                checkActiveStates();
+            });
+        });
+
+        // === SMART ENTER KEY LOGIC ===
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const currentFormat = document.queryCommandValue('formatBlock');
+                if (currentFormat === 'blockquote') {
+                    const selection = window.getSelection();
+                    const focusNode = selection.focusNode;
+                    if (focusNode.textContent.trim().length === 0) {
+                        e.preventDefault();
+                        document.execCommand('formatBlock', false, 'div');
+                        document.execCommand('insertHTML', false, '<br>');
+                    }
+                }
+            }
+        });
+
+        // === ACTIVE STATE CHECKER ===
+        editor.addEventListener('keyup', checkActiveStates);
+        editor.addEventListener('mouseup', checkActiveStates);
+        editor.addEventListener('click', checkActiveStates);
+
+        function checkActiveStates() {
+            buttons.forEach(btn => {
+                if (btn.id === 'quoteBtn') {
+                    if (document.queryCommandValue('formatBlock') === 'blockquote') {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                    return;
+                }
+
+                const cmd = btn.dataset.cmd;
+                if (!cmd) return;
+
+                try {
+                    if (document.queryCommandState(cmd)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                } catch (e) { }
+            });
+
+            // Sync Font Select
+            const currentFont = document.queryCommandValue('fontName');
+            if (currentFont) {
+                const cleanFont = currentFont.replace(/['"]/g, '');
+                for (let i = 0; i < fontSelect.options.length; i++) {
+                    if (fontSelect.options[i].value.toLowerCase() === cleanFont.toLowerCase()) {
+                        fontSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // === THEME TOGGLE LOGIC ===
+        themeBtn.addEventListener('click', () => {
+            if (body.classList.contains('dark-theme')) {
+                body.classList.replace('dark-theme', 'light-theme');
+                themeIcon.classList.replace('ph-moon', 'ph-sun');
+            } else {
+                body.classList.replace('light-theme', 'dark-theme');
+                themeIcon.classList.replace('ph-sun', 'ph-moon');
+            }
+        });
+    </script>
+</body>
+
+</html>

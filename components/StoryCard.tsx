@@ -325,7 +325,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
           toggleLike(story.id);
         }}
       >
-        {story.title && <h2 className="text-lg font-bold mb-2 leading-tight dark:text-slate-100">{story.title}</h2>}
+        {story.title && <h2 className="text-lg font-bold mb-2 leading-tight text-slate-800 dark:text-slate-100">{story.title}</h2>}
         <p className="text-slate-600 dark:text-[#aab2bd] text-sm leading-relaxed line-clamp-3">
           {previewText}
         </p>

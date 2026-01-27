@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
-  const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme, currentUser, updatePrivacySettings, isGuest } = useApp();
+  const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme, currentUser, updatePrivacySettings, isGuest, isOnline } = useApp();
   const privacy = currentUser.privacySettings || { showBio: true, showTimeline: true };
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
@@ -96,11 +96,11 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
           <CarvedButton
             active={theme === 'dark'}
             onClick={toggleTheme}
-            className="w-full py-4 flex justify-between px-6"
+            className={`w-full py-4 flex justify-between px-6 ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <div className="flex items-center gap-3">
               {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
-              <span>Dark Mode</span>
+              <span>{isOnline ? 'Dark Mode' : 'Dark Mode (Offline Locked)'}</span>
             </div>
             <div className={`w-10 h-5 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
               <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-md transition-all ${theme === 'dark' ? 'left-6' : 'left-1'}`} />

@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayGame }) => {
-  const { currentUser, stories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, setAuthPage, viewedProfile, clearViewedProfile } = useApp();
+  const { currentUser, stories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, setAuthPage, viewedProfile, clearViewedProfile, isOnline, showToast } = useApp();
 
   // Determine who we are viewing
   const userToDisplay = viewedProfile || currentUser;
@@ -193,8 +193,11 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
               <InstallAppButton className="!h-9 !px-4 !text-xs" />
             )}
             <CarvedButton
-              onClick={onPlayGame}
-              className="!h-9 !px-4 !text-xs font-bold text-emerald-600 dark:text-emerald-400"
+              onClick={() => {
+                if (isOnline) onPlayGame();
+                else showToast("Games require internet connection", "info");
+              }}
+              className={`!h-9 !px-4 !text-xs font-bold text-emerald-600 dark:text-emerald-400 ${!isOnline ? 'opacity-50 grayscale' : ''}`}
             >
               <Gamepad2 size={14} className="mr-1" /> Play Runner
             </CarvedButton>

@@ -70,12 +70,42 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [managingStoryId, setManagingStoryId] = useState<string | null>(null);
   const [feedScrollPosition, setFeedScrollPosition] = useState(0);
   const [sessionViews, setSessionViews] = useState<Set<string>>(new Set());
   const [editorDraft, setEditorDraft] = useState({ title: '', description: '', content: '', isProMode: false });
 
-  // --- Initial Load: Auth & Settings ---
+  // --- Connectivity Listener ---
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => {
+      setIsOnline(false);
+      setTheme('dark'); // Force dark mode when offline
+      showToast("You are offline. Switched to Safe Mode.", "info");
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const toggleTheme = () => {
+    if (!isOnline) {
+      showToast("Theme requires internet connection.", "info");
+      return;
+    }
+    triggerHaptic('medium');
+    setTheme(prev => {
+      const newTheme = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('dopamine_theme', newTheme);
+      return newTheme;
+    });
+  };
   useEffect(() => {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -312,14 +342,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const toggleTheme = () => {
-    triggerHaptic('medium');
-    setTheme(prev => {
-      const newTheme = prev === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('dopamine_theme', newTheme);
-      return newTheme;
-    });
-  };
+
 
   const updateSettings = async (newSettings: Partial<AppSettings>) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
@@ -651,6 +674,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       },
       isGuest,
       isAppInstalled,
+      isOnline,
 
       authPage,
       setAuthPage,

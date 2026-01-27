@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Outfit', sans-serif;
+
+  --color-obsidian-base: #2E3238;
+  --color-obsidian-surface: #2E3238;
+  --color-obsidian-highlight: #393d45;
+
+  --color-ceramic-base: #e0e5ec;
+  --color-ceramic-surface: #e0e5ec;
+
+  --color-accent: #10b981;
+  --color-accent-glow: #00f2ff;
+  --color-accent-amber: #ffaa00;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+
+:root {
+  color-scheme: light;
+  /* Base Variables updated by JS */
+  --light-x: -6px;
+  --light-y: -6px;
+  --shadow-x: 6px;
+  --shadow-y: 6px;
+
+  /* Shadow Colors */
+  --shadow-light-dm: rgba(255, 255, 255, 0.05);
+  --shadow-dark-dm: rgba(0, 0, 0, 0.5);
+
+  --shadow-light-lm: rgba(255, 255, 255, 0.8);
+  --shadow-dark-lm: rgba(163, 177, 198, 0.6);
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  transition: background-color 0.3s ease;
+}
+
+/* Noise Texture */
+.noise-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* --- DYNAMIC NEUMORPHIC CLASSES --- */
+
+/* Convex (Sticking Out) */
+.neu-convex {
+  transition: box-shadow 0.1s ease;
+}
+
+.dark .neu-convex {
+  box-shadow:
+    var(--shadow-x) var(--shadow-y) 15px var(--shadow-dark-dm),
+    var(--light-x) var(--light-y) 15px var(--shadow-light-dm);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.neu-convex {
+  box-shadow:
+    var(--shadow-x) var(--shadow-y) 15px var(--shadow-dark-lm),
+    var(--light-x) var(--light-y) 15px var(--shadow-light-lm);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Concave (Pressed In) */
+.neu-concave {
+  transition: box-shadow 0.1s ease;
+}
+
+.dark .neu-concave {
+  box-shadow:
+    inset 5px 5px 10px var(--shadow-dark-dm),
+    inset -5px -5px 10px var(--shadow-light-dm);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.neu-concave {
+  box-shadow:
+    inset 5px 5px 10px var(--shadow-dark-lm),
+    inset -5px -5px 10px var(--shadow-light-lm);
+}
+
+/* Glow Effects */
+.neu-glow-emerald {
+  box-shadow: 0 0 15px #10b981;
+}
+
+.neu-glow-active {
+  box-shadow:
+    inset 5px 5px 10px var(--shadow-dark-dm),
+    inset -5px -5px 10px var(--shadow-light-dm),
+    0 0 15px #10b981;
+  /* Emerald Glow */
+}
+
+.neu-text-glow {
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}

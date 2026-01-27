@@ -74,11 +74,11 @@ export interface AppContextType {
   toggleLike: (storyId: string) => void;
   addComment: (storyId: string, text: string, parentId?: string) => void;
   deleteComment: (storyId: string, commentId: string) => void;
-  addStory: (title: string, description: string, content: string, imageUrl?: string, audioUrl?: string) => Promise<void>; // Updated to Promise
+  addStory: (title: string, description: string, content: string, imageFile?: File, audioUrl?: string) => Promise<void>; // Updated to Promise
   deleteStory: (storyId: string) => void;
   incrementViews: (storyId: string) => void;
   toggleHideStory: (storyId: string) => void;
-  updateStory: (storyId: string, title: string, description: string, content: string, imageUrl?: string) => void;
+  updateStory: (storyId: string, title: string, description: string, content: string, imageFile?: File | string) => Promise<void>;
 
   // State
   feedScrollPosition: number;
@@ -109,6 +109,7 @@ export interface AppContextType {
 
   // System
   isAppInstalled: boolean;
+  isOnline: boolean;
 
   // Editor Draft (Session Only)
   editorDraft: {

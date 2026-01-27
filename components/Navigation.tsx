@@ -20,14 +20,14 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
   ];
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-md flex justify-center pointer-events-none">
+    <div className="fixed bottom-6 left-0 right-0 mx-auto z-40 w-full max-w-md flex items-center justify-center pointer-events-none">
       <motion.div
         initial={false}
         animate={{
-          width: isCollapsed ? 64 : "90%",
-          height: isCollapsed ? 64 : 72,
-          borderRadius: isCollapsed ? 32 : 24,
-          padding: isCollapsed ? 0 : 8,
+          width: isCollapsed ? 72 : "auto",
+          height: isCollapsed ? 72 : 88,
+          borderRadius: isCollapsed ? 36 : 32,
+          padding: isCollapsed ? 0 : "0 24px",
         }}
         transition={{ type: "spring", stiffness: 200, damping: 25 }}
         className="pointer-events-auto bg-ceramic-base dark:bg-obsidian-surface
@@ -42,7 +42,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-              className="flex justify-between items-center w-full min-w-0"
+              className="flex justify-center gap-6 items-center w-full min-w-0"
             >
               {navItems.map((item) => (
                 <CarvedButton

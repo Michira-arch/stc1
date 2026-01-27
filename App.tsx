@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import VersionManager from './components/VersionManager';
 import { AppProvider, useApp } from './store/AppContext';
 import { Navigation } from './components/Navigation';
 import { Feed } from './pages/Feed';
@@ -237,6 +238,7 @@ const AppContent = () => {
 const App = () => {
   return (
     <AppProvider>
+      <VersionManager />
       <AppContent />
     </AppProvider>
   );
