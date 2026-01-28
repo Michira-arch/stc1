@@ -6,6 +6,8 @@ import { CarvedButton } from '../components/CarvedButton';
 import { timeAgo } from '../utils';
 import { StoryCard } from '../components/StoryCard';
 import { InstallAppButton } from '../components/InstallAppButton';
+import { useFcm } from '../src/hooks/useFcm';
+import { Bell } from 'lucide-react'; // Ensure Bell is imported (it was in line 4 but confirming)
 
 interface Props {
   onStoryClick: (id: string) => void;
@@ -15,6 +17,7 @@ interface Props {
 
 export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayGame }) => {
   const { currentUser, stories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, setAuthPage, viewedProfile, clearViewedProfile, isOnline, showToast } = useApp();
+  const { notificationPermission, requestPermission } = useFcm();
 
   // Determine who we are viewing
   const userToDisplay = viewedProfile || currentUser;
@@ -191,6 +194,23 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
           <div className="flex gap-3 mb-6">
             {isMe && (
               <InstallAppButton className="!h-9 !px-4 !text-xs" />
+            )}
+
+            {/* Notification Button */}
+            {isMe && notificationPermission !== 'granted' && (
+              <CarvedButton
+                onClick={async () => {
+                  if (notificationPermission === 'default') {
+                    // Request permission
+                    await requestPermission();
+                  } else if (notificationPermission === 'denied') {
+                    showToast('Notifications are blocked. Please enable them in your browser settings.', 'info');
+                  }
+                }}
+                className="!h-9 !px-4 !text-xs font-bold text-emerald-600 dark:text-emerald-400"
+              >
+                <Bell size={14} className="mr-1" /> Enable Notifications
+              </CarvedButton>
             )}
             <CarvedButton
               onClick={() => {

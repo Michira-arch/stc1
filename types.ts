@@ -381,6 +381,40 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      },
+      fcm_tokens: {
+        Row: {
+          id: string
+          user_id: string
+          token: string
+          platform: string | null
+          last_seen_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          token: string
+          platform?: string | null
+          last_seen_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          token?: string
+          platform?: string | null
+          last_seen_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fcm_tokens_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

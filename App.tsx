@@ -67,7 +67,39 @@ const MeetWrapper = () => {
 
 
 
+// Import at the top
+import { useFcm } from './src/hooks/useFcm';
+
+import { NotificationPermissionModal } from './components/NotificationPermissionModal';
+
 const AppContent = () => {
+  // Initialize FCM
+  const { requestPermission, notificationPermission } = useFcm();
+
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Show modal if permission is default (not yet prompted) and user hasn't dismissed it
+    const hasDismissed = localStorage.getItem('has_dismissed_notification_modal');
+    if (notificationPermission === 'default' && !hasDismissed) {
+      // Small delay to not overwhelm user immediately
+      const timer = setTimeout(() => setIsNotificationModalOpen(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notificationPermission]);
+
+  const handleEnableNotifications = async () => {
+    const granted = await requestPermission();
+    if (granted) {
+      setIsNotificationModalOpen(false);
+    }
+  };
+
+  const handleCloseNotificationModal = () => {
+    setIsNotificationModalOpen(false);
+    localStorage.setItem('has_dismissed_notification_modal', 'true');
+  };
+
   const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile } = useApp();
   const [activeTab, setActiveTab] = useState('feed');
   const [viewedStoryId, setViewedStoryId] = useState<string | null>(null);
@@ -230,6 +262,12 @@ const AppContent = () => {
         onLogin={() => { setGuestModalAction(null); setAuthPage('login'); }}
         onSignup={() => { setGuestModalAction(null); setAuthPage('signup'); }}
         actionName={guestModalAction || ''}
+      />
+
+      <NotificationPermissionModal
+        isOpen={isNotificationModalOpen}
+        onClose={handleCloseNotificationModal}
+        onEnable={handleEnableNotifications}
       />
     </div>
   );
