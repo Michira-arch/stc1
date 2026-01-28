@@ -30,17 +30,26 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+let app;
+let messaging;
 
-onBackgroundMessage(messaging, (payload) => {
-    console.log('[firebase-messaging-sw.js] Received background message ', payload);
-    // Customize notification here
-    const notificationTitle = payload.notification?.title || 'New Message';
-    const notificationOptions = {
-        body: payload.notification?.body,
-        icon: '/pwa-192x192.png'
-    };
+try {
+    const app = initializeApp(firebaseConfig);
+    messaging = getMessaging(app);
+} catch (e) {
+    console.error('Failed to initialize Firebase in SW:', e);
+}
 
-    self.registration.showNotification(notificationTitle, notificationOptions);
-});
+if (messaging) {
+    onBackgroundMessage(messaging, (payload) => {
+        console.log('[firebase-messaging-sw.js] Received background message ', payload);
+        // Customize notification here
+        const notificationTitle = payload.notification?.title || 'New Message';
+        const notificationOptions = {
+            body: payload.notification?.body,
+            icon: '/pwa-192x192.png'
+        };
+
+        self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+}
