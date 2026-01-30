@@ -7,6 +7,7 @@ export interface User {
   bio?: string;
   // added specifically for DB sync
   email?: string;
+  handle?: string;
   privacySettings?: PrivacySettings;
 }
 
@@ -71,6 +72,7 @@ export interface AppContextType {
   updateUserBio: (bio: string) => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   removeToast: (id: string) => void;
+  updateUserHandle: (handle: string) => Promise<void>;
 
   // Story Actions
   toggleLike: (storyId: string) => void;
@@ -136,6 +138,31 @@ export interface AppContextType {
   }) => void;
 }
 
+export interface SearchResultUser {
+  id: string;
+  full_name: string;
+  handle: string;
+  avatar_url: string;
+  similarity: number;
+}
+
+export interface SearchResultStory extends Story {
+  similarity: number;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  lastMessage: string;
+  timestamp: number;
+  messages: ChatMessage[];
+}
+
 // --- Supabase Database Types ---
 
 export type Json =
@@ -156,6 +183,7 @@ export type Database = {
           avatar_url: string | null
           cover_url: string | null
           bio: string | null
+          handle: string | null
           font_size: 'sm' | 'base' | 'lg' | null
           is_italic: boolean | null
           privacy_settings: PrivacySettings | null
@@ -165,6 +193,7 @@ export type Database = {
         Insert: {
           id: string
           full_name?: string | null
+          handle?: string | null
           avatar_url?: string | null
           cover_url?: string | null
           bio?: string | null
@@ -181,6 +210,7 @@ export type Database = {
           avatar_url?: string | null
           cover_url?: string | null
           bio?: string | null
+          handle?: string | null
           font_size?: 'sm' | 'base' | 'lg' | null
           is_italic?: boolean | null
 

@@ -13,16 +13,24 @@ const VersionManager = () => {
                     console.log('New version detected:', serverVersion);
 
                     // Whitelist of keys to preserve
-                    const preserveKeys = ['theme', 'user_preferences', 'supabase.auth.token']; // Add other keys as needed
+                    const explicitPreserveKeys = ['theme', 'user_preferences'];
                     const preservedData: Record<string, string | null> = {};
 
-                    // Backup preserved keys
-                    preserveKeys.forEach(key => {
+                    // Backup explicitly preserved keys
+                    explicitPreserveKeys.forEach(key => {
                         const value = localStorage.getItem(key);
                         if (value !== null) {
                             preservedData[key] = value;
                         }
                     });
+
+                    // Dynamically preserve Supabase Auth tokens (keys usually start with 'sb-' or contain 'supabase')
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+                            preservedData[key] = localStorage.getItem(key);
+                        }
+                    }
 
                     // Clear storage
                     localStorage.clear();

@@ -12,6 +12,7 @@ interface Props {
 
 export const Signup: React.FC<Props> = ({ onNavigate }) => {
     const [name, setName] = useState('');
+    const [handle, setHandle] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -27,6 +28,7 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
                 options: {
                     data: {
                         full_name: name,
+                        handle,
                         avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
                     }
                 }
@@ -77,6 +79,21 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
                          dark:shadow-[inset_4px_4px_8px_#151618,inset_-4px_-4px_8px_#35363e]
                          transition-shadow focus:shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff]"
                                 required
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">@</span>
+                            <input
+                                type="text"
+                                value={handle}
+                                onChange={(e) => setHandle(e.target.value)}
+                                placeholder="Handle (optional)"
+                                className="w-full pl-12 pr-4 py-4 rounded-xl outline-none text-slate-700 dark:text-slate-200
+                         bg-ceramic-base dark:bg-obsidian-surface
+                         shadow-[inset_3px_3px_6px_#bebebe,inset_-3px_-3px_6px_#ffffff]
+                         dark:shadow-[inset_4px_4px_8px_#151618,inset_-4px_-4px_8px_#35363e]
+                         transition-shadow focus:shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff]"
                             />
                         </div>
 

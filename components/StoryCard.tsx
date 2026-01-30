@@ -189,7 +189,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
   const [scrollProgress, setScrollProgress] = useState(0);
   const commentContainerRef = useRef<HTMLDivElement>(null);
 
-  const author = story.isAnonymous ? users['anonymous'] : (users[story.authorId] || { name: 'Unknown', avatar: '' });
+  const author = story.isAnonymous ? users['anonymous'] : (users[story.authorId] || { name: 'Unknown', avatar: '', handle: undefined });
   const isLiked = story.likes.includes(currentUser.id);
   const isMine = story.authorId === currentUser.id;
 
@@ -289,7 +289,10 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
             <img src={author.avatar} alt={author.name} className="relative w-10 h-10 rounded-full object-cover border-2 border-ceramic-base dark:border-obsidian-highlight" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 cursor-pointer hover:text-emerald-500 transition-colors" onClick={handleProfileClick}>{author.name}</h3>
+            <div onClick={handleProfileClick} className="cursor-pointer">
+              <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 hover:text-emerald-500 transition-colors">{author.name}</h3>
+              {author.handle && <p className="text-[10px] text-slate-400">@{author.handle}</p>}
+            </div>
             <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase">{timeAgo(story.timestamp)}</p>
           </div>
         </div>

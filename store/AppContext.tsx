@@ -148,6 +148,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const user: User = {
         id: data.id,
         name: data.full_name || 'Anonymous',
+        handle: data.handle || undefined,
         avatar: data.avatar_url || 'https://ui-avatars.com/api/?name=?',
         coverPhoto: data.cover_url || undefined,
         bio: data.bio || undefined,
@@ -172,7 +173,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       .from('stories')
       .select(`
         *,
-        author:profiles!stories_author_id_fkey(id, full_name, avatar_url),
+        author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle),
         likes(user_id),
         comments(*)
       `)
@@ -212,6 +213,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           newUsers[item.author.id] = {
             id: item.author.id,
             name: item.author.full_name || 'Unknown',
+            handle: item.author.handle,
             avatar: item.author.avatar_url || ''
           };
         }
@@ -225,7 +227,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         .from('stories')
         .select(`
              *,
-             author:profiles!stories_author_id_fkey(id, full_name, avatar_url),
+             author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle),
              likes(user_id),
              comments(*)
            `)
@@ -411,6 +413,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!error) {
       setCurrentUser(prev => ({ ...prev, bio }));
       showToast('Bio updated', 'success');
+    }
+  };
+
+  const updateUserHandle = async (handle: string) => {
+    if (isGuest) return;
+    // Basic validation
+    if (handle && !/^[a-zA-Z0-9_]+$/.test(handle)) {
+      showToast('Handle can only contain letters, numbers, and underscores', 'error');
+      return;
+    }
+
+    const { error } = await supabase.from('profiles').update({ handle }).eq('id', currentUser.id);
+    if (!error) {
+      setCurrentUser(prev => ({ ...prev, handle }));
+      showToast('Handle updated', 'success');
+    } else {
+      if (error.code === '23505') { // Unique violation
+        showToast('Handle already taken', 'error');
+      } else {
+        showToast('Failed to update handle', 'error');
+      }
     }
   };
 
@@ -700,7 +723,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       viewedProfile,
       loadPublicProfile,
       clearViewedProfile,
-      updatePrivacySettings
+      updatePrivacySettings,
+      updateUserHandle
     }}>
       {children}
     </AppContext.Provider>

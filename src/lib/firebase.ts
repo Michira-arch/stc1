@@ -22,7 +22,12 @@ try {
         throw new Error('Firebase configuration is missing. Please check your .env file.');
     }
     app = initializeApp(firebaseConfig);
-    messaging = getMessaging(app);
+    try {
+        messaging = getMessaging(app);
+    } catch (e) {
+        console.warn('Firebase Messaging not supported (likely insecure context or missing features):', e);
+        messaging = null;
+    }
 
     // Initialize Analytics (Measurement)
     isSupported().then(supported => {
@@ -32,8 +37,6 @@ try {
     });
 } catch (error) {
     console.error('Firebase Initialization Error:', error);
-    // Optional: Provide a dummy object if essential to prevent immediate crash,
-    // or let the error surface but with a clear message.
 }
 
 export { messaging };

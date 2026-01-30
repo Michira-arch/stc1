@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayGame }) => {
-  const { currentUser, stories, hiddenStories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, setAuthPage, viewedProfile, clearViewedProfile, isOnline, showToast } = useApp();
+  const { currentUser, stories, hiddenStories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, updateUserHandle, setAuthPage, viewedProfile, clearViewedProfile, isOnline, showToast } = useApp();
   const [showHidden, setShowHidden] = React.useState(false);
   const { notificationPermission, requestPermission } = useFcm();
 
@@ -32,11 +32,14 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
   }, [isMe]);
 
   const [isEditingBio, setIsEditingBio] = React.useState(false);
+  const [isEditingHandle, setIsEditingHandle] = React.useState(false);
+  const [handleText, setHandleText] = React.useState(userToDisplay.handle || '');
   const [bioText, setBioText] = React.useState(userToDisplay.bio || '');
 
   // Update local state when user changes
   React.useEffect(() => {
     setBioText(userToDisplay.bio || '');
+    setHandleText(userToDisplay.handle || '');
   }, [userToDisplay]);
 
   // Privacy Checks
@@ -149,7 +152,33 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
             )}
           </motion.div>
 
-          <h2 className="text-2xl font-bold mb-1">{userToDisplay.name}</h2>
+
+          <h2 className="text-2xl font-bold mb-0 leading-tight">{userToDisplay.name}</h2>
+          {isEditingHandle && isMe ? (
+            <div className="flex items-center gap-2 mt-1 mb-2">
+              <span className="text-slate-400 font-bold">@</span>
+              <input
+                type="text"
+                value={handleText}
+                onChange={(e) => setHandleText(e.target.value)}
+                className="bg-transparent border-b border-emerald-500 outline-none text-slate-500 font-medium w-32"
+                autoFocus
+                onBlur={() => {
+                  useApp().updateUserHandle(handleText); // Need to access via hook result, but cannot inside JSX easily if not destructured.
+                  // Wait, I destructured useApp at top level.
+                  // But `updateUserHandle` needs to be destructured.
+                }}
+              />
+              <CarvedButton onClick={() => { updateUserHandle(handleText); setIsEditingHandle(false); }} className="!h-6 !px-2 !text-[10px]">Save</CarvedButton>
+            </div>
+          ) : (
+            <p
+              className={`text-slate-500 font-medium mb-1 ${isMe ? 'cursor-pointer hover:text-emerald-500 transition-colors' : ''}`}
+              onClick={() => { if (isMe) setIsEditingHandle(true); }}
+            >
+              @{userToDisplay.handle || (isMe ? 'set_handle' : '...')}
+            </p>
+          )}
           <p className="text-accent font-medium tracking-widest text-xs uppercase mb-1">
             {isMe ? '🌟' : '✨'}
           </p>
