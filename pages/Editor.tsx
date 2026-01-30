@@ -219,7 +219,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
                 onClick={() => setIsAnonymous(!isAnonymous)}
                 className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-emerald-500 text-left transition-colors"
               >
-                {isAnonymous ? 'Posting Anonymously' : 'Posting Publicly'}
+                {isAnonymous ? 'Posting Anonymously. Tap profile to change to public.' : 'Posting Publicly. Tap profile to change to anonymous.'}
               </button>
             </div>
 

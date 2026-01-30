@@ -26,6 +26,13 @@ import { BlindDateHome } from './pages/realtime/BlindDateHome';
 import { BlindDateRoom } from './pages/realtime/BlindDateRoom';
 import RunnerGame from './pages/games/runner/RunnerGame';
 
+// STC Apps
+import { AppsLauncher } from './pages/stc-apps/AppsLauncher';
+import { FreshmanStarterPack } from './pages/stc-apps/FreshmanStarterPack';
+import { FoodServices } from './pages/stc-apps/FoodServices';
+import { LostAndFound } from './pages/stc-apps/LostAndFound';
+import { Marketplace } from './pages/stc-apps/Marketplace';
+
 interface BlindDateWrapperProps {
   onBack: () => void;
 }
@@ -155,14 +162,21 @@ const AppContent = () => {
     if (authPage === 'forgot-password') return <ForgotPassword onNavigate={(page) => page === 'feed' ? setAuthPage(null) : setAuthPage(page)} />;
 
     switch (activeTab) {
-      case 'feed': return <Feed onStoryClick={handleStoryClick} />;
+      case 'feed': return <Feed onStoryClick={handleStoryClick} onNavigate={setActiveTab} />;
       case 'editor': return <Editor onNavigate={(path) => setActiveTab(path)} />;
       case 'profile': return <Profile onStoryClick={handleStoryClick} onOpenSettings={() => setIsSettingsOpen(true)} onPlayGame={() => setActiveTab('runner')} />;
       case 'explore': return <Explore onStoryClick={handleStoryClick} />;
       case 'meet': return <MeetWrapper />;
       case 'runner': return <RunnerGame onBack={() => setActiveTab('profile')} />;
 
-      default: return <Feed onStoryClick={handleStoryClick} />;
+      // STC Apps Routes
+      case 'apps': return <AppsLauncher onBack={() => setActiveTab('feed')} onNavigate={setActiveTab} />;
+      case 'freshman': return <FreshmanStarterPack onBack={() => setActiveTab('apps')} />;
+      case 'food': return <FoodServices onBack={() => setActiveTab('apps')} />;
+      case 'lost-found': return <LostAndFound onBack={() => setActiveTab('apps')} />;
+      case 'marketplace': return <Marketplace onBack={() => setActiveTab('apps')} />;
+
+      default: return <Feed onStoryClick={handleStoryClick} onNavigate={setActiveTab} />;
     }
   };
 
@@ -212,6 +226,9 @@ const AppContent = () => {
             const isDesktop = window.innerWidth > 768;
             if (isMouse || isDesktop) return;
 
+            // Disable swipe if in STC Apps sub-pages
+            if (['freshman', 'food', 'lost-found', 'marketplace'].includes(activeTab)) return;
+
             const threshold = 50;
             if (info.offset.x < -threshold) {
               // Swiped Left (Next)
@@ -247,9 +264,10 @@ const AppContent = () => {
       </AnimatePresence>
 
       {/* Hide navigation when viewing a story or settings */}
-      {!viewedStoryId && !isSettingsOpen && !authPage && !showOnboarding && activeTab !== 'runner' && (
-        <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
-      )}
+      {!viewedStoryId && !isSettingsOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
+        !['apps', 'freshman', 'food', 'lost-found', 'marketplace'].includes(activeTab) && (
+          <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
+        )}
 
       <FeedbackModal
         isOpen={isFeedbackOpen}

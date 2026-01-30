@@ -189,7 +189,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
   const [scrollProgress, setScrollProgress] = useState(0);
   const commentContainerRef = useRef<HTMLDivElement>(null);
 
-  const author = users[story.authorId] || { name: 'Unknown', avatar: '' };
+  const author = story.isAnonymous ? users['anonymous'] : (users[story.authorId] || { name: 'Unknown', avatar: '' });
   const isLiked = story.likes.includes(currentUser.id);
   const isMine = story.authorId === currentUser.id;
 

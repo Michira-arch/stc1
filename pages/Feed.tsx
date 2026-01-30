@@ -2,11 +2,11 @@ import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { StoryCard } from '../components/StoryCard';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Download } from 'lucide-react';
+import { Sun, Moon, Download, Grid } from 'lucide-react';
 import { CarvedButton } from '../components/CarvedButton';
 import { Logo } from '../components/Logo';
 
-export const Feed = ({ onStoryClick }: { onStoryClick: (id: string) => void }) => {
+export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) => void, onNavigate: (path: string) => void }) => {
   const { stories, currentUser, feedScrollPosition, setFeedScrollPosition, isGuest, setAuthPage, theme, toggleTheme, deferredPrompt, installApp } = useApp();
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'following'>('all');
@@ -20,13 +20,22 @@ export const Feed = ({ onStoryClick }: { onStoryClick: (id: string) => void }) =
   }, []);
 
   // Scroll Persistence
+  // 1. Restore scroll position only when loading is done
   useLayoutEffect(() => {
-    window.scrollTo(0, feedScrollPosition);
-  }, [feedScrollPosition]);
+    if (!isLoading) {
+      window.scrollTo(0, feedScrollPosition);
+    }
+  }, [isLoading, feedScrollPosition]);
 
-  // Save scroll on click
+  // 2. Save scroll position on unmount (navigation)
+  useEffect(() => {
+    return () => {
+      setFeedScrollPosition(window.scrollY);
+    };
+  }, [setFeedScrollPosition]);
+
   const handleStoryClick = (id: string) => {
-    setFeedScrollPosition(window.scrollY);
+    // Unmount effect will handle saving scroll
     onStoryClick(id);
   };
 
@@ -45,7 +54,16 @@ export const Feed = ({ onStoryClick }: { onStoryClick: (id: string) => void }) =
             >
               StudentCenter
             </motion.h1>
-            <p className="text-[10px] font-bold text-accent tracking-widest uppercase">Daily Feed</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-[10px] font-bold text-accent tracking-widest uppercase">Daily Feed</p>
+              <button
+                onClick={() => onNavigate('apps')}
+                className="flex items-center gap-2 bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs uppercase font-bold px-3 py-1.5 rounded-xl shadow-[2px_2px_4px_rgba(0,0,0,0.2),-1px_-1px_2px_rgba(255,255,255,0.2)] border border-white/10 active:shadow-inner active:scale-95 transition-all"
+              >
+                <Grid size={14} className="drop-shadow-md" />
+                <span className="drop-shadow-sm">STC APPS</span>
+              </button>
+            </div>
             <p className="text-[8px] text-slate-400 dark:text-slate-500 font-medium">Powered by Dispatch STC</p>
           </div>
         </div>

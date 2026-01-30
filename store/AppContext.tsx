@@ -187,7 +187,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const processStories = (rawData: any[]) => {
       return rawData.map(dbStory => ({
         id: dbStory.id,
-        authorId: dbStory.is_anonymous ? 'anonymous' : dbStory.author_id,
+        authorId: (dbStory.is_anonymous && dbStory.author_id !== currentUser.id) ? 'anonymous' : dbStory.author_id,
         timestamp: new Date(dbStory.created_at).getTime(),
         title: dbStory.title,
         description: dbStory.description || '',
