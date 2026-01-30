@@ -37,6 +37,7 @@ export interface Story {
   comments: Comment[];
   views: number;
   isHidden: boolean;
+  isAnonymous?: boolean;
 }
 
 export type ThemeMode = 'light' | 'dark';
@@ -56,6 +57,7 @@ export interface AppContextType {
   currentUser: User;
   users: Record<string, User>;
   stories: Story[];
+  hiddenStories: Story[];
   theme: ThemeMode;
   settings: AppSettings;
   deferredPrompt: any;
@@ -74,7 +76,7 @@ export interface AppContextType {
   toggleLike: (storyId: string) => void;
   addComment: (storyId: string, text: string, parentId?: string) => void;
   deleteComment: (storyId: string, commentId: string) => void;
-  addStory: (title: string, description: string, content: string, imageFile?: File, audioUrl?: string) => Promise<void>; // Updated to Promise
+  addStory: (title: string, description: string, content: string, imageFile?: File, audioUrl?: string, isAnonymous?: boolean) => Promise<void>; // Updated to Promise
   deleteStory: (storyId: string) => void;
   incrementViews: (storyId: string) => void;
   toggleHideStory: (storyId: string) => void;
@@ -120,6 +122,7 @@ export interface AppContextType {
     imageBase64?: string;
     audioBase64?: string;
     imageFile?: File; // Added to store the actual file for upload
+    isAnonymous: boolean;
   };
   setEditorDraft: (draft: {
     title: string;
@@ -129,6 +132,7 @@ export interface AppContextType {
     imageBase64?: string;
     audioBase64?: string;
     imageFile?: File;
+    isAnonymous: boolean;
   }) => void;
 }
 

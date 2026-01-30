@@ -36,7 +36,7 @@ export const PostManagementModal = () => {
 
   const handleSave = () => {
     // If editFile exists, pass it, otherwise pass editImage (string URL) or whatever logic updateStory expects
-    updateStory(story.id, editTitle, editContent, editImage ? (editFile || editImage) : "");
+    updateStory(story.id, editTitle, story.description || "", editContent, editImage ? (editFile || editImage) : undefined);
     // Typescript might complain if we pass string | File to 'imageFile' param from context. 
     // We updated AppContext to accept File | string.
 

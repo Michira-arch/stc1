@@ -56,7 +56,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // --- Data State ---
   const [stories, setStories] = useState<Story[]>([]);
-  const [users, setUsers] = useState<Record<string, User>>({}); // Cache for user profiles
+  const [hiddenStories, setHiddenStories] = useState<Story[]>([]);
+  const [users, setUsers] = useState<Record<string, User>>({
+    'anonymous': { id: 'anonymous', name: 'Anonymous', avatar: 'https://ui-avatars.com/api/?name=?', bio: '' }
+  }); // Cache for user profiles
 
   // --- UI State ---
   const [theme, setTheme] = useState<ThemeMode>(() => {
@@ -74,7 +77,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [managingStoryId, setManagingStoryId] = useState<string | null>(null);
   const [feedScrollPosition, setFeedScrollPosition] = useState(0);
   const [sessionViews, setSessionViews] = useState<Set<string>>(new Set());
-  const [editorDraft, setEditorDraft] = useState({ title: '', description: '', content: '', isProMode: false });
+  const [editorDraft, setEditorDraft] = useState({ title: '', description: '', content: '', isProMode: false, isAnonymous: false });
 
   // --- Connectivity Listener ---
   useEffect(() => {
@@ -164,6 +167,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const fetchStories = async () => {
+    // 1. Public Feed (Non-hidden)
     const { data, error } = await supabase
       .from('stories')
       .select(`
@@ -172,6 +176,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         likes(user_id),
         comments(*)
       `)
+      .eq('is_hidden', false)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -179,10 +184,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    if (data) {
-      const mappedStories: Story[] = data.map(dbStory => ({
+    const processStories = (rawData: any[]) => {
+      return rawData.map(dbStory => ({
         id: dbStory.id,
-        authorId: dbStory.author_id,
+        authorId: dbStory.is_anonymous ? 'anonymous' : dbStory.author_id,
         timestamp: new Date(dbStory.created_at).getTime(),
         title: dbStory.title,
         description: dbStory.description || '',
@@ -190,31 +195,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         imageUrl: dbStory.image_url || undefined,
         audioUrl: dbStory.audio_url || undefined,
         likes: dbStory.likes.map((l: any) => l.user_id),
-        comments: [], // TODO: Reconstruct comment tree from flat fetch if needed
+        comments: buildCommentTree(dbStory.comments || []),
         views: dbStory.views_count || 0,
-        isHidden: dbStory.is_hidden || false
+        isHidden: dbStory.is_hidden || false,
+        isAnonymous: dbStory.is_anonymous || false
       }));
+    };
 
-      // Process comments separately or nested? 
-      // For now, we fetched comments(*) flat. We need to construct tree.
-      // Optimization: Fetch comments only when story is opened? 
-      // For feed, we might not need all comments. 
-      // But let's map what we have.
-
-      const storiesWithComments = mappedStories.map((story, index) => {
-        const rawComments = data[index].comments;
-        return {
-          ...story,
-          comments: buildCommentTree(rawComments || [])
-        };
-      });
-
-      setStories(storiesWithComments);
+    if (data) {
+      setStories(processStories(data));
 
       // Update Users Cache
       const newUsers = { ...users };
       data.forEach((item: any) => {
-        if (item.author) {
+        if (item.author && !item.is_anonymous) {
           newUsers[item.author.id] = {
             id: item.author.id,
             name: item.author.full_name || 'Unknown',
@@ -223,6 +217,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
       });
       setUsers(newUsers);
+    }
+
+    // 2. Fetch My Hidden Stories
+    if (!isGuest && currentUser.id !== 'guest') {
+      const { data: hiddenData } = await supabase
+        .from('stories')
+        .select(`
+             *,
+             author:profiles!stories_author_id_fkey(id, full_name, avatar_url),
+             likes(user_id),
+             comments(*)
+           `)
+        .eq('author_id', currentUser.id)
+        .eq('is_hidden', true)
+        .order('created_at', { ascending: false });
+
+      if (hiddenData) {
+        setHiddenStories(processStories(hiddenData));
+      }
+    } else {
+      setHiddenStories([]);
     }
   };
 
@@ -264,7 +279,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [currentUser.id]); // Refetch when user changes (for hidden stories)
 
 
 
@@ -540,7 +555,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const addStory = async (title: string, description: string, content: string, imageFile?: File, audioUrl?: string) => {
+  const addStory = async (title: string, description: string, content: string, imageFile?: File, audioUrl?: string, isAnonymous: boolean = false) => {
     if (isGuest) return;
     triggerHaptic('success');
 
@@ -559,7 +574,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       description,
       content,
       image_url: uploadedImageUrl,
-      audio_url: audioUrl
+      audio_url: audioUrl,
+      is_anonymous: isAnonymous
     });
 
     if (error) {
@@ -635,6 +651,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       currentUser,
       users,
       stories,
+      hiddenStories,
       theme,
       settings,
       deferredPrompt,

@@ -13,7 +13,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
   const { addStory, currentUser, isGuest, editorDraft, setEditorDraft, showToast, sanitizeInput } = useApp();
 
   // Use context state instead of local state
-  const { title, description, content, isProMode, imageBase64, audioBase64, imageFile } = editorDraft;
+  const { title, description, content, isProMode, imageBase64, audioBase64, imageFile, isAnonymous } = editorDraft;
 
   // Helper to update draft
   const updateDraft = (updates: Partial<typeof editorDraft>) => {
@@ -26,6 +26,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
   const setImageBase64 = (val: string | undefined) => updateDraft({ imageBase64: val });
   const setAudioBase64 = (val: string | undefined) => updateDraft({ audioBase64: val });
   const setIsProMode = (val: boolean) => updateDraft({ isProMode: val });
+  const setIsAnonymous = (val: boolean) => updateDraft({ isAnonymous: val });
 
   // Toolbar State (Active formatting detection)
   const [toolbarState, setToolbarState] = useState({ bold: false, italic: false, list: false });
@@ -129,14 +130,14 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
     const cleanTitle = sanitizeInput(title.trim() || "Untitled Post");
     const cleanDesc = sanitizeInput(description.trim());
 
-    addStory(cleanTitle, cleanDesc, cleanContent, imageFile, audioBase64);
+    addStory(cleanTitle, cleanDesc, cleanContent, imageFile, audioBase64, isAnonymous);
     showToast("Story published successfully!", "success");
     clearDraft();
     onNavigate('feed');
   };
 
   const clearDraft = () => {
-    setEditorDraft({ title: '', description: '', content: '', isProMode: false, imageFile: undefined, imageBase64: undefined, audioBase64: undefined });
+    setEditorDraft({ title: '', description: '', content: '', isProMode: false, imageFile: undefined, imageBase64: undefined, audioBase64: undefined, isAnonymous: false });
     if (editorRef.current) editorRef.current.innerHTML = '';
   };
 
@@ -205,8 +206,23 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
       >
         <div className="flex items-center justify-between mb-6 opacity-70">
           <div className="flex items-center gap-3">
-            <img src={currentUser.avatar} className="w-10 h-10 rounded-full border border-slate-400 object-cover" />
-            <span className="font-semibold text-sm tracking-wide">Drafting as {currentUser.name}</span>
+            <div className="relative cursor-pointer" onClick={() => setIsAnonymous(!isAnonymous)}>
+              <img src={isAnonymous ? 'https://ui-avatars.com/api/?name=?' : currentUser.avatar} className="w-10 h-10 rounded-full border border-slate-400 object-cover" />
+              {isAnonymous && <div className="absolute -bottom-1 -right-1 bg-black text-white text-[8px] px-1 rounded-full">HIDDEN</div>}
+            </div>
+
+            <div className="flex flex-col">
+              <span className="font-semibold text-sm tracking-wide">
+                {isAnonymous ? 'Anonymous' : currentUser.name}
+              </span>
+              <button
+                onClick={() => setIsAnonymous(!isAnonymous)}
+                className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-emerald-500 text-left transition-colors"
+              >
+                {isAnonymous ? 'Posting Anonymously' : 'Posting Publicly'}
+              </button>
+            </div>
+
             <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${isProMode ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5' : 'border-slate-300 text-slate-500'}`}>
               {isProMode ? 'Pro Mode' : 'Standard'}
             </div>

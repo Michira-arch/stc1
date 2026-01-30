@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getMessaging } from "firebase/messaging";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -22,6 +23,13 @@ try {
     }
     app = initializeApp(firebaseConfig);
     messaging = getMessaging(app);
+
+    // Initialize Analytics (Measurement)
+    isSupported().then(supported => {
+        if (supported) {
+            getAnalytics(app);
+        }
+    });
 } catch (error) {
     console.error('Firebase Initialization Error:', error);
     // Optional: Provide a dummy object if essential to prevent immediate crash,

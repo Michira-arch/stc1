@@ -16,7 +16,8 @@ interface Props {
 }
 
 export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayGame }) => {
-  const { currentUser, stories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, setAuthPage, viewedProfile, clearViewedProfile, isOnline, showToast } = useApp();
+  const { currentUser, stories, hiddenStories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, setAuthPage, viewedProfile, clearViewedProfile, isOnline, showToast } = useApp();
+  const [showHidden, setShowHidden] = React.useState(false);
   const { notificationPermission, requestPermission } = useFcm();
 
   // Determine who we are viewing
@@ -297,7 +298,70 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
             </>
           )}
         </div>
+
+        {/* Hidden Stories Section (Only for Me) */}
+        {isMe && hiddenStories.length > 0 && (
+          <div className="mt-8 mb-8 border-t border-dashed border-slate-300 dark:border-slate-700 pt-6">
+            <div
+              onClick={() => setShowHidden(!showHidden)}
+              className="flex items-center justify-between cursor-pointer group select-none"
+            >
+              <h3 className="font-bold text-lg text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <span>Hidden Stories</span>
+                <span className="bg-slate-200 dark:bg-slate-700 text-xs px-2 py-0.5 rounded-full text-slate-600 dark:text-slate-300">{hiddenStories.length}</span>
+              </h3>
+              <div className={`transition-transform duration-300 ${showHidden ? 'rotate-180' : ''}`}>
+                <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-slate-400 group-hover:border-t-emerald-500 transition-colors" />
+              </div>
+            </div>
+
+            <motion.div
+              initial={false}
+              animate={{ height: showHidden ? 'auto' : 0, opacity: showHidden ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-4 pt-4">
+                {hiddenStories.map((story, index) => (
+                  <motion.div
+                    key={story.id}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => onStoryClick(story.id)}
+                    className="relative flex items-center gap-4 p-3 rounded-2xl cursor-pointer
+                                bg-slate-100 dark:bg-slate-800/50
+                                border border-slate-200 dark:border-slate-700
+                                opacity-80 hover:opacity-100 transition-opacity"
+                  >
+                    <div className="w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 grayscale">
+                      {story.imageUrl ? (
+                        <img src={story.imageUrl} alt={story.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-400"><span className="text-[9px]">No IMG</span></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 pr-8">
+                      <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300 truncate mb-1">{story.title || 'Untitled'}</h4>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                        <span>{timeAgo(story.timestamp)}</span>
+                        <span className="text-red-400 border border-red-200 dark:border-red-900/30 px-1 rounded">HIDDEN</span>
+                      </div>
+                    </div>
+
+                    {/* Management dots */}
+                    <div onClick={(e) => { e.stopPropagation(); setManagingStoryId(story.id); }} className="absolute top-3 right-3 p-2 bg-white/50 rounded-full hover:bg-white transition-colors">
+                      <div className="flex flex-col gap-0.5">
+                        {[1, 2, 3].map(i => <div key={i} className="w-1 h-1 rounded-full bg-slate-400" />)}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
-    </div>
+    </div >
   );
 };
