@@ -50,41 +50,50 @@ export default defineConfig(({ mode }) => {
             }
           ]
         },
-        workbox: {
+        injectManifest: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-          runtimeCaching: [
-            {
-              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'google-fonts-cache',
-                expiration: {
-                  maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'gstatic-fonts-cache',
-                expiration: {
-                  maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
+          // Exclude large chunks from precaching
+          globIgnores: [
+            '**/node_modules/**/*',
+            'sw.js',
+            'workbox-*.js',
+            'assets/stc-apps-*.js',
+            'assets/games-*.js',
+            'assets/realtime-*.js',
+            'assets/leaderboard-*.js',
+          ],
+          manifestTransforms: [
+            async (manifest) => {
+              const manifestItems = manifest.filter(entry => {
+                return !/assets\/(stc-apps|games|realtime|leaderboard)-[a-zA-Z0-9]+\.js/.test(entry.url);
+              });
+              return { manifest: manifestItems };
             }
           ]
         }
       })
     ],
+    build: {
+      chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('src/pages/stc-apps')) {
+              return 'stc-apps';
+            }
+            if (id.includes('src/pages/games')) {
+              return 'games';
+            }
+            if (id.includes('src/pages/realtime')) {
+              return 'realtime';
+            }
+            if (id.includes('src/pages/leaderboard')) {
+              return 'leaderboard';
+            }
+          }
+        }
+      }
+    },
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)

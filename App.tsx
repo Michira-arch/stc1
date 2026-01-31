@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import VersionManager from './components/VersionManager';
 import { AppProvider, useApp } from './store/AppContext';
 import { Navigation } from './components/Navigation';
@@ -24,17 +24,26 @@ import { Room } from './pages/realtime/Room';
 
 import { BlindDateHome } from './pages/realtime/BlindDateHome';
 import { BlindDateRoom } from './pages/realtime/BlindDateRoom';
-import RunnerGame from './pages/games/runner/RunnerGame';
+// import RunnerGame from './pages/games/runner/RunnerGame'; // Lazy loaded below
 import { ChatModal } from './components/AI/ChatModal';
 import { Bot } from 'lucide-react';
 
 // STC Apps
-import { AppsLauncher } from './pages/stc-apps/AppsLauncher';
-import { FreshmanStarterPack } from './pages/stc-apps/FreshmanStarterPack';
-import { FoodServices } from './pages/stc-apps/FoodServices';
-import { LostAndFound } from './pages/stc-apps/LostAndFound';
-import { Marketplace } from './pages/stc-apps/Marketplace';
-import { LeaderboardWrapper } from './pages/leaderboard/LeaderboardWrapper';
+// STC Apps - Lazy Loaded
+const AppsLauncher = React.lazy(() => import('./pages/stc-apps/AppsLauncher').then(module => ({ default: module.AppsLauncher })));
+const FreshmanStarterPack = React.lazy(() => import('./pages/stc-apps/FreshmanStarterPack').then(module => ({ default: module.FreshmanStarterPack })));
+const FoodServices = React.lazy(() => import('./pages/stc-apps/FoodServices').then(module => ({ default: module.FoodServices })));
+const LostAndFound = React.lazy(() => import('./pages/stc-apps/LostAndFound').then(module => ({ default: module.LostAndFound })));
+const Marketplace = React.lazy(() => import('./pages/stc-apps/Marketplace').then(module => ({ default: module.Marketplace })));
+const LeaderboardWrapper = React.lazy(() => import('./pages/leaderboard/LeaderboardWrapper').then(module => ({ default: module.LeaderboardWrapper })));
+const RunnerGame = React.lazy(() => import('./pages/games/runner/RunnerGame')); // Default export
+
+// Loading Component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+  </div>
+);
 
 interface BlindDateWrapperProps {
   onBack: () => void;
@@ -171,15 +180,45 @@ const AppContent = () => {
       case 'profile': return <Profile onStoryClick={handleStoryClick} onOpenSettings={() => setIsSettingsOpen(true)} onPlayGame={() => setActiveTab('runner')} />;
       case 'explore': return <Explore onStoryClick={handleStoryClick} />;
       case 'meet': return <MeetWrapper />;
-      case 'runner': return <RunnerGame onBack={() => setActiveTab('profile')} />;
+      // case 'runner': return <RunnerGame onBack={() => setActiveTab('profile')} />; // Removed static import
 
       // STC Apps Routes
-      case 'apps': return <AppsLauncher onBack={() => setActiveTab('feed')} onNavigate={setActiveTab} />;
-      case 'freshman': return <FreshmanStarterPack onBack={() => setActiveTab('apps')} />;
-      case 'food': return <FoodServices onBack={() => setActiveTab('apps')} />;
-      case 'lost-found': return <LostAndFound onBack={() => setActiveTab('apps')} />;
-      case 'marketplace': return <Marketplace onBack={() => setActiveTab('apps')} />;
-      case 'leaderboards': return <LeaderboardWrapper onBack={() => setActiveTab('apps')} />;
+      case 'apps': return (
+        <Suspense fallback={<PageLoader />}>
+          <AppsLauncher onBack={() => setActiveTab('feed')} onNavigate={setActiveTab} />
+        </Suspense>
+      );
+      case 'freshman': return (
+        <Suspense fallback={<PageLoader />}>
+          <FreshmanStarterPack onBack={() => setActiveTab('apps')} />
+        </Suspense>
+      );
+      case 'food': return (
+        <Suspense fallback={<PageLoader />}>
+          <FoodServices onBack={() => setActiveTab('apps')} />
+        </Suspense>
+      );
+      case 'lost-found': return (
+        <Suspense fallback={<PageLoader />}>
+          <LostAndFound onBack={() => setActiveTab('apps')} />
+        </Suspense>
+      );
+      case 'marketplace': return (
+        <Suspense fallback={<PageLoader />}>
+          <Marketplace onBack={() => setActiveTab('apps')} />
+        </Suspense>
+      );
+      case 'leaderboards': return (
+        <Suspense fallback={<PageLoader />}>
+          <LeaderboardWrapper onBack={() => setActiveTab('apps')} />
+        </Suspense>
+      );
+
+      case 'runner': return (
+        <Suspense fallback={<PageLoader />}>
+          <RunnerGame onBack={() => setActiveTab('profile')} />
+        </Suspense>
+      );
 
       default: return <Feed onStoryClick={handleStoryClick} onNavigate={setActiveTab} />;
     }
