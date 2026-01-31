@@ -22,6 +22,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@marketplace/*": [
+        "./src/features/marketplace/*"
       ]
     },
     "allowImportingTsExtensions": true,

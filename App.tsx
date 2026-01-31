@@ -34,6 +34,7 @@ import { FreshmanStarterPack } from './pages/stc-apps/FreshmanStarterPack';
 import { FoodServices } from './pages/stc-apps/FoodServices';
 import { LostAndFound } from './pages/stc-apps/LostAndFound';
 import { Marketplace } from './pages/stc-apps/Marketplace';
+import { LeaderboardWrapper } from './pages/leaderboard/LeaderboardWrapper';
 
 interface BlindDateWrapperProps {
   onBack: () => void;
@@ -178,6 +179,7 @@ const AppContent = () => {
       case 'food': return <FoodServices onBack={() => setActiveTab('apps')} />;
       case 'lost-found': return <LostAndFound onBack={() => setActiveTab('apps')} />;
       case 'marketplace': return <Marketplace onBack={() => setActiveTab('apps')} />;
+      case 'leaderboards': return <LeaderboardWrapper onBack={() => setActiveTab('apps')} />;
 
       default: return <Feed onStoryClick={handleStoryClick} onNavigate={setActiveTab} />;
     }
@@ -230,7 +232,7 @@ const AppContent = () => {
             if (isMouse || isDesktop) return;
 
             // Disable swipe if in STC Apps sub-pages
-            if (['freshman', 'food', 'lost-found', 'marketplace'].includes(activeTab)) return;
+            if (['freshman', 'food', 'lost-found', 'marketplace', 'leaderboards'].includes(activeTab)) return;
 
             const threshold = 50;
             if (info.offset.x < -threshold) {
@@ -266,9 +268,9 @@ const AppContent = () => {
         )}
       </AnimatePresence>
 
-      {/* Hide navigation when viewing a story or settings */}
+      {/* Hide navigation when viewing a story or settings or inside apps */}
       {!viewedStoryId && !isSettingsOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
-        !['apps', 'freshman', 'food', 'lost-found', 'marketplace'].includes(activeTab) && (
+        !['apps', 'freshman', 'food', 'lost-found', 'marketplace', 'leaderboards'].includes(activeTab) && (
           <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
         )}
 

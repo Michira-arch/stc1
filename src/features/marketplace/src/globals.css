@@ -1,0 +1,126 @@
+/* Tailwind directives removed to avoid conflict */
+* {
+    scroll-behavior: smooth;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #d2d2d2;
+    /* Tailwind Gray-400 */
+    border-radius: 9999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background-color: #f0f0f0;
+    /* Tailwind Gray-200 */
+}
+
+.curve {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+    transform: rotate(180deg);
+}
+
+.curve svg {
+    position: relative;
+    display: block;
+    width: calc(100% + 1.3px);
+    height: 100px;
+}
+
+.curve .shape-fill {
+    fill: #ffffff;
+}
+
+/** For mobile devices **/
+@media (max-width: 767px) {
+    .curve svg {
+        width: calc(100% + 1.3px);
+        height: 50px;
+    }
+}
+
+.curve2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+}
+
+.curve2 svg {
+    position: relative;
+    display: block;
+    width: calc(100% + 1.3px);
+    height: 150px;
+}
+
+.curve2 .shape-fill {
+    fill: #cad2c5;
+}
+
+/** For mobile devices **/
+@media (max-width: 767px) {
+    .curve2 svg {
+        width: calc(100% + 1.3px);
+        height: 100px;
+    }
+}
+
+@layer base {
+    :root {
+        /* Ceramic White Theme */
+        --background: 216 27% 90%;
+        /* #E0E5EC */
+        --foreground: 218 23% 30%;
+        /* #3A475C - Slightly softer than pure black */
+
+        /* Neumorphic Shadows */
+        --shadow-light: 0 0% 100%;
+        /* #FFFFFF */
+        --shadow-dark: 216 22% 71%;
+        /* #A3B1C6 */
+
+        /* Sidebar - matching main theme for consistency */
+        --sidebar-background: 216 27% 90%;
+        --sidebar-foreground: 218 23% 30%;
+        --sidebar-primary: 240 5.9% 10%;
+        --sidebar-primary-foreground: 0 0% 98%;
+        --sidebar-accent: 216 27% 85%;
+        --sidebar-accent-foreground: 240 5.9% 10%;
+        --sidebar-border: 220 13% 91%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
+    }
+
+    .dark {
+        /* Obsidian Dark Theme */
+        --background: 0 0% 13%;
+        /* #212121 */
+        --foreground: 210 25% 91%;
+        /* #E2E8F0 */
+
+        /* Neumorphic Shadows */
+        --shadow-light: 0 0% 18%;
+        /* #2e2e2e */
+        --shadow-dark: 0 0% 8%;
+        /* #141414 */
+
+        /* Sidebar */
+        --sidebar-background: 0 0% 13%;
+        --sidebar-foreground: 210 25% 91%;
+        --sidebar-primary: 224.3 76.3% 48%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 0 0% 18%;
+        --sidebar-accent-foreground: 240 4.8% 95.9%;
+        --sidebar-border: 240 3.7% 15.9%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
+    }
+}

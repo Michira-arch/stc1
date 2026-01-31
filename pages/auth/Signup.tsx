@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, Check, X } from 'lucide-react';
 import { CarvedButton } from '../../components/CarvedButton';
 import { Logo } from '../../components/Logo';
 import { supabase } from '../../store/supabaseClient';
@@ -16,11 +16,57 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
+    const [checkingHandle, setCheckingHandle] = useState(false);
+    const [handleAvailable, setHandleAvailable] = useState<boolean | null>(null);
+
     const { showToast } = useApp();
     const routerNavigate = onNavigate; // Alias to avoid shadowing if needed, but safe here
 
+    useEffect(() => {
+        const checkAvailability = async () => {
+            if (!handle || handle.length < 3) {
+                setHandleAvailable(null);
+                return;
+            }
+
+            // Basic validation: alphanumeric and underscores only
+            if (!/^[a-zA-Z0-9_]+$/.test(handle)) {
+                setHandleAvailable(false);
+                return;
+            }
+
+            setCheckingHandle(true);
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('handle')
+                    .eq('handle', handle)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                // If data exists, handle is taken. If null, it's available.
+                setHandleAvailable(!data);
+            } catch (error) {
+                console.error('Error checking handle:', error);
+                // Optionally handle error state specifically
+            } finally {
+                setCheckingHandle(false);
+            }
+        };
+
+        const timeoutId = setTimeout(checkAvailability, 500);
+        return () => clearTimeout(timeoutId);
+    }, [handle]);
+
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (handleAvailable === false) {
+            showToast('Please choose a valid and available handle.', 'error');
+            return;
+        }
+
         try {
             const { data, error } = await supabase.auth.signUp({
                 email,
@@ -28,7 +74,7 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
                 options: {
                     data: {
                         full_name: name,
-                        handle,
+                        handle: handle || undefined, // Send handle if provided
                         avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
                     }
                 }
@@ -84,16 +130,30 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
 
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">@</span>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                {checkingHandle ? (
+                                    <div className="animate-spin text-slate-400">
+                                        <Loader2 size={20} />
+                                    </div>
+                                ) : handle ? (
+                                    handleAvailable ? (
+                                        <Check size={20} className="text-green-500" />
+                                    ) : (
+                                        <X size={20} className="text-red-500" />
+                                    )
+                                ) : null}
+                            </div>
                             <input
                                 type="text"
                                 value={handle}
                                 onChange={(e) => setHandle(e.target.value)}
                                 placeholder="Handle (optional)"
-                                className="w-full pl-12 pr-4 py-4 rounded-xl outline-none text-slate-700 dark:text-slate-200
+                                className={`w-full pl-12 pr-12 py-4 rounded-xl outline-none text-slate-700 dark:text-slate-200
                          bg-ceramic-base dark:bg-obsidian-surface
                          shadow-[inset_3px_3px_6px_#bebebe,inset_-3px_-3px_6px_#ffffff]
                          dark:shadow-[inset_4px_4px_8px_#151618,inset_-4px_-4px_8px_#35363e]
-                         transition-shadow focus:shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff]"
+                         transition-shadow focus:shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff]
+                         ${handle && handleAvailable === false ? 'border-red-500 focus:ring-1 focus:ring-red-500' : ''}`}
                             />
                         </div>
 
@@ -129,7 +189,11 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
                             />
                         </div>
 
-                        <CarvedButton type="submit" className="w-full py-4 font-bold text-lg text-emerald-600 dark:text-emerald-400">
+                        <CarvedButton
+                            type="submit"
+                            className="w-full py-4 font-bold text-lg text-emerald-600 dark:text-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={handleAvailable === false && handle.length > 0}
+                        >
                             Sign Up <ArrowRight className="ml-2 inline" size={20} />
                         </CarvedButton>
                     </form>

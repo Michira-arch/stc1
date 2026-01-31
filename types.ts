@@ -353,6 +353,37 @@ export type Database = {
           }
         ]
       },
+      feedback: {
+        Row: {
+          id: string
+          user_id: string | null
+          rating: 'good' | 'neutral' | 'bad' | null
+          message: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          rating?: 'good' | 'neutral' | 'bad' | null
+          message?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          rating?: 'good' | 'neutral' | 'bad' | null
+          message?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
       rooms: {
         Row: {
           id: string
@@ -449,13 +480,148 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      },
+
+      leaderboards: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          slug: string
+          entity_type: string
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          slug: string
+          entity_type: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          slug?: string
+          entity_type?: string
+          metadata?: Json | null
+          created_at?: string
+        },
+        Relationships: []
+      },
+      ranked_entities: {
+        Row: {
+          id: string
+          leaderboard_id: string
+          name: string
+          image_url: string | null
+          metadata: Json | null
+          elo_score: number
+          match_count: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          leaderboard_id: string
+          name: string
+          image_url?: string | null
+          metadata?: Json | null
+          elo_score?: number
+          match_count?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          leaderboard_id?: string
+          name?: string
+          image_url?: string | null
+          metadata?: Json | null
+          elo_score?: number
+          match_count?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ranked_entities_leaderboard_id_fkey"
+            columns: ["leaderboard_id"]
+            referencedRelation: "leaderboards"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      ranking_votes: {
+        Row: {
+          id: string
+          leaderboard_id: string
+          winner_id: string | null
+          loser_id: string | null
+          is_draw: boolean
+          user_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          leaderboard_id: string
+          winner_id?: string | null
+          loser_id?: string | null
+          is_draw?: boolean
+          user_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          leaderboard_id?: string
+          winner_id?: string | null
+          loser_id?: string | null
+          is_draw?: boolean
+          user_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ranking_votes_leaderboard_id_fkey"
+            columns: ["leaderboard_id"]
+            referencedRelation: "leaderboards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ranking_votes_winner_id_fkey"
+            columns: ["winner_id"]
+            referencedRelation: "ranked_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ranking_votes_loser_id_fkey"
+            columns: ["loser_id"]
+            referencedRelation: "ranked_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ranking_votes_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
-    }
+    },
+
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      submit_vote: {
+        Args: {
+          match_leaderboard_id: string
+          match_winner_id: string
+          match_loser_id: string
+          match_is_draw: boolean
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
