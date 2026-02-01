@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Search, ShoppingBag, Trophy, ArrowLeft, Utensils, TriangleAlert } from 'lucide-react';
+import { BookOpen, Search, ShoppingBag, Trophy, ArrowLeft, Utensils, TriangleAlert, Briefcase } from 'lucide-react';
 import { CarvedButton } from '../../components/CarvedButton';
 
 interface AppsLauncherProps {
@@ -37,6 +37,32 @@ export const AppsLauncher: React.FC<AppsLauncherProps> = ({ onBack, onNavigate }
             shadow: 'shadow-orange-500/10 dark:shadow-orange-900/20'
         },
         {
+            id: 'marketplace',
+            name: 'Marketplace',
+            icon: <ShoppingBag strokeWidth={2} size={28} />,
+            description: 'Buy & sell',
+            // Light: Pastel Pink, Dark: Deep Pink
+            gradient: 'from-pink-100 to-rose-200 dark:from-pink-900/40 dark:to-rose-900/40',
+            textColor: 'text-pink-900 dark:text-pink-100',
+            descColor: 'text-pink-700 dark:text-pink-300',
+            iconBg: 'bg-white/60 dark:bg-pink-500/20',
+            iconColor: 'text-pink-600 dark:text-pink-300',
+            shadow: 'shadow-pink-500/10 dark:shadow-pink-900/20'
+        },
+        {
+            id: 'campus-hustle',
+            name: 'Campus Hustle',
+            icon: <Briefcase strokeWidth={2} size={28} />,
+            description: 'Freelance & Gigs',
+            // Light: Pastel Emerald, Dark: Deep Emerald
+            gradient: 'from-emerald-100 to-teal-200 dark:from-emerald-900/40 dark:to-teal-900/40',
+            textColor: 'text-emerald-900 dark:text-emerald-100',
+            descColor: 'text-emerald-700 dark:text-emerald-300',
+            iconBg: 'bg-white/60 dark:bg-emerald-500/20',
+            iconColor: 'text-emerald-600 dark:text-emerald-300',
+            shadow: 'shadow-emerald-500/10 dark:shadow-emerald-900/20'
+        },
+        {
             id: 'lost-found',
             name: 'Lost & Found',
             icon: <Search strokeWidth={2} size={28} />,
@@ -49,19 +75,7 @@ export const AppsLauncher: React.FC<AppsLauncherProps> = ({ onBack, onNavigate }
             iconColor: 'text-purple-600 dark:text-purple-300',
             shadow: 'shadow-purple-500/10 dark:shadow-purple-900/20'
         },
-        {
-            id: 'marketplace',
-            name: 'Campus Hustle',
-            icon: <ShoppingBag strokeWidth={2} size={28} />,
-            description: 'Buy & sell',
-            // Light: Pastel Emerald, Dark: Deep Emerald
-            gradient: 'from-emerald-100 to-teal-200 dark:from-emerald-900/40 dark:to-teal-900/40',
-            textColor: 'text-emerald-900 dark:text-emerald-100',
-            descColor: 'text-emerald-700 dark:text-emerald-300',
-            iconBg: 'bg-white/60 dark:bg-emerald-500/20',
-            iconColor: 'text-emerald-600 dark:text-emerald-300',
-            shadow: 'shadow-emerald-500/10 dark:shadow-emerald-900/20'
-        },
+
         {
             id: 'leaderboards',
             name: 'Leaderboards',

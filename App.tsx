@@ -35,6 +35,7 @@ const FreshmanStarterPack = React.lazy(() => import('./pages/stc-apps/FreshmanSt
 const CampusEatsApp = React.lazy(() => import('./src/apps/campus-eats/App'));
 const LostAndFound = React.lazy(() => import('./pages/stc-apps/LostAndFound').then(module => ({ default: module.LostAndFound })));
 const CampusHustleApp = React.lazy(() => import('./src/apps/campus-hustle/App'));
+const MarketplaceApp = React.lazy(() => import('./src/features/marketplace/MarketplaceApp'));
 const LeaderboardWrapper = React.lazy(() => import('./pages/leaderboard/LeaderboardWrapper').then(module => ({ default: module.LeaderboardWrapper })));
 const RunnerGame = React.lazy(() => import('./pages/games/runner/RunnerGame')); // Default export
 
@@ -203,9 +204,15 @@ const AppContent = () => {
           <LostAndFound onBack={() => setActiveTab('apps')} />
         </Suspense>
       );
-      case 'marketplace': return (
+      case 'campus-hustle': return (
         <Suspense fallback={<PageLoader />}>
           <CampusHustleApp onBack={() => setActiveTab('apps')} />
+        </Suspense>
+      );
+      case 'marketplace': return (
+        <Suspense fallback={<PageLoader />}>
+          {/* @ts-ignore */}
+          <MarketplaceApp onBack={() => setActiveTab('apps')} />
         </Suspense>
       );
       case 'leaderboards': return (
@@ -271,7 +278,7 @@ const AppContent = () => {
             if (isMouse || isDesktop) return;
 
             // Disable swipe if in STC Apps sub-pages
-            if (['freshman', 'food', 'lost-found', 'marketplace', 'leaderboards'].includes(activeTab)) return;
+            if (['freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards'].includes(activeTab)) return;
 
             const threshold = 50;
             if (info.offset.x < -threshold) {
@@ -309,7 +316,7 @@ const AppContent = () => {
 
       {/* Hide navigation when viewing a story or settings or inside apps */}
       {!viewedStoryId && !isSettingsOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
-        !['apps', 'freshman', 'food', 'lost-found', 'marketplace', 'leaderboards'].includes(activeTab) && (
+        !['apps', 'freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards'].includes(activeTab) && (
           <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
         )}
 
@@ -336,7 +343,7 @@ const AppContent = () => {
       <ChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
       {!isChatOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
-        !['food', 'marketplace'].includes(activeTab) && (
+        !['food', 'marketplace', 'campus-hustle'].includes(activeTab) && (
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}

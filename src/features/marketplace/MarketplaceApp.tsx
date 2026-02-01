@@ -18,9 +18,24 @@ import ResourceDetails from '@marketplace/src/pages/ResourceDetails';
 import UserPostDetails from '@marketplace/src/pages/UserPostDetails';
 import { Toaster } from 'sonner';
 
-export default function App() {
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@marketplace/components/ui/button';
+
+export default function App({ onBack }: { onBack?: () => void }) {
   return (
     <Router>
+      {onBack && (
+        <div className="fixed top-4 left-4 z-[100]">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="icon"
+            className="bg-white/80 backdrop-blur-md hover:bg-white shadow-sm border border-slate-200 rounded-full w-10 h-10"
+          >
+            <ArrowLeft size={20} className="text-slate-700" />
+          </Button>
+        </div>
+      )}
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<LoginPage />} />
@@ -46,3 +61,4 @@ export default function App() {
     </Router>
   );
 }
+
