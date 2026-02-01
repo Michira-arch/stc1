@@ -205,12 +205,17 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     triggerHaptic('medium');
+    const shareUrl = `${window.location.origin}?story=${story.id}`;
+
     if (navigator.share) {
       try {
-        await navigator.share({ title: story.title, text: story.content, url: window.location.href });
+        await navigator.share({ title: story.title, text: story.content, url: shareUrl });
       } catch (err) { console.log("Share cancelled"); }
     } else {
-      alert("Sharing is available on mobile devices.");
+      navigator.clipboard.writeText(shareUrl);
+      // We need showToast here but it is not destructured from useApp
+      // I need to add showToast to useApp destructuring above.
+      alert("Story link copied to clipboard!");
     }
   };
 

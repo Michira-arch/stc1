@@ -25,11 +25,15 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
   const isMe = userToDisplay.id === currentUser.id;
 
   // Cleanup on unmount if viewing someone else
+  // Cleanup on unmount if viewing someone else - REMOVED to fix race condition/strict mode issue.
+  // Instead, we handle clearing in App.tsx navigation.
+  /*
   React.useEffect(() => {
     return () => {
       if (!isMe) clearViewedProfile();
     };
   }, [isMe]);
+  */
 
   const [isEditingBio, setIsEditingBio] = React.useState(false);
   const [isEditingHandle, setIsEditingHandle] = React.useState(false);
@@ -251,7 +255,14 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
             >
               <Gamepad2 size={14} className="mr-1" /> Play Runner
             </CarvedButton>
-            <CarvedButton className="!h-9 !px-4 !text-xs font-bold text-slate-500">
+            <CarvedButton
+              onClick={() => {
+                const url = `${window.location.origin}?profile=${userToDisplay.id}`;
+                navigator.clipboard.writeText(url);
+                showToast('Profile link copied!', 'success');
+              }}
+              className="!h-9 !px-4 !text-xs font-bold text-slate-500"
+            >
               <Share2 size={14} className="mr-1" /> Share
             </CarvedButton>
           </div>

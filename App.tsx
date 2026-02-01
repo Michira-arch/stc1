@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import VersionManager from './components/VersionManager';
 import { AppProvider, useApp } from './store/AppContext';
 import { Navigation } from './components/Navigation';
@@ -121,7 +121,7 @@ const AppContent = () => {
     localStorage.setItem('has_dismissed_notification_modal', 'true');
   };
 
-  const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile, isChatOpen, openChat } = useApp();
+  const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile, isChatOpen, openChat, loadPublicProfile, clearViewedProfile } = useApp();
   const [activeTab, setActiveTab] = useState('feed');
   const [viewedStoryId, setViewedStoryId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -158,6 +158,23 @@ const AppContent = () => {
       return () => clearTimeout(timer);
     }
   }, [authPage, showOnboarding]);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const profileId = params.get('profile');
+    const storyId = params.get('story');
+
+    if (profileId) {
+      loadPublicProfile(profileId);
+    }
+
+    if (storyId) {
+      // Delay slightly to allow stories to load if needed, but handleStoryClick just sets ID
+      setViewedStoryId(storyId);
+    }
+  }, [location.search]);
 
   const handleStoryClick = (id: string) => {
     setViewedStoryId(id);
@@ -234,6 +251,9 @@ const AppContent = () => {
   const [guestModalAction, setGuestModalAction] = useState<string | null>(null);
 
   const handleTabChange = (tab: string) => {
+    if (tab !== 'profile' && viewedProfile) {
+      clearViewedProfile();
+    }
     setActiveTab(tab);
   };
 
@@ -288,7 +308,10 @@ const AppContent = () => {
               else if (activeTab === 'editor') setActiveTab('profile');
             } else if (info.offset.x > threshold) {
               // Swiped Right (Prev)
-              if (activeTab === 'profile') setActiveTab('editor');
+              if (activeTab === 'profile') {
+                if (viewedProfile) clearViewedProfile();
+                setActiveTab('editor');
+              }
               else if (activeTab === 'editor') setActiveTab('explore');
               else if (activeTab === 'explore') setActiveTab('feed');
             }
