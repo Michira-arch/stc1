@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 
 import { cn } from "@marketplace/components/lib/utils";
+import { parseDateSafe } from "@/utils";
 
 import { fetchUserNotifications } from "@marketplace/actions/user";
 import type { IUserNotification } from "@marketplace/actions/types";
@@ -54,9 +55,10 @@ export default function Notifications() {
                                 <div>
                                     <h1 className="text-secondary">{item.message}</h1>
                                     <p className="text-xs text-wrap text-market-accent">
-                                        {formatDistanceToNow(new Date(item.createdAt), {
-                                            addSuffix: true,
-                                        })}
+                                        {(() => {
+                                            const date = parseDateSafe(item.createdAt);
+                                            return date ? formatDistanceToNow(date, { addSuffix: true }) : "";
+                                        })()}
                                     </p>
                                 </div>
                             </div>

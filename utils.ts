@@ -101,3 +101,20 @@ export const uploadImage = async (file: File, bucket: string): Promise<string | 
     return null;
   }
 };
+
+export const parseDateSafe = (dateString: string | number | Date | null | undefined): Date | null => {
+  if (!dateString) return null;
+  if (dateString instanceof Date) return dateString;
+  if (typeof dateString === 'number') return new Date(dateString);
+
+  // Handle SQL timestamps (YYYY-MM-DD HH:MM:SS) which Safari hates
+  // Replace space with T to make it ISO-8601 compliant
+  const safeString = dateString.replace(' ', 'T');
+  const date = new Date(safeString);
+
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid date string:', dateString);
+    return null;
+  }
+  return date;
+};

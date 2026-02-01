@@ -10,6 +10,7 @@ import {
 import { IndianRupee } from "lucide-react";
 
 import { cn } from "@marketplace/components/lib/utils";
+import { parseDateSafe } from "@/utils";
 import type { IPost } from "@marketplace/actions/types";
 
 export function PostCard({
@@ -63,11 +64,14 @@ export function PostCard({
           <p className="text-xs text-wrap text-market-accent">
             Created{" "}
             Created{" "}
-            {post.createdAt && !isNaN(new Date(post.createdAt).getTime())
-              ? formatDistanceToNow(new Date(post.createdAt), {
-                addSuffix: true,
-              })
-              : "Just now"}
+            {(() => {
+              const date = parseDateSafe(post.createdAt);
+              return date
+                ? formatDistanceToNow(date, {
+                  addSuffix: true,
+                })
+                : "Just now";
+            })()}
           </p>
         </CardFooter>
       </Card>

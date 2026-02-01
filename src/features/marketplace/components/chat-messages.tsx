@@ -4,6 +4,7 @@ import type { IMessage } from "@marketplace/actions/types";
 import { useEffect, useRef } from "react";
 import { cn } from "./lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { parseDateSafe } from "@/utils";
 
 export function ChatMessages({
   messages,
@@ -68,9 +69,10 @@ export function ChatMessages({
                 )}
               >
                 Created{" "}
-                {formatDistanceToNow(new Date(item.createdAt), {
-                  addSuffix: true,
-                })}
+                {(() => {
+                  const date = parseDateSafe(item.createdAt);
+                  return date ? formatDistanceToNow(date, { addSuffix: true }) : "";
+                })()}
               </p>
             </div>
             <div ref={messagesEndRef} />

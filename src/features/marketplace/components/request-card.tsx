@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ChevronUp, Contact } from "lucide-react";
 import { Button } from "@marketplace/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@marketplace/components/ui/card";
+import { parseDateSafe } from "@/utils";
 
 import type { IUserRequest } from "@marketplace/actions/types";
 import { upVoteRequest } from "@marketplace/actions/request";
@@ -75,9 +76,10 @@ export function RequestCard({
             </h1>
             <p className="text-xs text-market-accent">
               Created{" "}
-              {formatDistanceToNow(new Date(request.createdAt), {
-                addSuffix: true,
-              })}
+              {(() => {
+                const date = parseDateSafe(request.createdAt);
+                return date ? formatDistanceToNow(date, { addSuffix: true }) : "Just now";
+              })()}
             </p>
           </div>
         </div>
