@@ -25,7 +25,7 @@ export const AppsLauncher: React.FC<AppsLauncherProps> = ({ onBack, onNavigate }
         },
         {
             id: 'food',
-            name: 'Services',
+            name: 'Campus Eats',
             icon: <Utensils strokeWidth={2} size={28} />,
             description: 'Food & more',
             // Light: Pastel Orange, Dark: Deep Orange
@@ -51,7 +51,7 @@ export const AppsLauncher: React.FC<AppsLauncherProps> = ({ onBack, onNavigate }
         },
         {
             id: 'marketplace',
-            name: 'Marketplace',
+            name: 'Campus Hustle',
             icon: <ShoppingBag strokeWidth={2} size={28} />,
             description: 'Buy & sell',
             // Light: Pastel Emerald, Dark: Deep Emerald

@@ -32,9 +32,9 @@ import { Bot } from 'lucide-react';
 // STC Apps - Lazy Loaded
 const AppsLauncher = React.lazy(() => import('./pages/stc-apps/AppsLauncher').then(module => ({ default: module.AppsLauncher })));
 const FreshmanStarterPack = React.lazy(() => import('./pages/stc-apps/FreshmanStarterPack').then(module => ({ default: module.FreshmanStarterPack })));
-const FoodServices = React.lazy(() => import('./pages/stc-apps/FoodServices').then(module => ({ default: module.FoodServices })));
+const CampusEatsApp = React.lazy(() => import('./src/apps/campus-eats/App'));
 const LostAndFound = React.lazy(() => import('./pages/stc-apps/LostAndFound').then(module => ({ default: module.LostAndFound })));
-const Marketplace = React.lazy(() => import('./pages/stc-apps/Marketplace').then(module => ({ default: module.Marketplace })));
+const CampusHustleApp = React.lazy(() => import('./src/apps/campus-hustle/App'));
 const LeaderboardWrapper = React.lazy(() => import('./pages/leaderboard/LeaderboardWrapper').then(module => ({ default: module.LeaderboardWrapper })));
 const RunnerGame = React.lazy(() => import('./pages/games/runner/RunnerGame')); // Default export
 
@@ -195,7 +195,7 @@ const AppContent = () => {
       );
       case 'food': return (
         <Suspense fallback={<PageLoader />}>
-          <FoodServices onBack={() => setActiveTab('apps')} />
+          <CampusEatsApp onBack={() => setActiveTab('apps')} />
         </Suspense>
       );
       case 'lost-found': return (
@@ -205,7 +205,7 @@ const AppContent = () => {
       );
       case 'marketplace': return (
         <Suspense fallback={<PageLoader />}>
-          <Marketplace onBack={() => setActiveTab('apps')} />
+          <CampusHustleApp onBack={() => setActiveTab('apps')} />
         </Suspense>
       );
       case 'leaderboards': return (
@@ -335,20 +335,21 @@ const AppContent = () => {
       {/* AI Chat Bot */}
       <ChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
-      {!isChatOpen && !authPage && !showOnboarding && activeTab !== 'runner' && (
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setIsChatOpen(true)}
-          className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white border-2 border-white/20 backdrop-blur-sm"
-        >
-          <Bot size={28} />
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-          </span>
-        </motion.button>
-      )}
+      {!isChatOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
+        !['food', 'marketplace'].includes(activeTab) && (
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsChatOpen(true)}
+            className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white border-2 border-white/20 backdrop-blur-sm"
+          >
+            <Bot size={28} />
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+            </span>
+          </motion.button>
+        )}
     </div>
   );
 };

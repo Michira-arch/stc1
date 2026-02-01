@@ -1,0 +1,7 @@
+{
+  "name": "Campus Hustle",
+  "description": "A state-of-the-art student marketplace leveraging the campus convenience economy with hyper-local services, academic asset trading, and micro-SaaS tools.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
