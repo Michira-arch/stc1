@@ -78,6 +78,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [feedScrollPosition, setFeedScrollPosition] = useState(0);
   const [sessionViews, setSessionViews] = useState<Set<string>>(new Set());
   const [editorDraft, setEditorDraft] = useState({ title: '', description: '', content: '', isProMode: false, isAnonymous: false });
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatContext, setChatContext] = useState<{ type: 'page' | 'post' | 'selection'; content: string; id?: string } | null>(null);
+
+  const openChat = (context?: { type: 'page' | 'post' | 'selection'; content: string; id?: string }) => {
+    if (context) setChatContext(context);
+    setIsChatOpen(true);
+  };
+
+  const closeChat = () => {
+    setIsChatOpen(false);
+    setChatContext(null);
+  };
 
   // --- Connectivity Listener ---
   useEffect(() => {
@@ -724,7 +736,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       loadPublicProfile,
       clearViewedProfile,
       updatePrivacySettings,
-      updateUserHandle
+      updateUserHandle,
+      isChatOpen,
+      chatContext,
+      openChat,
+      closeChat
     }}>
       {children}
     </AppContext.Provider>

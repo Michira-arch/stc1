@@ -136,6 +136,12 @@ export interface AppContextType {
     imageFile?: File;
     isAnonymous: boolean;
   }) => void;
+
+  // AI Chat Global
+  isChatOpen: boolean;
+  chatContext: { type: 'page' | 'post' | 'selection'; content: string; id?: string } | null;
+  openChat: (context?: { type: 'page' | 'post' | 'selection'; content: string; id?: string }) => void;
+  closeChat: () => void;
 }
 
 export interface SearchResultUser {

@@ -8,12 +8,14 @@ import { supabase } from '../../store/supabaseClient';
 import { getConversations, saveConversation, getConversation } from '../../src/services/chatStorage';
 import { v4 as uuidv4 } from 'uuid';
 
-interface Props {
-    isOpen: boolean;
-    onClose: () => void;
-}
+import { useApp } from '../../store/AppContext';
+import { usePageContext } from '../../src/hooks/usePageContext';
+import { sendMessageToAI, AIContext } from '../../src/services/aiService';
 
-export const ChatModal: React.FC<Props> = ({ isOpen, onClose }) => {
+export const ChatModal: React.FC = () => {
+    const { isChatOpen, closeChat, chatContext } = useApp();
+    const { getPageContext } = usePageContext();
+
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [history, setHistory] = useState<Conversation[]>([]);
@@ -23,10 +25,10 @@ export const ChatModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
     // Load history on open
     useEffect(() => {
-        if (isOpen) {
+        if (isChatOpen) {
             loadHistory();
         }
-    }, [isOpen]);
+    }, [isChatOpen]);
 
     const loadHistory = async () => {
         const convs = await getConversations();
@@ -50,12 +52,14 @@ export const ChatModal: React.FC<Props> = ({ isOpen, onClose }) => {
         }
     };
 
-    // Auto-start new chat if none active
+    // Auto-start new chat if none active or if context changes
     useEffect(() => {
-        if (isOpen && !activeConversationId && messages.length === 0) {
-            startNewChat();
+        if (isChatOpen) {
+            if (chatContext || (!activeConversationId && messages.length === 0)) {
+                startNewChat();
+            }
         }
-    }, [isOpen]);
+    }, [isChatOpen, chatContext]);
 
     const handleSendMessage = async (text: string) => {
         const newMsg: ChatMessage = { role: 'user', content: text };
@@ -64,74 +68,27 @@ export const ChatModal: React.FC<Props> = ({ isOpen, onClose }) => {
         setIsLoading(true);
         setError(null);
 
+        // Add placeholder bot message
+        setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
+            const context: AIContext = chatContext ?
+                { ...chatContext } :
+                { type: 'page', content: getPageContext() };
 
-            if (!token) throw new Error("Please log in to use AI chat.");
-
-            const response = await fetch('https://njzdblwjpuogbjujrxrw.supabase.co/functions/v1/chat-with-ai', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    messages: updatedMessages
-                })
-            });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error || "Failed to get response");
-            }
-
-            if (!response.body) throw new Error("No response body");
-
-            // Handle Stream
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
             let botContent = '';
 
-            // Add placeholder bot message
-            setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value);
-
-                // Basic stream parsing (assuming Groq sends standard SSE or raw text chunks here?)
-                // Groq usually sends standard OpenAI format "data: {...}"
-                // But our Edge Function just returns body?
-                // Let's assume our Edge Function returns raw text content for simplicity since we blindly pipe body.
-                // Wait, generatedResponse in llm.ts returns `callGroq` response.
-                // Groq returns strict SSE. We need to parse it. 
-                // OR we assume non-streaming for MVP simplicity in frontend if parsing is tough?
-                // "stream: true" was set. 
-                // Simple hacky parser for "data: json" lines
-
-                const lines = chunk.split('\n');
-                for (const line of lines) {
-                    if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                        try {
-                            const json = JSON.parse(line.substring(6));
-                            const content = json.choices[0]?.delta?.content || '';
-                            botContent += content;
-
-                            setMessages(prev => {
-                                const last = prev[prev.length - 1];
-                                if (last.role === 'assistant') {
-                                    return [...prev.slice(0, -1), { ...last, content: botContent }];
-                                }
-                                return prev;
-                            });
-                        } catch (e) {
-                            // ignore parse error of partial chunks
-                        }
+            await sendMessageToAI(updatedMessages, context, (chunk) => {
+                botContent += chunk;
+                setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    // Ensure we are updating the last assistant message
+                    if (last.role === 'assistant') {
+                        return [...prev.slice(0, -1), { ...last, content: botContent }];
                     }
-                }
-            }
+                    return prev;
+                });
+            });
 
             // Save to IndexDB
             if (activeConversationId) {
@@ -148,6 +105,8 @@ export const ChatModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
         } catch (err: any) {
             setError(err.message || "Something went wrong");
+            // Remove the empty placeholder if failed? Or show error in it?
+            // Existing UI has error banner, so maybe just leave it
         } finally {
             setIsLoading(false);
         }
@@ -155,13 +114,13 @@ export const ChatModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
     return (
         <AnimatePresence>
-            {isOpen && (
+            {isChatOpen && (
                 <>
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 0.5 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        onClick={closeChat}
                         className="fixed inset-0 bg-black z-[60]"
                     />
                     <motion.div
@@ -191,7 +150,7 @@ export const ChatModal: React.FC<Props> = ({ isOpen, onClose }) => {
                                 <button onClick={startNewChat} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-emerald-500">
                                     <Plus size={20} />
                                 </button>
-                                <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400">
+                                <button onClick={closeChat} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400">
                                     <X size={20} />
                                 </button>
                             </div>
@@ -224,6 +183,7 @@ export const ChatModal: React.FC<Props> = ({ isOpen, onClose }) => {
                                         onSendMessage={handleSendMessage}
                                         isLoading={isLoading}
                                         error={error}
+                                        activeContext={chatContext}
                                     />
                                 </div>
                             )}

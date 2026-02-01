@@ -55,9 +55,9 @@ export default function Profile() {
                     </div>
                 </div>
 
-                <div className="w-full flex flex-col items-center mt-20 sm:mt-0 sm:items-end sm:pr-5 sm:pt-5">
+                <div className="w-full flex flex-col items-end mt-16 sm:mt-0 sm:pr-5 sm:pt-5 px-4">
                     <Link to={"/profile/edit"}>
-                        <Button className="bg-primary text-white hover:bg-market-accent">
+                        <Button className="bg-primary text-white hover:bg-market-accent shadow-neu-outset border border-white/20">
                             <SquarePen className="mr-2" /> Edit profile
                         </Button>
                     </Link>

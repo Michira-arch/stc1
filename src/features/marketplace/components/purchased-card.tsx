@@ -45,8 +45,8 @@ export function PurchasedCard({ post }: { post: IPost }) {
             <h1 className="text-xl text-secondary">{post.title}</h1>
           </div>
           <div>
-            <h1 className="flex items-center text-base text-secondary">
-              <IndianRupee size={18} /> {post.price}
+            <h1 className="flex items-center text-base text-secondary font-bold">
+              KSh {post.price}
             </h1>
           </div>
         </CardTitle>

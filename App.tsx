@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import VersionManager from './components/VersionManager';
 import { AppProvider, useApp } from './store/AppContext';
 import { Navigation } from './components/Navigation';
@@ -120,11 +121,10 @@ const AppContent = () => {
     localStorage.setItem('has_dismissed_notification_modal', 'true');
   };
 
-  const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile } = useApp();
+  const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile, isChatOpen, openChat } = useApp();
   const [activeTab, setActiveTab] = useState('feed');
   const [viewedStoryId, setViewedStoryId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Auto-switch to profile tab when a profile is viewed
   useEffect(() => {
@@ -340,14 +340,14 @@ const AppContent = () => {
       />
 
       {/* AI Chat Bot */}
-      <ChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <ChatModal />
 
       {!isChatOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
         !['food', 'marketplace', 'campus-hustle'].includes(activeTab) && (
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setIsChatOpen(true)}
+            onClick={() => openChat()}
             className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white border-2 border-white/20 backdrop-blur-sm"
           >
             <Bot size={28} />
@@ -363,10 +363,12 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <AppProvider>
-      <VersionManager />
-      <AppContent />
-    </AppProvider>
+    <BrowserRouter>
+      <AppProvider>
+        <VersionManager />
+        <AppContent />
+      </AppProvider>
+    </BrowserRouter>
   );
 };
 

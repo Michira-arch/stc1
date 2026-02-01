@@ -57,6 +57,8 @@ export default {
             boxShadow: {
                 "neu-flat": "9px 9px 16px hsl(var(--shadow-dark)), -9px -9px 16px hsl(var(--shadow-light))",
                 "neu-pressed": "inset 9px 9px 16px hsl(var(--shadow-dark)), inset -9px -9px 16px hsl(var(--shadow-light))",
+                "neu-outset": "9px 9px 16px hsl(var(--shadow-dark)), -9px -9px 16px hsl(var(--shadow-light))",
+                "neu-inset": "inset 9px 9px 16px hsl(var(--shadow-dark)), inset -9px -9px 16px hsl(var(--shadow-light))",
                 "neu-icon": "5px 5px 10px hsl(var(--shadow-dark)), -5px -5px 10px hsl(var(--shadow-light))",
                 "neu-convex": "9px 9px 16px hsl(var(--shadow-dark)), -9px -9px 16px hsl(var(--shadow-light))",
                 "neu-concave": "inset 9px 9px 16px hsl(var(--shadow-dark)), inset -9px -9px 16px hsl(var(--shadow-light))",

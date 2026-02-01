@@ -30,7 +30,7 @@ export const SignupSchema = z.object({
     .min(5, { message: "College name must be minimum 5 characters long" }),
   phoneNo: z
     .string()
-    .min(10, { message: "Phone no. must be minimum 10 digits" })
+    .min(10, { message: "Phone no. must be minimum 10 digits (e.g. 07... or +254...)" })
     .max(15, { message: "Phone no. must be maximum 15 digits" }),
   image: z.string().optional(), // Image is optional during initial signup
 });

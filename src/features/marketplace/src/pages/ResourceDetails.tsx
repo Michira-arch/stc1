@@ -61,7 +61,7 @@ export default function ResourceDetails() {
                         {post?.description}
                     </p>
                     <p className="flex items-center font-extrabold text-2xl text-primary">
-                        <IndianRupee /> {post?.price}
+                        KSh {post?.price}
                     </p>
 
                     {post?.seller.id !== userId && post?.isAvailable && (

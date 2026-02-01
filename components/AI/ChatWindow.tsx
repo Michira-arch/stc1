@@ -1,5 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Send, Bot, User, RefreshCw, AlertTriangle } from 'lucide-react';
 import { ChatMessage } from '../../types';
 import { supabase } from '../../store/supabaseClient';
@@ -11,9 +13,10 @@ interface Props {
     onSendMessage: (message: string) => Promise<void>;
     isLoading: boolean;
     error: string | null;
+    activeContext?: { type: 'page' | 'post' | 'selection'; content: string; id?: string } | null;
 }
 
-export const ChatWindow: React.FC<Props> = ({ messages, onSendMessage, isLoading, error }) => {
+export const ChatWindow: React.FC<Props> = ({ messages, onSendMessage, isLoading, error, activeContext }) => {
     const [input, setInput] = useState('');
     const bottomRef = useRef<HTMLDivElement>(null);
     const { currentUser } = useApp();
@@ -32,14 +35,42 @@ export const ChatWindow: React.FC<Props> = ({ messages, onSendMessage, isLoading
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 dark:bg-[#1E2024] rounded-2xl overflow-hidden">
+        <div className="flex flex-col h-full bg-slate-50 dark:bg-[#1E2024] rounded-2xl overflow-hidden relative">
+
+            {/* Context Banner */}
+            {activeContext && (
+                <div className="absolute top-0 left-0 right-0 z-10 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800 p-2 px-4 flex items-center gap-2 shadow-sm backdrop-blur-sm">
+                    <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-800 flex items-center justify-center">
+                        <span className="text-xs">📎</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">
+                            Attached: {activeContext.type}
+                        </p>
+                        {activeContext.type === 'post' && (
+                            <p className="text-[10px] text-indigo-700 dark:text-indigo-300 truncate opacity-80">
+                                {activeContext.content.split('\n')[1]?.replace('Title: ', '') || 'Current Post'}
+                            </p>
+                        )}
+                    </div>
+                    {/* Optional: Close button to clear context? For now we keep it simple. */}
+                </div>
+            )}
+
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className={`flex-1 overflow-y-auto p-4 space-y-4 ${activeContext ? 'pt-14' : ''}`}>
                 {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-70">
                         <Bot size={48} className="mb-2 text-emerald-500" />
                         <p className="font-medium text-lg">Ask STC Bot anything!</p>
                         <p className="text-sm">"How do I find food?" or "Where is the library?"</p>
+                        {activeContext && (
+                            <div className="mt-4 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                                <p className="text-xs text-indigo-600 dark:text-indigo-300">
+                                    I have read the attached {activeContext.type}. Ask me about it!
+                                </p>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -65,7 +96,15 @@ export const ChatWindow: React.FC<Props> = ({ messages, onSendMessage, isLoading
               ${msg.role === 'user'
                                 ? 'bg-emerald-500 text-white rounded-tr-none'
                                 : 'bg-white dark:bg-[#2A2D35] text-slate-700 dark:text-slate-200 rounded-tl-none border border-slate-100 dark:border-slate-700'}`}>
-                            {msg.content}
+                            {msg.role === 'user' ? (
+                                msg.content
+                            ) : (
+                                <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        {msg.content}
+                                    </ReactMarkdown>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 ))}

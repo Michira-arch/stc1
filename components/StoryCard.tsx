@@ -1,6 +1,6 @@
 import React, { useState, useRef, memo, useCallback } from 'react';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
-import { Share2, Heart, MessageCircle, Play, MoreHorizontal, Eye, CornerDownRight, Send, Trash2, X } from 'lucide-react';
+import { Share2, Heart, MessageCircle, Play, MoreHorizontal, Eye, CornerDownRight, Send, Trash2, X, Sparkles } from 'lucide-react';
 import { Story, Comment, User } from '../types';
 import { useApp } from '../store/AppContext';
 import { timeAgo, triggerHaptic } from '../utils';
@@ -181,7 +181,7 @@ const CommentNode = memo(({ comment, users, currentUser, storyAuthorId, depth = 
 // --- Main Component ---
 
 export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileClick }) => {
-  const { users, currentUser, toggleLike, incrementViews, setManagingStoryId, addComment, deleteComment, isGuest, loadPublicProfile } = useApp();
+  const { users, currentUser, toggleLike, incrementViews, setManagingStoryId, addComment, deleteComment, isGuest, loadPublicProfile, openChat } = useApp();
   const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);
@@ -212,6 +212,15 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
     } else {
       alert("Sharing is available on mobile devices.");
     }
+  };
+
+  const handleAskAI = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    triggerHaptic('medium');
+    openChat({
+      type: 'post',
+      content: `[Post Context]\nTitle: ${story.title}\nAuthor: ${author.name}\nTimestamp: ${new Date(story.timestamp).toLocaleString()}\n\nContent:\n${story.content || story.description}`
+    });
   };
 
   const handleProfileClick = (e: React.MouseEvent) => {
@@ -356,6 +365,10 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
 
           <CarvedButton onClick={handleShare} className="!w-12 !h-12 !rounded-full text-slate-400">
             <Share2 size={20} />
+          </CarvedButton>
+
+          <CarvedButton onClick={handleAskAI} className="!w-12 !h-12 !rounded-full text-indigo-400">
+            <Sparkles size={20} />
           </CarvedButton>
         </div>
 
