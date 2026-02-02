@@ -1,7 +1,7 @@
 
 import React, { useState, memo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { ArrowLeft, Heart, Send, Trash2, Share2 } from 'lucide-react';
+import { ArrowLeft, Heart, Send, Trash2, Share2, Check } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { timeAgo } from '../utils';
 import { CarvedButton } from '../components/CarvedButton';
@@ -105,7 +105,7 @@ export const StoryDetail: React.FC<Props> = ({ storyId, onBack }) => {
 
   if (!story) return null;
 
-  const author = users[story.authorId] || { name: 'Unknown', avatar: '' };
+  const author = users[story.authorId] || { name: 'Unknown', avatar: '', isCertified: false };
   const isLiked = story.likes.includes(currentUser.id);
 
   const heartVariants: Variants = {
@@ -161,7 +161,14 @@ export const StoryDetail: React.FC<Props> = ({ storyId, onBack }) => {
               <img src={author.avatar} className="relative w-14 h-14 rounded-full border-2 border-ceramic-base dark:border-obsidian-highlight object-cover" alt={author.name} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{author.name}</h2>
+              <div className="flex items-center gap-1">
+                <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{author.name}</h2>
+                {author.isCertified && (
+                  <div className="bg-blue-500 text-white p-[2px] rounded-full shadow-sm mt-0.5" title="Verified">
+                    <Check size={10} strokeWidth={4} />
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-slate-500 font-medium tracking-wider uppercase">{timeAgo(story.timestamp)}</p>
             </div>
           </div>

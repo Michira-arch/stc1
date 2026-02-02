@@ -12,6 +12,14 @@ export const useFcm = () => {
     );
 
     const requestPermission = async () => {
+        // Detect iOS (iPhone, iPad, iPod)
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
+        if (isIOS) {
+            console.log("FCM is disabled on iOS to prevent rendering issues.");
+            return false;
+        }
+
         // If messaging is not initialized (e.g. insecure context), return false
         if (!messaging) {
             console.warn("FCM messaging is not available.");

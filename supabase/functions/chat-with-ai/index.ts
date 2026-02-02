@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SYSTEM_CONTEXT } from "./context_data.ts";
 import { checkAndIncrementQuota } from "./repository.ts";
 import { generateResponse } from "./llm.ts";
+import { toolsSchema, executeTool } from "./tools.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,12 +31,7 @@ serve(async (req) => {
     if (authError || !user) throw new Error('Invalid User Token');
 
     // 2. Parse Request
-    const { messages, embedding } = await req.json(); // Expecting embedding from client or we generate it here?
-    // User request implies strict system instruction, let's assume client sends text messages.
-    // Ideally we generate embedding regarding the LAST user message here if we had `transformers.js`
-    // Since we can't easily add deps in this environment without `deno.json`, we might skip RAG 
-    // OR assuming client sends `embedding` (which isn't secure but works for this constraint).
-    // Let's assume for now we just use the SYSTEM_CONTEXT + Chat.
+    const { messages } = await req.json();
 
     // 3. Check Quota
     const { allowed, isPremium, error: quotaError } = await checkAndIncrementQuota(supabase, user.id);
@@ -57,14 +53,71 @@ serve(async (req) => {
 ${SYSTEM_CONTEXT}`
     };
 
-    const finalMessages = [systemMessage, ...messages];
+    let finalMessages = [systemMessage, ...messages];
 
-    // 5. Call LLM (Stream)
-    const responseComp = await generateResponse(finalMessages, isPremium);
+    // 5. Agentic Loop (Step 1: Check for Tool Call)
+    // We call with stream: false first to see if the model wants to run a tool
+    const firstResponse = await generateResponse(finalMessages, isPremium, toolsSchema, false);
+    const firstResponseJson = await firstResponse.json();
+    const choice = firstResponseJson.choices[0];
+    const message = choice.message;
 
-    return new Response(responseComp.body, {
-      headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
-    });
+    if (message.tool_calls && message.tool_calls.length > 0) {
+      // Tool usage detected!
+      console.log("Agent decided to use tools:", message.tool_calls.length);
+      
+      // Append the assistant's "intent" to messages
+      finalMessages.push(message);
+
+      // Execute all tools
+      for (const toolCall of message.tool_calls) {
+        const functionName = toolCall.function.name;
+        const args = JSON.parse(toolCall.function.arguments);
+        
+        const result = await executeTool(functionName, args, supabase, user.id);
+        
+        // Append result as a tool message
+        finalMessages.push({
+          tool_call_id: toolCall.id,
+          role: "tool",
+          name: functionName,
+          content: result
+        });
+      }
+
+      // Step 2: Final Answer (Streaming)
+      // Now we call LLM again with the tool outputs context
+      const secondResponse = await generateResponse(finalMessages, isPremium, toolsSchema, true);
+      
+      return new Response(secondResponse.body, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
+      });
+
+    } else {
+      // No tool used, just text.
+      // Since we already consumed the stream (by doing await firstResponse.json()), 
+      // we need to re-package the text as a stream for the frontend.
+      
+      const content = message.content || "";
+      const stream = new ReadableStream({
+        start(controller) {
+          const encoder = new TextEncoder();
+          // Simulate OpenAI/Groq SSE format
+          // Send content
+          if (content) {
+             const chunk = { choices: [{ delta: { content: content } }] };
+             controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+          }
+          // Send DONE
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+        }
+      });
+
+      return new Response(stream, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
+      });
+    }
 
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {

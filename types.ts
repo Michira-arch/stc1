@@ -9,6 +9,7 @@ export interface User {
   email?: string;
   handle?: string;
   privacySettings?: PrivacySettings;
+  isCertified?: boolean;
 }
 
 export interface PrivacySettings {
@@ -193,6 +194,7 @@ export type Database = {
           font_size: 'sm' | 'base' | 'lg' | null
           is_italic: boolean | null
           privacy_settings: PrivacySettings | null
+          is_certified: boolean | null
           created_at: string
           updated_at: string | null
         }
@@ -207,6 +209,7 @@ export type Database = {
           is_italic?: boolean | null
 
           privacy_settings?: PrivacySettings | null
+          is_certified?: boolean | null
           created_at?: string
           updated_at?: string | null
         }
@@ -221,6 +224,7 @@ export type Database = {
           is_italic?: boolean | null
 
           privacy_settings?: PrivacySettings | null
+          is_certified?: boolean | null
           created_at?: string
           updated_at?: string | null
         }
@@ -625,6 +629,12 @@ export type Database = {
           match_winner_id: string
           match_loser_id: string
           match_is_draw: boolean
+        }
+        Returns: undefined
+      },
+      increment_story_view: {
+        Args: {
+          p_story_id: string
         }
         Returns: undefined
       }

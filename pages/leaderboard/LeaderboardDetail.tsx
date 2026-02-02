@@ -45,7 +45,7 @@ export const LeaderboardDetail: React.FC<Props> = ({ leaderboardId, onBack }) =>
             .single();
 
         if (lbData) {
-            setLeaderboard(lbData);
+            setLeaderboard(lbData as any);
 
             // Fetch basic stats (parallel if possible but keeping simple for now)
             const { count: voteCount } = await supabase

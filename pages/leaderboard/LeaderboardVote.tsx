@@ -71,15 +71,13 @@ export const LeaderboardVote: React.FC<Props> = ({ leaderboard }) => {
                 const loser = winnerIndex === 0 ? right : left;
 
                 // Explode confetti on vote!
-                if (winnerIndex !== 'tie') {
-                    const side = winnerIndex === 0 ? 0.25 : 0.75;
-                    confetti({
-                        particleCount: 60,
-                        spread: 60,
-                        origin: { x: side, y: 0.7 },
-                        colors: [leaderboard.metadata?.theme_color || '#F59E0B', '#ffffff']
-                    });
-                }
+                const side = winnerIndex === 0 ? 0.25 : 0.75;
+                confetti({
+                    particleCount: 60,
+                    spread: 60,
+                    origin: { x: side, y: 0.7 },
+                    colors: [leaderboard.metadata?.theme_color || '#F59E0B', '#ffffff']
+                });
 
                 const { error: err } = await supabase.rpc('submit_vote', {
                     match_leaderboard_id: leaderboard.id,

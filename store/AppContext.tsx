@@ -164,7 +164,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         avatar: data.avatar_url || 'https://ui-avatars.com/api/?name=?',
         coverPhoto: data.cover_url || undefined,
         bio: data.bio || undefined,
-        email: supabase.auth.getUser().then(u => u.data.user?.email).toString() // approximate
+        email: supabase.auth.getUser().then(u => u.data.user?.email).toString(), // approximate
+        isCertified: data.is_certified || false
       };
       setCurrentUser(user);
 
@@ -185,7 +186,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       .from('stories')
       .select(`
         *,
-        author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle),
+        author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle, is_certified),
         likes(user_id),
         comments(*)
       `)
@@ -226,7 +227,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             id: item.author.id,
             name: item.author.full_name || 'Unknown',
             handle: item.author.handle,
-            avatar: item.author.avatar_url || ''
+            avatar: item.author.avatar_url || '',
+            isCertified: item.author.is_certified || false
           };
         }
       });
@@ -239,7 +241,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         .from('stories')
         .select(`
              *,
-             author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle),
+             author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle, is_certified),
              likes(user_id),
              comments(*)
            `)
@@ -292,8 +294,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, [currentUser.id]); // Refetch when user changes (for hidden stories)
+    // Realtime subscription for My Profile
+    // This allows toggling is_certified in DB to immediately show up
+    let profileChannel: any = null;
+    if (!isGuest && currentUser.id !== 'guest') {
+      profileChannel = supabase.channel(`public:profile:${currentUser.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${currentUser.id}`
+        }, () => {
+          console.log("Profile updated, refetching...");
+          fetchProfile(currentUser.id);
+        })
+        .subscribe();
+    }
+
+    return () => {
+      supabase.removeChannel(channel);
+      if (profileChannel) supabase.removeChannel(profileChannel);
+    };
+  }, [currentUser.id, isGuest]); // Refetch when user changes (for hidden stories)
 
 
 
@@ -470,7 +492,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         avatar: data.avatar_url || 'https://ui-avatars.com/api/?name=?',
         coverPhoto: data.cover_url || undefined,
         bio: data.bio || undefined,
-        privacySettings: (data.privacy_settings as any) || { showBio: true, showTimeline: true }
+        privacySettings: (data.privacy_settings as any) || { showBio: true, showTimeline: true },
+        isCertified: data.is_certified || false
       };
       setViewedProfile(user);
       setUsers(prev => ({ ...prev, [user.id]: user }));
@@ -497,10 +520,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Optimistic UI
     setStories(prev => prev.map(s => s.id === storyId ? { ...s, views: s.views + 1 } : s));
 
-    // DB Update (RPC would be better for atomicity, but simple update works for low scale)
-    const story = stories.find(s => s.id === storyId);
-    if (story) {
-      await supabase.from('stories').update({ views_count: story.views + 1 }).eq('id', storyId);
+    // DB Update: Use RPC to bypass specific RLS policy safely
+    const { error } = await supabase.rpc('increment_story_view', { p_story_id: storyId });
+    if (error) {
+      console.error("Failed to increment views:", error);
     }
   };
 

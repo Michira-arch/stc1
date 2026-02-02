@@ -23,7 +23,7 @@ import { Button } from '@marketplace/components/ui/button';
 
 export default function App({ onBack }: { onBack?: () => void }) {
   return (
-    <Router>
+    <>
       {onBack && (
         <div className="fixed top-4 left-4 z-[100]">
           <Button
@@ -58,7 +58,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
         <Route path="/admin/dashboard" element={<div>Admin Dashboard (To be implemented)</div>} />
       </Routes>
       <Toaster visibleToasts={10} richColors position="top-right" />
-    </Router>
+    </>
   );
 }
 

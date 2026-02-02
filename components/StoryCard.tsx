@@ -1,6 +1,6 @@
 import React, { useState, useRef, memo, useCallback } from 'react';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
-import { Share2, Heart, MessageCircle, Play, MoreHorizontal, Eye, CornerDownRight, Send, Trash2, X, Sparkles } from 'lucide-react';
+import { Share2, Heart, MessageCircle, Play, MoreHorizontal, Eye, CornerDownRight, Send, Trash2, X, Sparkles, Check } from 'lucide-react';
 import { Story, Comment, User } from '../types';
 import { useApp } from '../store/AppContext';
 import { timeAgo, triggerHaptic } from '../utils';
@@ -189,7 +189,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
   const [scrollProgress, setScrollProgress] = useState(0);
   const commentContainerRef = useRef<HTMLDivElement>(null);
 
-  const author = story.isAnonymous ? users['anonymous'] : (users[story.authorId] || { name: 'Unknown', avatar: '', handle: undefined });
+  const author = story.isAnonymous ? users['anonymous'] : (users[story.authorId] || { name: 'Unknown', avatar: '', handle: undefined, isCertified: false });
   const isLiked = story.likes.includes(currentUser.id);
   const isMine = story.authorId === currentUser.id;
 
@@ -303,10 +303,15 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
             <img src={author.avatar} alt={author.name} className="relative w-10 h-10 rounded-full object-cover border-2 border-ceramic-base dark:border-obsidian-highlight" />
           </div>
           <div>
-            <div onClick={handleProfileClick} className="cursor-pointer">
+            <div onClick={handleProfileClick} className="cursor-pointer flex items-center gap-1">
               <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 hover:text-emerald-500 transition-colors">{author.name}</h3>
-              {author.handle && <p className="text-[10px] text-slate-400">@{author.handle}</p>}
+              {author.isCertified && (
+                <div className="bg-blue-500 text-white p-[1px] rounded-full shadow-sm" title="Verified">
+                  <span className="block"><Check size={8} strokeWidth={4} /></span>
+                </div>
+              )}
             </div>
+            {author.handle && <p className="text-[10px] text-slate-400">@{author.handle}</p>}
             <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase">{timeAgo(story.timestamp)}</p>
           </div>
         </div>

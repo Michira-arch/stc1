@@ -16,6 +16,9 @@ create table public.profiles (
   updated_at timestamptz default now()
 );
 
+
+ALTER TABLE public.profiles ADD COLUMN is_certified BOOLEAN DEFAULT FALSE;
+
 -------------------------------------------------------------------------------
 -- 2. Stories Table
 -------------------------------------------------------------------------------

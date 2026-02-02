@@ -1,13 +1,12 @@
 import React, { useRef } from 'react';
 import { useApp } from '../store/AppContext';
 import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, Edit2, Camera, User, Download, Check, MapPin, Link as LinkIcon, Share2, Eye, Heart, Gamepad2 } from 'lucide-react';
+import { Settings as SettingsIcon, Edit2, Camera, User, Download, Check, MapPin, Link as LinkIcon, Share2, Eye, Heart, Gamepad2, Bell } from 'lucide-react';
 import { CarvedButton } from '../components/CarvedButton';
 import { timeAgo } from '../utils';
 import { StoryCard } from '../components/StoryCard';
 import { InstallAppButton } from '../components/InstallAppButton';
 import { useFcm } from '../src/hooks/useFcm';
-import { Bell } from 'lucide-react'; // Ensure Bell is imported (it was in line 4 but confirming)
 
 interface Props {
   onStoryClick: (id: string) => void;
@@ -156,8 +155,14 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
             )}
           </motion.div>
 
-
-          <h2 className="text-2xl font-bold mb-0 leading-tight">{userToDisplay.name}</h2>
+          <div className="flex items-center gap-1 justify-center mb-0">
+            <h2 className="text-2xl font-bold leading-tight">{userToDisplay.name}</h2>
+            {userToDisplay.isCertified && (
+              <div className="bg-blue-500 text-white p-0.5 rounded-full shadow-sm ml-1" title="Verified">
+                <Check size={14} strokeWidth={3} />
+              </div>
+            )}
+          </div>
           {isEditingHandle && isMe ? (
             <div className="flex items-center gap-2 mt-1 mb-2">
               <span className="text-slate-400 font-bold">@</span>
