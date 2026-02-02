@@ -74,6 +74,7 @@ export default defineConfig(({ mode }) => {
       })
     ],
     build: {
+      target: 'es2020', // Fix for iOS white screen/rendering issues
       chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB
       rollupOptions: {
         output: {

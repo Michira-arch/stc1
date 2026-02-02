@@ -14,45 +14,13 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap"
     rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Outfit', 'sans-serif'],
-          },
-          colors: {
-            obsidian: {
-              base: '#2E3238',
-              surface: '#2E3238',
-              highlight: '#393d45',
-            },
-            ceramic: {
-              base: '#e0e5ec', // Light Mode Base
-              surface: '#e0e5ec',
-            },
-            accent: {
-              DEFAULT: '#10b981', // Emerald
-              glow: '#00f2ff', // Cyan
-              amber: '#ffaa00', // Amber
-            }
-          },
-          animation: {
-            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-          }
-        }
+    (function () {
+      const savedTheme = localStorage.getItem('dopamine_theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
       }
-    }
-  </script>
-  <script>
-      (function () {
-        const savedTheme = localStorage.getItem('dopamine_theme');
-        if (savedTheme === 'dark') {
-          document.documentElement.classList.add('dark');
-        }
-      })();
+    })();
   </script>
 
 
