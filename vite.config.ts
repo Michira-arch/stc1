@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
+import legacy from '@vitejs/plugin-legacy';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -17,6 +18,9 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
     },
     plugins: [
+      legacy({
+        targets: ['defaults', 'not IE 11'],
+      }),
       react(),
       VitePWA({
         strategies: 'injectManifest',
