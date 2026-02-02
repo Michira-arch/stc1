@@ -33,7 +33,7 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-50 bg-ceramic-base dark:bg-obsidian-base overflow-y-auto"
+      className="fixed inset-0 z-50 bg-ceramic-base dark:bg-obsidian-base overflow-y-auto pt-safe pb-safe"
     >
       <div className="sticky top-0 z-10 px-4 py-4 flex items-center bg-ceramic-base/90 dark:bg-obsidian-base/90 backdrop-blur-lg">
         <CarvedButton onClick={onBack} className="!w-12 !h-12 !rounded-full mr-4">

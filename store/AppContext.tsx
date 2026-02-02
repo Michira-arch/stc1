@@ -110,10 +110,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const toggleTheme = () => {
-    if (!isOnline) {
-      showToast("Theme requires internet connection.", "info");
-      return;
-    }
+    // Offline check removed for theme - local preference should always work
     triggerHaptic('medium');
     setTheme(prev => {
       const newTheme = prev === 'dark' ? 'light' : 'dark';
@@ -320,8 +317,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
 
   useEffect(() => {
-    if (theme === 'dark') document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
+    console.log("Theme Effect Triggered:", theme);
+    const html = document.documentElement;
+    if (theme === 'dark') {
+      html.classList.add('dark');
+      console.log("Added dark class. ClassList:", html.classList.toString());
+    } else {
+      html.classList.remove('dark');
+      console.log("Removed dark class. ClassList:", html.classList.toString());
+    }
   }, [theme]);
 
   // Global Font Scaling
