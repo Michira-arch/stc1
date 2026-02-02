@@ -8,7 +8,7 @@ export const useFcm = () => {
     const { currentUser, showToast } = useApp();
     const [fcmToken, setFcmToken] = useState<string | null>(null);
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
-        Notification.permission
+        typeof Notification !== 'undefined' ? Notification.permission : 'default'
     );
 
     const requestPermission = async () => {
@@ -23,6 +23,12 @@ export const useFcm = () => {
         // If messaging is not initialized (e.g. insecure context), return false
         if (!messaging) {
             console.warn("FCM messaging is not available.");
+            return false;
+        }
+
+        // Safety check for Notification API
+        if (typeof Notification === 'undefined') {
+            console.warn("Notification API not supported in this browser.");
             return false;
         }
 
@@ -61,7 +67,7 @@ export const useFcm = () => {
 
     // Check initial permission status without requesting
     useEffect(() => {
-        if (Notification.permission === 'granted') {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             // If already granted, ensure we have the token (in case app was reloaded)
             requestPermission();
         }
