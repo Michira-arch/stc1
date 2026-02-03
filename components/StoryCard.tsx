@@ -224,7 +224,8 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
     triggerHaptic('medium');
     openChat({
       type: 'post',
-      content: `[Post Context]\nTitle: ${story.title}\nAuthor: ${author.name}\nTimestamp: ${new Date(story.timestamp).toLocaleString()}\n\nContent:\n${story.content || story.description}`
+      content: `[Post Context]\nTitle: ${story.title}\nAuthor: ${author.name}\nTimestamp: ${new Date(story.timestamp).toLocaleString()}\n\nContent:\n${story.content || story.description}`,
+      imageUrl: story.imageUrl
     });
   };
 

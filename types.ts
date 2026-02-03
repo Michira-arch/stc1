@@ -15,6 +15,7 @@ export interface User {
 export interface PrivacySettings {
   showBio: boolean;
   showTimeline: boolean;
+  showName: boolean;
 }
 
 export interface Comment {
@@ -74,6 +75,7 @@ export interface AppContextType {
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   removeToast: (id: string) => void;
   updateUserHandle: (handle: string) => Promise<void>;
+  updateUserName: (name: string) => Promise<void>;
 
   // Story Actions
   toggleLike: (storyId: string) => void;
@@ -140,8 +142,8 @@ export interface AppContextType {
 
   // AI Chat Global
   isChatOpen: boolean;
-  chatContext: { type: 'page' | 'post' | 'selection'; content: string; id?: string } | null;
-  openChat: (context?: { type: 'page' | 'post' | 'selection'; content: string; id?: string }) => void;
+  chatContext: { type: 'page' | 'post' | 'selection'; content: string; id?: string; imageUrl?: string } | null;
+  openChat: (context?: { type: 'page' | 'post' | 'selection'; content: string; id?: string; imageUrl?: string }) => void;
   closeChat: () => void;
 }
 

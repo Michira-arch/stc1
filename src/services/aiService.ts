@@ -6,6 +6,7 @@ export interface AIContext {
     type: 'page' | 'post' | 'selection';
     content: string;
     id?: string;
+    imageUrl?: string;
 }
 
 export const sendMessageToAI = async (
@@ -33,9 +34,31 @@ export const sendMessageToAI = async (
 
         const preparedMessages = [...messages];
         if (context) {
-            // Find the last user message to append context
-            // Or add a system message at the end?
-            // Adding a system message right before the last user message is usually best.
+            // If image is present, we attach it to the latest user message
+            // OR create a new user message if the last one isn't user (unlikely for a chat start, but possible)
+            // Groq/OpenAI expects:
+            // content: [ { type: "text", text: "..." }, { type: "image_url", image_url: { url: "..." } } ]
+
+            if (context.imageUrl && preparedMessages.length > 0) {
+                const lastMsgIndex = preparedMessages.length - 1;
+                const lastMsg = preparedMessages[lastMsgIndex];
+
+                if (lastMsg.role === 'user') {
+                    // Convert string content to array if needed
+                    const textContent = typeof lastMsg.content === 'string' ? lastMsg.content : '';
+                    // Note: if content was already array, we'd need more complex handling, but usually it's string in our app.
+
+                    preparedMessages[lastMsgIndex] = {
+                        ...lastMsg,
+                        content: [
+                            { type: "text", text: textContent },
+                            { type: "image_url", image_url: { url: context.imageUrl } }
+                        ]
+                    };
+                }
+            }
+
+            // Also append text context as system message
             preparedMessages.splice(preparedMessages.length - 1, 0, {
                 role: 'system',
                 content: `Context Information for the user's current view:\n${contextMessage}`

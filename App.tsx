@@ -97,6 +97,11 @@ const AppContent = () => {
   // Initialize FCM
   const { requestPermission, notificationPermission } = useFcm();
 
+  // Initialize Remote Error Logging
+  React.useEffect(() => {
+    import('./src/utils/errorLogger').then(mod => mod.initErrorLogger());
+  }, []);
+
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
   useEffect(() => {
@@ -286,12 +291,15 @@ const AppContent = () => {
       {!viewedStoryId && !isSettingsOpen && (
         <motion.main
           key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="min-h-screen touch-pan-y"
-          onPanEnd={(e, info) => {
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(e, info) => {
             // Disable swipe nav on desktop/laptop (mouse or large screen)
             const isMouse = (e as PointerEvent).pointerType === 'mouse';
             const isDesktop = window.innerWidth > 768;
@@ -300,19 +308,23 @@ const AppContent = () => {
             // Disable swipe if in STC Apps sub-pages
             if (['freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards'].includes(activeTab)) return;
 
-            const threshold = 50;
-            if (info.offset.x < -threshold) {
+            const threshold = 100; // Drag distance threshold
+            const velocityThreshold = 500; // Speed threshold
+
+            if (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) {
               // Swiped Left (Next)
               if (activeTab === 'feed') setActiveTab('explore');
-              else if (activeTab === 'explore') setActiveTab('editor');
+              else if (activeTab === 'explore') setActiveTab('meet'); // Updated order: feed -> explore -> meet -> editor -> profile
+              else if (activeTab === 'meet') setActiveTab('editor');
               else if (activeTab === 'editor') setActiveTab('profile');
-            } else if (info.offset.x > threshold) {
+            } else if (info.offset.x > threshold || info.velocity.x > velocityThreshold) {
               // Swiped Right (Prev)
               if (activeTab === 'profile') {
                 if (viewedProfile) clearViewedProfile();
                 setActiveTab('editor');
               }
-              else if (activeTab === 'editor') setActiveTab('explore');
+              else if (activeTab === 'editor') setActiveTab('meet');
+              else if (activeTab === 'meet') setActiveTab('explore');
               else if (activeTab === 'explore') setActiveTab('feed');
             }
           }}

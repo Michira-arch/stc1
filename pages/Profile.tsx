@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayGame }) => {
-  const { currentUser, stories, hiddenStories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, updateUserHandle, setAuthPage, viewedProfile, clearViewedProfile, isOnline, showToast } = useApp();
+  const { currentUser, stories, hiddenStories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, updateUserName, setAuthPage, viewedProfile, clearViewedProfile, isOnline, showToast } = useApp();
   const [showHidden, setShowHidden] = React.useState(false);
   const { notificationPermission, requestPermission } = useFcm();
 
@@ -35,19 +35,20 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
   */
 
   const [isEditingBio, setIsEditingBio] = React.useState(false);
-  const [isEditingHandle, setIsEditingHandle] = React.useState(false);
-  const [handleText, setHandleText] = React.useState(userToDisplay.handle || '');
+  const [isEditingName, setIsEditingName] = React.useState(false);
+  const [nameText, setNameText] = React.useState(userToDisplay.name || '');
   const [bioText, setBioText] = React.useState(userToDisplay.bio || '');
 
   // Update local state when user changes
   React.useEffect(() => {
     setBioText(userToDisplay.bio || '');
-    setHandleText(userToDisplay.handle || '');
+    setNameText(userToDisplay.name || '');
   }, [userToDisplay]);
 
   // Privacy Checks
   const showBio = isMe || (userToDisplay.privacySettings?.showBio !== false); // Default true
   const showTimeline = isMe || (userToDisplay.privacySettings?.showTimeline !== false); // Default true
+  const showName = isMe || (userToDisplay.privacySettings?.showName !== false); // Default true
 
   const myStories = stories.filter(s => s.authorId === userToDisplay.id);
   const totalLikes = myStories.reduce((acc, curr) => acc + curr.likes.length, 0);
@@ -156,38 +157,45 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
           </motion.div>
 
           <div className="flex items-center gap-1 justify-center mb-0">
-            <h2 className="text-2xl font-bold leading-tight">{userToDisplay.name}</h2>
+            {isEditingName && isMe ? (
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="text"
+                  value={nameText}
+                  onChange={(e) => setNameText(e.target.value)}
+                  className="bg-transparent border-b border-emerald-500 outline-none text-2xl font-bold leading-tight text-center w-full max-w-[200px]"
+                  autoFocus
+                  onBlur={() => {
+                    // Auto-save on blur if desired, or just wait for button. Let's wait for button to match style.
+                  }}
+                />
+                <CarvedButton onClick={() => { updateUserName(nameText); setIsEditingName(false); }} className="!h-6 !px-2 !text-[10px]">Save</CarvedButton>
+              </div>
+            ) : (
+              <>
+                {showName ? (
+                  <h2
+                    className={`text-2xl font-bold leading-tight ${isMe ? 'cursor-pointer hover:text-emerald-500 transition-colors' : ''}`}
+                    onClick={() => isMe && setIsEditingName(true)}
+                  >
+                    {userToDisplay.name}
+                  </h2>
+                ) : (
+                  <h2 className="text-2xl font-bold leading-tight text-slate-400 italic">Name Hidden</h2>
+                )}
+              </>
+            )}
+
             {userToDisplay.isCertified && (
               <div className="bg-blue-500 text-white p-0.5 rounded-full shadow-sm ml-1" title="Verified">
                 <Check size={14} strokeWidth={3} />
               </div>
             )}
+            {!showName && isMe && <span className="ml-2 text-xs text-slate-400 border border-slate-300 px-1 rounded">Hidden from public</span>}
           </div>
-          {isEditingHandle && isMe ? (
-            <div className="flex items-center gap-2 mt-1 mb-2">
-              <span className="text-slate-400 font-bold">@</span>
-              <input
-                type="text"
-                value={handleText}
-                onChange={(e) => setHandleText(e.target.value)}
-                className="bg-transparent border-b border-emerald-500 outline-none text-slate-500 font-medium w-32"
-                autoFocus
-                onBlur={() => {
-                  useApp().updateUserHandle(handleText); // Need to access via hook result, but cannot inside JSX easily if not destructured.
-                  // Wait, I destructured useApp at top level.
-                  // But `updateUserHandle` needs to be destructured.
-                }}
-              />
-              <CarvedButton onClick={() => { updateUserHandle(handleText); setIsEditingHandle(false); }} className="!h-6 !px-2 !text-[10px]">Save</CarvedButton>
-            </div>
-          ) : (
-            <p
-              className={`text-slate-500 font-medium mb-1 ${isMe ? 'cursor-pointer hover:text-emerald-500 transition-colors' : ''}`}
-              onClick={() => { if (isMe) setIsEditingHandle(true); }}
-            >
-              @{userToDisplay.handle || (isMe ? 'set_handle' : '...')}
-            </p>
-          )}
+          <p className="text-slate-500 font-medium mb-1">
+            @{userToDisplay.handle}
+          </p>
           <p className="text-accent font-medium tracking-widest text-xs uppercase mb-1">
             {isMe ? '🌟' : '✨'}
           </p>

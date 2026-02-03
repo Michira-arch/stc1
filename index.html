@@ -27,6 +27,12 @@
       // alert('Error: ' + message + '\nLine: ' + lineno); // Access to alert might be annoying if frequent, but good for "white screen"
     };
   </script>
+  <style>
+    /* Hide vConsole switch button but keep functionality active */
+    .vc-switch {
+      display: none !important;
+    }
+  </style>
   <script>
     (function () {
       const savedTheme = localStorage.getItem('dopamine_theme');

@@ -79,9 +79,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [sessionViews, setSessionViews] = useState<Set<string>>(new Set());
   const [editorDraft, setEditorDraft] = useState({ title: '', description: '', content: '', isProMode: false, isAnonymous: false });
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatContext, setChatContext] = useState<{ type: 'page' | 'post' | 'selection'; content: string; id?: string } | null>(null);
+  const [chatContext, setChatContext] = useState<{ type: 'page' | 'post' | 'selection'; content: string; id?: string; imageUrl?: string } | null>(null);
 
-  const openChat = (context?: { type: 'page' | 'post' | 'selection'; content: string; id?: string }) => {
+  const openChat = (context?: { type: 'page' | 'post' | 'selection'; content: string; id?: string; imageUrl?: string }) => {
     if (context) setChatContext(context);
     setIsChatOpen(true);
   };
@@ -119,19 +119,59 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   };
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchProfile(session.user.id);
-        setIsGuest(false);
-      }
-    });
+    const initializeAuth = async () => {
+      // 1. Try getting standard session
+      const { data: { session } } = await supabase.auth.getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        // Valid session found
         fetchProfile(session.user.id);
         setIsGuest(false);
       } else {
+        // 2. No session? Try Recovery from Backup
+        const backupStr = localStorage.getItem('STC_SESSION_BACKUP');
+        if (backupStr) {
+          try {
+            const backup = JSON.parse(backupStr);
+            console.log("Attempting session recovery from backup...");
+            const { data: recoveryData, error: recoveryError } = await supabase.auth.setSession({
+              access_token: backup.access_token,
+              refresh_token: backup.refresh_token
+            });
+
+            if (!recoveryError && recoveryData.session) {
+              console.log("Session recovered successfully!");
+              fetchProfile(recoveryData.session.user.id);
+              setIsGuest(false);
+              showToast("Session restored", "success");
+            } else {
+              console.warn("Session recovery failed:", recoveryError);
+              localStorage.removeItem('STC_SESSION_BACKUP'); // Bad backup
+            }
+          } catch (e) {
+            console.error("Backup parse error", e);
+            localStorage.removeItem('STC_SESSION_BACKUP');
+          }
+        }
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        // Backup the session!
+        localStorage.setItem('STC_SESSION_BACKUP', JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token
+        }));
+
+        fetchProfile(session.user.id);
+        setIsGuest(false);
+      } else {
+        // Signed out
+        localStorage.removeItem('STC_SESSION_BACKUP');
+
         setCurrentUser({ id: 'guest', name: 'Guest', avatar: 'https://ui-avatars.com/api/?name=Guest', bio: 'Just passing through.' });
         setIsGuest(true);
       }
@@ -475,6 +515,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const updateUserName = async (name: string) => {
+    if (isGuest) return;
+    if (!name.trim()) {
+      showToast('Name cannot be empty', 'error');
+      return;
+    }
+
+    const { error } = await supabase.from('profiles').update({ full_name: name }).eq('id', currentUser.id);
+    if (!error) {
+      setCurrentUser(prev => ({ ...prev, name }));
+      showToast('Name updated', 'success');
+    } else {
+      showToast('Failed to update name', 'error');
+    }
+  };
+
   const [viewedProfile, setViewedProfile] = useState<User | null>(null);
 
   const loadPublicProfile = async (userId: string) => {
@@ -496,7 +552,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         avatar: data.avatar_url || 'https://ui-avatars.com/api/?name=?',
         coverPhoto: data.cover_url || undefined,
         bio: data.bio || undefined,
-        privacySettings: (data.privacy_settings as any) || { showBio: true, showTimeline: true },
+        privacySettings: (data.privacy_settings as any) || { showBio: true, showTimeline: true, showName: true },
         isCertified: data.is_certified || false
       };
       setViewedProfile(user);
@@ -510,7 +566,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updatePrivacySettings = async (newSettings: Partial<PrivacySettings>) => {
     if (isGuest) return;
-    const updated = { ...(currentUser.privacySettings || { showBio: true, showTimeline: true }), ...newSettings };
+    const updated = { ...(currentUser.privacySettings || { showBio: true, showTimeline: true, showName: true }), ...newSettings };
     setCurrentUser(prev => ({ ...prev, privacySettings: updated }));
     const { error } = await supabase.from('profiles').update({ privacy_settings: updated }).eq('id', currentUser.id);
     if (error) showToast('Failed to update privacy', 'error');
@@ -764,6 +820,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       clearViewedProfile,
       updatePrivacySettings,
       updateUserHandle,
+      updateUserName,
       isChatOpen,
       chatContext,
       openChat,

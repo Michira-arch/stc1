@@ -12,7 +12,7 @@ interface Props {
 
 export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
   const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme, currentUser, updatePrivacySettings, isGuest, isOnline } = useApp();
-  const privacy = currentUser.privacySettings || { showBio: true, showTimeline: true };
+  const privacy = currentUser.privacySettings || { showBio: true, showTimeline: true, showName: true };
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const handleUpdate = (newSettings: Partial<typeof settings>) => {
@@ -53,6 +53,15 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
             </div>
 
             <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-700 dark:text-slate-300">Show Name</span>
+                <div
+                  onClick={() => updatePrivacySettings({ showName: !privacy.showName })}
+                  className={`w-12 h-6 rounded-full cursor-pointer transition-colors relative ${privacy.showName ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${privacy.showName ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-700 dark:text-slate-300">Show Bio</span>
                 <div
