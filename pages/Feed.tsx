@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import { useApp } from '../store/AppContext';
 import { StoryCard } from '../components/StoryCard';
 import { motion } from 'framer-motion';
@@ -20,17 +20,29 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
   }, []);
 
   // Scroll Persistence
+  const scrollRef = useRef(feedScrollPosition);
+
   // 1. Restore scroll position only when loading is done
   useLayoutEffect(() => {
     if (!isLoading) {
       window.scrollTo(0, feedScrollPosition);
+      scrollRef.current = feedScrollPosition;
     }
   }, [isLoading, feedScrollPosition]);
 
-  // 2. Save scroll position on unmount (navigation)
+  // 2. Track scroll position continuously
+  useEffect(() => {
+    const handleScroll = () => {
+      scrollRef.current = window.scrollY;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 3. Save scroll position on unmount using the Ref (bypassing unmount layout shifts)
   useEffect(() => {
     return () => {
-      setFeedScrollPosition(window.scrollY);
+      setFeedScrollPosition(scrollRef.current);
     };
   }, [setFeedScrollPosition]);
 

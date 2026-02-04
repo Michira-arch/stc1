@@ -38,6 +38,7 @@ const LostAndFound = React.lazy(() => import('./pages/stc-apps/LostAndFound').th
 const CampusHustleApp = React.lazy(() => import('./src/apps/campus-hustle/App'));
 const MarketplaceApp = React.lazy(() => import('./src/features/marketplace/MarketplaceApp'));
 const LeaderboardWrapper = React.lazy(() => import('./pages/leaderboard/LeaderboardWrapper').then(module => ({ default: module.LeaderboardWrapper })));
+const UnicampusApp = React.lazy(() => import('./src/apps/unicampus/App'));
 const RunnerGame = React.lazy(() => import('./pages/games/runner/RunnerGame')); // Default export
 
 // Loading Component
@@ -242,6 +243,11 @@ const AppContent = () => {
           <LeaderboardWrapper onBack={() => setActiveTab('apps')} />
         </Suspense>
       );
+      case 'unicampus': return (
+        <Suspense fallback={<PageLoader />}>
+          <UnicampusApp onBack={() => setActiveTab('apps')} />
+        </Suspense>
+      );
 
       case 'runner': return (
         <Suspense fallback={<PageLoader />}>
@@ -306,7 +312,7 @@ const AppContent = () => {
             if (isMouse || isDesktop) return;
 
             // Disable swipe if in STC Apps sub-pages
-            if (['freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards'].includes(activeTab)) return;
+            if (['freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards', 'unicampus'].includes(activeTab)) return;
 
             const threshold = 100; // Drag distance threshold
             const velocityThreshold = 500; // Speed threshold
@@ -351,7 +357,7 @@ const AppContent = () => {
 
       {/* Hide navigation when viewing a story or settings or inside apps */}
       {!viewedStoryId && !isSettingsOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
-        !['apps', 'freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards'].includes(activeTab) && (
+        !['apps', 'freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards', 'unicampus'].includes(activeTab) && (
           <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
         )}
 

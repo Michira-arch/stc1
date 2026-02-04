@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { House, Compass, PenTool, User as UserIcon, ChevronDown, Video } from 'lucide-react';
 import { CarvedButton } from './CarvedButton';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 
 interface Props {
   activeTab: string;
@@ -10,6 +10,8 @@ interface Props {
 
 export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const isDragging = useRef(false);
 
   const navItems = [
     { id: 'feed', icon: <House size={24} />, label: 'Home' },
@@ -25,7 +27,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
   const [showCollapseHint, setShowCollapseHint] = useState(false);
   const [showGestureHint, setShowGestureHint] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Check if user has seen the collapse hint
     const hasSeenCollapse = localStorage.getItem('dock_onboarding_collapse');
     if (!hasSeenCollapse) {
@@ -50,8 +52,76 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
     }
   };
 
+  const handleDragStart = () => {
+    isDragging.current = true;
+  };
+
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    // Reset dragging flag after a short delay to block immediate clicks
+    setTimeout(() => {
+      isDragging.current = false;
+    }, 150);
+
+    const { innerWidth, innerHeight } = window;
+    const buttonSize = 88;
+    const radius = buttonSize / 2;
+    const margin = 16;
+
+    // Layout origin is center-bottom: (innerWidth/2, innerHeight - 44)
+    const layoutCenterX = innerWidth / 2;
+    const layoutCenterY = innerHeight - 44;
+
+    const currentX = info.point.x;
+    const currentY = info.point.y;
+
+    // Define snap targets (coordinate centers)
+    const targets = {
+      left: { x: radius + margin, y: currentY },
+      right: { x: innerWidth - radius - margin, y: currentY },
+      top: { x: currentX, y: radius + margin },
+      bottom: { x: currentX, y: innerHeight - 44 }
+    };
+
+    // Calculate distances
+    const distLeft = Math.abs(currentX - (radius + margin));
+    const distRight = Math.abs(currentX - (innerWidth - radius - margin));
+    const distTop = Math.abs(currentY - (radius + margin));
+    const distBottom = Math.abs(currentY - (innerHeight - 44));
+
+    const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+
+    let targetX = currentX;
+    let targetY = currentY;
+
+    if (minDist === distLeft) {
+      targetX = targets.left.x;
+      targetY = Math.max(radius + margin, Math.min(innerHeight - radius - margin, currentY));
+    } else if (minDist === distRight) {
+      targetX = targets.right.x;
+      targetY = Math.max(radius + margin, Math.min(innerHeight - radius - margin, currentY));
+    } else if (minDist === distTop) {
+      targetX = Math.max(radius + margin, Math.min(innerWidth - radius - margin, currentX));
+      targetY = targets.top.y;
+    } else {
+      // Bottom Snap
+      targetX = Math.max(radius + margin, Math.min(innerWidth - radius - margin, currentX));
+      targetY = innerHeight - 44;
+    }
+
+    // Convert absolute target to relative delta
+    const deltaX = targetX - layoutCenterX;
+    const deltaY = targetY - layoutCenterY;
+
+    setDragPosition({ x: deltaX, y: deltaY });
+  };
+
+  const handleCollapsedClick = () => {
+    if (isDragging.current) return;
+    setIsCollapsed(false);
+  };
+
   return (
-    <div className="fixed bottom-6 left-0 right-0 mx-auto z-40 w-full max-w-md flex items-center justify-center pointer-events-none">
+    <div className="fixed inset-0 z-40 pointer-events-none flex items-end justify-center">
       {/* Onboarding Bubble */}
       <AnimatePresence>
         {showCollapseHint && !isCollapsed && (
@@ -59,7 +129,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute -top-12 right-8 bg-accent text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg pointer-events-auto"
+            className="absolute bottom-24 right-8 bg-accent text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg pointer-events-auto"
             onClick={() => { setShowCollapseHint(false); localStorage.setItem('dock_onboarding_collapse', 'true'); }}
           >
             Try collapsing the dock!
@@ -71,9 +141,9 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed bottom-32 bg-black/70 backdrop-blur-md text-white px-6 py-3 rounded-full font-bold shadow-2xl z-50 pointer-events-none flex items-center gap-3"
+            className="fixed bottom-32 left-0 right-0 mx-auto w-max bg-black/70 backdrop-blur-md text-white px-6 py-3 rounded-full font-bold shadow-2xl z-50 pointer-events-none flex items-center gap-3"
           >
-            <span>Swipe to navigate</span>
+            <span>Drag to snap</span>
             <motion.div
               animate={{ x: [0, 20, -20, 0] }}
               transition={{ repeat: Infinity, duration: 2 }}
@@ -84,21 +154,35 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
       </AnimatePresence>
 
       <motion.div
+        drag={isCollapsed}
+        dragMomentum={false}
+        dragElastic={0.2}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
         initial={false}
         animate={{
           width: isCollapsed ? 88 : "auto",
           height: 88, // Constant height prevents vertical squashing
-          borderRadius: isCollapsed ? 44 : 32, // 44px is exactly half of 88px (circle)
+
+          borderTopLeftRadius: isCollapsed ? 44 : 32,
+          borderTopRightRadius: isCollapsed ? 44 : 32,
+          borderBottomLeftRadius: isCollapsed ? 44 : 0,
+          borderBottomRightRadius: isCollapsed ? 44 : 0,
+
           padding: isCollapsed ? 0 : "0 24px",
+
+          // Position Handling
+          x: isCollapsed ? dragPosition.x : 0,
+          y: isCollapsed ? dragPosition.y : 0,
         }}
         transition={{
           type: "spring",
-          bounce: isCollapsed ? 0 : 0.25, // No bounce on collapse (prevents squashing), bounce on expand
+          bounce: isCollapsed ? 0.1 : 0.2,
           duration: 0.5
         }}
         className="pointer-events-auto bg-ceramic-base dark:bg-obsidian-surface
-                    neu-convex border border-white/5 shadow-2xl overflow-hidden relative
-                    flex items-center justify-center"
+                    neu-convex border-t border-x border-white/5 shadow-2xl overflow-hidden relative
+                    flex items-center justify-center max-w-md w-full"
       >
         <AnimatePresence mode="popLayout" initial={false}>
           {!isCollapsed ? (
@@ -108,7 +192,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
               transition={{ duration: 0.3 }}
-              className="flex justify-center gap-4 items-center w-full min-w-0" // Reduced gap slightly
+              className="flex justify-center gap-4 items-center w-full min-w-0 pb-2"
             >
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;
@@ -127,7 +211,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
                 );
               })}
 
-              {/* Collapse Trigger - Separated to avoid layout interference */}
+              {/* Collapse Trigger */}
               <motion.button
                 layout
                 onClick={handleCollapse}
@@ -145,7 +229,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
             <motion.button
               layoutId={`dock-item-${activeItem.id}`} // Match the active item's ID
               key="collapsed"
-              onClick={() => setIsCollapsed(false)}
+              onClick={handleCollapsedClick}
               className="w-full h-full flex items-center justify-center text-accent-glow relative z-10"
               whileTap={{ scale: 0.9 }}
             >

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Search, ShoppingBag, Trophy, ArrowLeft, Utensils, TriangleAlert, Briefcase } from 'lucide-react';
+import { BookOpen, Search, ShoppingBag, Trophy, ArrowLeft, Utensils, TriangleAlert, Briefcase, GraduationCap } from 'lucide-react';
 import { CarvedButton } from '../../components/CarvedButton';
 
 interface AppsLauncherProps {
@@ -88,6 +88,19 @@ export const AppsLauncher: React.FC<AppsLauncherProps> = ({ onBack, onNavigate }
             iconBg: 'bg-white/60 dark:bg-amber-500/20',
             iconColor: 'text-amber-600 dark:text-amber-300',
             shadow: 'shadow-amber-500/10 dark:shadow-amber-900/20'
+        },
+        {
+            id: 'unicampus',
+            name: 'Unicampus',
+            icon: <GraduationCap strokeWidth={2} size={28} />,
+            description: 'Past Papers',
+            // Light: Pastel Teal, Dark: Deep Teal
+            gradient: 'from-teal-100 to-emerald-200 dark:from-teal-900/40 dark:to-emerald-900/40',
+            textColor: 'text-teal-900 dark:text-teal-100',
+            descColor: 'text-teal-700 dark:text-teal-300',
+            iconBg: 'bg-white/60 dark:bg-teal-500/20',
+            iconColor: 'text-teal-600 dark:text-teal-300',
+            shadow: 'shadow-teal-500/10 dark:shadow-teal-900/20'
         },
     ];
 
