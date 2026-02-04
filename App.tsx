@@ -180,6 +180,12 @@ const AppContent = () => {
       // Delay slightly to allow stories to load if needed, but handleStoryClick just sets ID
       setViewedStoryId(storyId);
     }
+
+    // Unicampus Deep Link
+    const paperId = params.get('paper');
+    if (paperId) {
+      setActiveTab('unicampus');
+    }
   }, [location.search]);
 
   const handleStoryClick = (id: string) => {
@@ -385,18 +391,21 @@ const AppContent = () => {
 
       {!isChatOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
         !['food', 'marketplace', 'campus-hustle'].includes(activeTab) && (
-          <motion.button
+          <motion.div
+            drag
+            dragMomentum={false}
             whileHover={{ scale: 1.1 }}
+            whileDrag={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => openChat()}
-            className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white border-2 border-white/20 backdrop-blur-sm"
+            className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white border-2 border-white/20 backdrop-blur-sm cursor-grab active:cursor-grabbing"
           >
             <Bot size={28} />
             <span className="absolute -top-1 -right-1 flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
             </span>
-          </motion.button>
+          </motion.div>
         )}
     </div>
   );

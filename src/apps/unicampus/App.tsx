@@ -94,12 +94,15 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
     const params = new URLSearchParams(window.location.search);
     const paperId = params.get('paper');
     if (paperId && papers.length > 0) {
+      // Prevent infinite loop: if we are already viewing THIS paper, don't re-trigger
+      if (viewingPaper?.id === paperId) return;
+
       const paper = papers.find(p => p.id === paperId);
       if (paper) {
         handlePreview(paper, false);
       }
     }
-  }, [papers]);
+  }, [papers, viewingPaper]);
 
   const showNotification = (message: string) => {
     setNotification(message);
@@ -157,6 +160,31 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
     });
   };
 
+  const handleDownload = async (paper: Paper) => {
+    if (!paper.fileUrl) return;
+
+    // Optimistic UI update
+    setPapers(prev => prev.map(p => p.id === paper.id ? { ...p, downloads: p.downloads + 1 } : p));
+
+    // DB Update
+    try {
+      await (supabase.rpc as any)('increment_paper_download', { p_paper_id: paper.id });
+    } catch (e) {
+      console.error("Failed to increment download count", e);
+    }
+
+    // Trigger Download
+    const link = document.createElement('a');
+    link.href = paper.fileUrl;
+    link.download = `${paper.courseCode}_${paper.year}_${paper.category}.pdf`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showNotification('Download started...');
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError(null);
     if (e.target.files && e.target.files[0]) {
@@ -191,7 +219,10 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
 
     try {
       // 1. Upload file to storage
-      const fileName = `${Date.now()}_${uploadForm.file.name.replace(/\s+/g, '_')}`;
+      // Use random UUID + timestamp to ensure uniqueness and prevent storage conflicts
+      const uniqueId = crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b => b.toString(16).padStart(2, '0')).join('');
+      const fileName = `${Date.now()}_${uniqueId}_${uploadForm.file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('unicampus-papers')
         .upload(fileName, uploadForm.file, {
@@ -229,8 +260,16 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
       fetchPapers(); // Refresh list
 
     } catch (err: any) {
-      console.error('Upload error:', err);
-      setUploadError(err.message || 'Failed to upload paper');
+      console.error('Upload error details:', err);
+
+      let message = 'Failed to upload paper';
+      if (err.statusCode === '409' || err.code === '23505' || err.message?.includes('Duplicate')) {
+        message = 'This paper (or file) already exists.';
+      } else if (err.message) {
+        message = err.message;
+      }
+
+      setUploadError(message);
     } finally {
       setIsUploading(false);
     }
@@ -547,6 +586,7 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
                   paper={paper}
                   onPreview={() => handlePreview(paper)}
                   onShare={handleShare}
+                  onDownload={handleDownload}
                 />
               ))}
             </div>
