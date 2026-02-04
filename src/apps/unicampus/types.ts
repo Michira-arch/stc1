@@ -30,3 +30,16 @@ export interface ChatMessage {
   text: string;
   timestamp: number;
 }
+
+export interface UploadRequest {
+  id: string;
+  requesterId: string;
+  university: string;
+  courseCode: string;
+  category: 'Exam' | 'CAT';
+  year?: number;
+  description?: string;
+  status: 'pending' | 'satisfied';
+  requestDate: string;
+  requesterName: string;
+}
