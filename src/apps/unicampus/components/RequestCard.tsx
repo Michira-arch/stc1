@@ -6,17 +6,20 @@ import { timeAgo } from '../../../utils';
 interface RequestCardProps {
     request: UploadRequest;
     onFulfill: (request: UploadRequest) => void;
+    className?: string; // For highlighting (halo effect)
+    id?: string; // For scrolling
 }
 
-export const RequestCard: React.FC<RequestCardProps> = ({ request, onFulfill }) => {
+export const RequestCard: React.FC<RequestCardProps> = ({ request, onFulfill, className = '', id }) => {
     return (
-        <div className="
+        <div id={id} className={`
       group relative flex flex-col p-6 rounded-2xl transition-all duration-300
       bg-ceramic dark:bg-obsidian
       shadow-[6px_6px_12px_#b8b9be,-6px_-6px_12px_#ffffff]
       dark:shadow-[6px_6px_12px_#151519,-6px_-6px_12px_#27272f]
       hover:scale-[1.02]
-    ">
+      ${className}
+    `}>
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-xl text-amber-500 
           shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff]

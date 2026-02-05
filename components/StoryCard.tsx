@@ -178,6 +178,73 @@ const CommentNode = memo(({ comment, users, currentUser, storyAuthorId, depth = 
   );
 });
 
+// --- Linkified Text Component ---
+const LinkifiedText = memo(({ text }: { text: string }) => {
+  if (!text) return null;
+
+  // Split by markdown image syntax first to ignore them or handle them? 
+  // The user only asked for links. Markdown links: [text](url)
+  // We should also handle raw URLs.
+
+  const parts = [];
+  let lastIndex = 0;
+
+  // Regex for Markdown links: [label](url)
+  // And Raw URLs: http://... or https://...
+  // We prioritize Markdown links.
+  const regex = /(\[([^\]]+)\]\(([^)]+)\))|(https?:\/\/[^\s]+)/g;
+
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    // Push preceding text
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+
+    if (match[1]) {
+      // It's a Markdown link: [label](url)
+      const label = match[2];
+      const url = match[3];
+      parts.push(
+        <a
+          key={match.index}
+          href={url}
+          onClick={(e) => { e.stopPropagation(); }}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-emerald-500 hover:underline font-medium"
+        >
+          {label}
+        </a>
+      );
+    } else if (match[4]) {
+      // It's a raw URL
+      const url = match[4];
+      parts.push(
+        <a
+          key={match.index}
+          href={url}
+          onClick={(e) => { e.stopPropagation(); }}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:underline break-all"
+        >
+          {url}
+        </a>
+      );
+    }
+
+    lastIndex = regex.lastIndex;
+  }
+
+  // Push remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return <>{parts}</>;
+});
+
 // --- Main Component ---
 
 export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileClick }) => {
@@ -283,7 +350,23 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
   };
 
   // Preview Logic
-  const previewText = story.description || story.content.replace(/<[^>]+>/g, '');
+  // We want to use the full content for rendering links if possible, 
+  // but if it's a preview card, maybe we still want to truncate?
+  // The original code used description OR content stripped of tags.
+  // For now, let's keep using description if available, else content.
+  // But we want to RETAIN the markdown links in the source text so we can parse them.
+  // Original: const previewText = story.description || story.content.replace(/<[^>]+>/g, '');
+  // If story.content has markdown links, stripping tags <[^>]+> shouldn't hurt them as they are []().
+  // However, if we just want to support markdown links, we should pass the raw text to LinkifiedText.
+
+  const rawText = story.description || story.content;
+  // Note: if content had HTML tags, we might want to strip them but keep markdown?
+  // Since we are moving to markdown support, likely content is markdown or plain text.
+  // Let's assume it's safe to pass rawText.
+  // But we still want to truncate if it's too long? The original code had line-clamp-3 css class.
+  // So we can let CSS handle truncation visually?
+  // But LinkifiedText returns a fragment of spans/anchors. line-clamp might not work perfectly on a fragment 
+  // if it's not a single block, but usually line-clamp works on the container.
 
   return (
     <motion.article
@@ -350,7 +433,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
       >
         {story.title && <h2 className="text-lg font-bold mb-2 leading-tight text-slate-800 dark:text-slate-100">{story.title}</h2>}
         <p className="text-slate-600 dark:text-[#aab2bd] text-sm leading-relaxed line-clamp-3">
-          {previewText}
+          <LinkifiedText text={rawText} />
         </p>
       </div>
 

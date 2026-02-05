@@ -46,6 +46,7 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
   const [requests, setRequests] = useState<UploadRequest[]>([]);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [fulfillRequestId, setFulfillRequestId] = useState<string | null>(null);
+  const [highlightedRequestId, setHighlightedRequestId] = useState<string | null>(null);
   const [requestForm, setRequestForm] = useState({
     university: '',
     courseCode: '',
@@ -147,16 +148,33 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const paperId = params.get('paper');
-    if (paperId && papers.length > 0) {
-      // Prevent infinite loop: if we are already viewing THIS paper, don't re-trigger
-      if (viewingPaper?.id === paperId) return;
+    const requestId = params.get('requestId');
 
+    if (paperId && papers.length > 0) {
+      if (viewingPaper?.id === paperId) return;
       const paper = papers.find(p => p.id === paperId);
-      if (paper) {
-        handlePreview(paper, false);
-      }
+      if (paper) handlePreview(paper, false);
     }
-  }, [papers, viewingPaper]);
+
+    if (requestId) {
+      setActiveTab('requests');
+      setHighlightedRequestId(requestId);
+
+      // Remove param after handling to avoid stickiness
+      const url = new URL(window.location.href);
+      // url.searchParams.delete('requestId'); 
+      // Keep it briefly or remove? Removing improves UX if they refresh.
+      // But we need to wait for requests to load.
+
+      // Auto-scroll to request if it exists
+      setTimeout(() => {
+        const el = document.getElementById(`request-${requestId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 1000); // Wait for requests to load
+    }
+  }, [papers.length, requests.length]); // Re-run when data loads
 
   const showNotification = (message: string) => {
     setNotification(message);
@@ -452,21 +470,25 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
         status: 'pending'
       };
 
-      const { error: reqError } = await (supabase as any)
+      const { data: newRequest, error: reqError } = await (supabase as any)
         .from('unicampus_upload_requests')
-        .insert(requestData);
+        .insert(requestData)
+        .select()
+        .single();
 
       if (reqError) throw reqError;
 
       // 2. Post as Story (Optional)
-      if (requestForm.postAsStory) {
+      if (requestForm.postAsStory && newRequest) {
         const uniName = UNIVERSITIES.find(u => u.id === requestForm.university)?.shortName || 'Unknown';
+        const requestLink = `${window.location.origin}${window.location.pathname}?requestId=${newRequest.id}`;
+
         const storyContent = `I need help finding the ${requestForm.category} paper for **${requestForm.courseCode}** (${uniName}).\n\n${requestForm.description || ''}`;
 
         await (supabase as any).from('stories').insert({
           author_id: currentUser.id,
           title: `Request: ${requestForm.courseCode}`,
-          content: storyContent,
+          content: `${storyContent}\n\n[View Request](${requestLink})`,
           is_anonymous: false
         });
       }
@@ -777,23 +799,21 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
             </button>
           </div>
 
-          {/* Sub-Category Switcher (Only for Papers for now) */}
-          {activeTab === 'papers' && (
-            <div className="flex items-center gap-4 mt-2 ml-1">
-              <button
-                onClick={() => setSelectedCategory('Exam')}
-                className={`text-xs font-bold pb-1 border-b-2 transition-all ${selectedCategory === 'Exam' ? 'text-emerald-600 border-emerald-500' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
-              >
-                Main Exams
-              </button>
-              <button
-                onClick={() => setSelectedCategory('CAT')}
-                className={`text-xs font-bold pb-1 border-b-2 transition-all ${selectedCategory === 'CAT' ? 'text-emerald-600 border-emerald-500' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
-              >
-                CATs
-              </button>
-            </div>
-          )}
+          {/* Sub-Category Switcher (Visible for both Papers and Requests) */}
+          <div className="flex items-center gap-4 mt-2 ml-1">
+            <button
+              onClick={() => setSelectedCategory('Exam')}
+              className={`text-xs font-bold pb-1 border-b-2 transition-all ${selectedCategory === 'Exam' ? 'text-emerald-600 border-emerald-500' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+            >
+              Main Exams
+            </button>
+            <button
+              onClick={() => setSelectedCategory('CAT')}
+              className={`text-xs font-bold pb-1 border-b-2 transition-all ${selectedCategory === 'CAT' ? 'text-emerald-600 border-emerald-500' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+            >
+              CATs
+            </button>
+          </div>
         </div>
 
 
@@ -886,7 +906,9 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
                 {filteredRequests.map(req => (
                   <RequestCard
                     key={req.id}
+                    id={`request-${req.id}`} // Add ID for scrolling
                     request={req}
+                    className={highlightedRequestId === req.id ? 'ring-4 ring-emerald-500 shadow-[0_0_50px_-12px_rgba(16,185,129,0.5)] scale-[1.02] transition-all duration-500' : ''}
                     onFulfill={(r) => {
                       if (isGuest) {
                         showToast?.('Please login to fulfill requests', 'error');
