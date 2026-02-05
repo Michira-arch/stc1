@@ -183,7 +183,8 @@ const AppContent = () => {
 
     // Unicampus Deep Link
     const paperId = params.get('paper');
-    if (paperId) {
+    const requestId = params.get('requestId');
+    if (paperId || requestId) {
       setActiveTab('unicampus');
     }
   }, [location.search]);
