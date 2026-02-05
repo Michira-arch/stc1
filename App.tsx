@@ -309,15 +309,10 @@ const AppContent = () => {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="min-h-screen touch-pan-y"
-          drag="x"
+          drag={typeof window !== 'undefined' && window.innerWidth <= 768 && 'ontouchstart' in window && activeTab !== 'runner' ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
           onDragEnd={(e, info) => {
-            // Disable swipe nav on desktop/laptop (mouse or large screen)
-            const isMouse = (e as PointerEvent).pointerType === 'mouse';
-            const isDesktop = window.innerWidth > 768;
-            if (isMouse || isDesktop) return;
-
             // Disable swipe if in STC Apps sub-pages
             if (['freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards', 'unicampus'].includes(activeTab)) return;
 

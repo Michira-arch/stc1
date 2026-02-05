@@ -129,11 +129,11 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-24 right-8 bg-accent text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg pointer-events-auto"
+            className="absolute bottom-20 left-1/2 translate-x-[60px] bg-accent text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg pointer-events-auto whitespace-nowrap"
             onClick={() => { setShowCollapseHint(false); localStorage.setItem('dock_onboarding_collapse', 'true'); }}
           >
             Try collapsing the dock!
-            <div className="absolute -bottom-1 right-4 w-3 h-3 bg-accent rotate-45" />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-accent rotate-45" />
           </motion.div>
         )}
         {showGestureHint && (
@@ -172,7 +172,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
           padding: isCollapsed ? 0 : "0 24px",
 
           // Position Handling
-          x: isCollapsed ? dragPosition.x : 0,
+          x: isCollapsed ? dragPosition.x : '-50%', // Centered when expanded
           y: isCollapsed ? dragPosition.y : 0,
         }}
         transition={{
@@ -181,8 +181,8 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
           duration: 0.5
         }}
         className="pointer-events-auto bg-ceramic-base dark:bg-obsidian-surface
-                    neu-convex border-t border-x border-white/5 shadow-2xl overflow-hidden relative
-                    flex items-center justify-center max-w-md w-full"
+                    neu-convex border-t border-x border-white/5 shadow-2xl overflow-hidden fixed bottom-0 left-1/2
+                    flex items-center justify-center max-w-md w-full z-50"
       >
         <AnimatePresence mode="popLayout" initial={false}>
           {!isCollapsed ? (

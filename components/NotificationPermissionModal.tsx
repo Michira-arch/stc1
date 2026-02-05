@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X } from 'lucide-react';
 import { CarvedButton } from './CarvedButton';
+import { useScrollLock } from '../src/hooks/useScrollLock';
 
 interface Props {
     isOpen: boolean;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const NotificationPermissionModal: React.FC<Props> = ({ isOpen, onClose, onEnable }) => {
+    useScrollLock(isOpen);
     return (
         <AnimatePresence>
             {isOpen && (

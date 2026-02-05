@@ -4,9 +4,14 @@ import { motion } from 'framer-motion';
 import { X, EyeOff, Eye, Trash2, Save, Image as ImageIcon } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { CarvedButton } from './CarvedButton';
+import { useScrollLock } from '../src/hooks/useScrollLock';
 
 export const PostManagementModal = () => {
   const { managingStoryId, setManagingStoryId, stories, toggleHideStory, deleteStory, updateStory } = useApp();
+
+  // Lock scroll when modal is active
+  useScrollLock(!!managingStoryId);
+
   const story = stories.find(s => s.id === managingStoryId);
 
   const [editTitle, setEditTitle] = useState('');

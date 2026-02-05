@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, UserPlus, LogIn } from 'lucide-react';
 import { CarvedButton } from './CarvedButton';
+import { useScrollLock } from '../src/hooks/useScrollLock';
 
 interface GuestActionModalProps {
     isOpen: boolean;
@@ -12,6 +13,7 @@ interface GuestActionModalProps {
 }
 
 export const GuestActionModal: React.FC<GuestActionModalProps> = ({ isOpen, onClose, onLogin, onSignup, actionName }) => {
+    useScrollLock(isOpen);
     return (
         <AnimatePresence>
             {isOpen && (

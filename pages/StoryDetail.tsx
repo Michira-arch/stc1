@@ -7,6 +7,7 @@ import { timeAgo } from '../utils';
 import { CarvedButton } from '../components/CarvedButton';
 import { Comment, User } from '../types';
 import { AudioPlayer } from '../components/AudioPlayer';
+import { useScrollLock } from '../src/hooks/useScrollLock';
 
 interface Props {
   storyId: string;
@@ -98,6 +99,7 @@ const CommentNode = memo(({ comment, depth = 0, users, replyToId, onSetReplyId, 
 });
 
 export const StoryDetail: React.FC<Props> = ({ storyId, onBack }) => {
+  useScrollLock(true);
   const { users, stories, currentUser, toggleLike, addComment, deleteStory, showToast } = useApp();
   const story = stories.find(s => s.id === storyId);
   const [mainCommentText, setMainCommentText] = useState("");

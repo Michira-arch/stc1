@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Smile, Meh, Frown, Loader2 } from 'lucide-react';
 import { CarvedButton } from './CarvedButton';
+import { useScrollLock } from '../src/hooks/useScrollLock';
 import { useApp } from '../store/AppContext';
 import { supabase } from '../store/supabaseClient';
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export const FeedbackModal: React.FC<Props> = ({ isOpen, onClose }) => {
+  useScrollLock(isOpen);
   const { showToast, currentUser, isGuest } = useApp();
   const [rating, setRating] = useState<'good' | 'neutral' | 'bad' | null>(null);
   const [text, setText] = useState('');
