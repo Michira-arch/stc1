@@ -7,6 +7,8 @@ import { timeAgo, triggerHaptic } from '../utils';
 import { CarvedButton } from './CarvedButton';
 
 import { AudioPlayer } from './AudioPlayer';
+import { cleanContent } from '../src/utils/textUtils';
+
 
 interface StoryCardProps {
   story: Story;
@@ -350,23 +352,11 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
   };
 
   // Preview Logic
-  // We want to use the full content for rendering links if possible, 
-  // but if it's a preview card, maybe we still want to truncate?
-  // The original code used description OR content stripped of tags.
-  // For now, let's keep using description if available, else content.
-  // But we want to RETAIN the markdown links in the source text so we can parse them.
-  // Original: const previewText = story.description || story.content.replace(/<[^>]+>/g, '');
-  // If story.content has markdown links, stripping tags <[^>]+> shouldn't hurt them as they are []().
-  // However, if we just want to support markdown links, we should pass the raw text to LinkifiedText.
+  // 4. Decode HTML Entities
+  // Moved decode logic to cleanContent in textUtils.ts
 
-  const rawText = story.description || story.content;
-  // Note: if content had HTML tags, we might want to strip them but keep markdown?
-  // Since we are moving to markdown support, likely content is markdown or plain text.
-  // Let's assume it's safe to pass rawText.
-  // But we still want to truncate if it's too long? The original code had line-clamp-3 css class.
-  // So we can let CSS handle truncation visually?
-  // But LinkifiedText returns a fragment of spans/anchors. line-clamp might not work perfectly on a fragment 
-  // if it's not a single block, but usually line-clamp works on the container.
+  const rawText = cleanContent(story.description || story.content);
+  // Note: cleanContent handles HTML stripping and preserves structure w/ newlines.
 
   return (
     <motion.article

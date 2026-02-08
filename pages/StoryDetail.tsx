@@ -8,6 +8,8 @@ import { CarvedButton } from '../components/CarvedButton';
 import { Comment, User } from '../types';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { useScrollLock } from '../src/hooks/useScrollLock';
+import { invertHtmlColors } from '../src/utils/textUtils';
+
 
 interface Props {
   storyId: string;
@@ -100,7 +102,7 @@ const CommentNode = memo(({ comment, depth = 0, users, replyToId, onSetReplyId, 
 
 export const StoryDetail: React.FC<Props> = ({ storyId, onBack }) => {
   useScrollLock(true);
-  const { users, stories, currentUser, toggleLike, addComment, deleteStory, showToast } = useApp();
+  const { users, stories, currentUser, toggleLike, addComment, deleteStory, showToast, theme } = useApp();
   const story = stories.find(s => s.id === storyId);
   const [mainCommentText, setMainCommentText] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);
@@ -206,10 +208,13 @@ export const StoryDetail: React.FC<Props> = ({ storyId, onBack }) => {
         <div className="mb-10">
           <h1 className="text-3xl font-bold mb-4 leading-tight text-slate-800 dark:text-slate-100">{story.title}</h1>
           {/* Use dangerouslySetInnerHTML to render potential HTML from rich text editor */}
+          {/* We remove whitespace-pre-wrap because the HTML content determines the structure (p tags etc). 
+              If we keep pre-wrap, the source code indentation/newlines in the HTML string will be rendered as huge gaps. */}
           <div
-            className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap prose dark:prose-invert"
-            dangerouslySetInnerHTML={{ __html: story.content }}
+            className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed prose dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: theme === 'dark' ? invertHtmlColors(story.content) : story.content }}
           />
+
         </div>
 
         {/* Interaction Bar */}

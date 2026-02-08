@@ -13,42 +13,92 @@ export const LeaderboardVote: React.FC<Props> = ({ leaderboard }) => {
     const [entities, setEntities] = useState<any[]>([]);
     const [pair, setPair] = useState<[any, any] | null>(null);
     const [loading, setLoading] = useState(true);
-    const [voting, setVoting] = useState(false); // Processing state
-    const { showToast } = useApp();
+    const [voting, setVoting] = useState(false);
+    const [votedPairs, setVotedPairs] = useState<Set<string>>(new Set());
+    const [allCaughtUp, setAllCaughtUp] = useState(false);
+    const { showToast, currentUser } = useApp();
 
     useEffect(() => {
-        fetchEntities();
-    }, [leaderboard.id]);
+        loadData();
+    }, [leaderboard.id, currentUser?.id]);
+
+    const loadData = async () => {
+        setLoading(true);
+        setAllCaughtUp(false);
+        const [entitiesData, votesData] = await Promise.all([
+            fetchEntities(),
+            fetchUserVotes()
+        ]);
+
+        if (entitiesData) {
+            setEntities(entitiesData);
+
+            // Reconstruct voted pairs set
+            const votedSet = new Set<string>();
+            if (votesData) {
+                votesData.forEach((vote: any) => {
+                    const sortedIds = [vote.winner_id, vote.loser_id].sort().join('-');
+                    votedSet.add(sortedIds);
+                });
+            }
+            setVotedPairs(votedSet);
+
+            // Pick first pair
+            pickRandomPair(entitiesData, votedSet);
+        }
+        setLoading(false);
+    };
 
     const fetchEntities = async () => {
         const { data } = await supabase
             .from('ranked_entities')
             .select('*')
-            .eq('leaderboard_id', leaderboard.id); // Fetch all for random pair logic
-
-        if (data && data.length >= 2) {
-            setEntities(data);
-            pickRandomPair(data);
-        }
-        setLoading(false);
+            .eq('leaderboard_id', leaderboard.id);
+        return data;
     };
 
-    const pickRandomPair = (pool: any[]) => {
+    const fetchUserVotes = async () => {
+        if (!currentUser) return [];
+        const { data } = await supabase
+            .from('ranking_votes')
+            .select('winner_id, loser_id')
+            .eq('leaderboard_id', leaderboard.id)
+            .eq('user_id', currentUser.id);
+        return data;
+    };
+
+    const pickRandomPair = (pool: any[], currentVotedPairs: Set<string>) => {
         if (pool.length < 2) return;
-        // Simple random pair logic
-        let idx1 = Math.floor(Math.random() * pool.length);
-        let idx2 = Math.floor(Math.random() * pool.length);
-        while (idx1 === idx2) {
-            idx2 = Math.floor(Math.random() * pool.length);
+
+        let attempts = 0;
+        const maxAttempts = 100; // Prevent infinite loop
+        let p1, p2, key;
+
+        do {
+            let idx1 = Math.floor(Math.random() * pool.length);
+            let idx2 = Math.floor(Math.random() * pool.length);
+            while (idx1 === idx2) {
+                idx2 = Math.floor(Math.random() * pool.length);
+            }
+            p1 = pool[idx1];
+            p2 = pool[idx2];
+            key = [p1.id, p2.id].sort().join('-');
+            attempts++;
+        } while (currentVotedPairs.has(key) && attempts < maxAttempts);
+
+        if (attempts >= maxAttempts) {
+            setAllCaughtUp(true);
+            setPair(null);
+        } else {
+            setPair([p1, p2]);
         }
-        setPair([pool[idx1], pool[idx2]]);
     };
 
     const handleVote = async (winnerIndex: 0 | 1 | 'tie') => {
         if (!pair || voting) return;
         setVoting(true);
 
-        // Haptic feedback if available (mobile)
+        // Haptic feedback
         if (window.navigator && window.navigator.vibrate) {
             window.navigator.vibrate(50);
         }
@@ -56,12 +106,18 @@ export const LeaderboardVote: React.FC<Props> = ({ leaderboard }) => {
         const left = pair[0];
         const right = pair[1];
 
+        // Optimistic update: Add to local voted set immediately
+        const pairKey = [left.id, right.id].sort().join('-');
+        const newVotedSet = new Set(votedPairs);
+        newVotedSet.add(pairKey);
+        setVotedPairs(newVotedSet);
+
         try {
             let error;
             if (winnerIndex === 'tie') {
                 const { error: err } = await supabase.rpc('submit_vote', {
                     match_leaderboard_id: leaderboard.id,
-                    match_winner_id: left.id, // Doesnt matter for draw
+                    match_winner_id: left.id,
                     match_loser_id: right.id,
                     match_is_draw: true
                 });
@@ -92,7 +148,7 @@ export const LeaderboardVote: React.FC<Props> = ({ leaderboard }) => {
 
             // Artificial delay for animation feel
             setTimeout(() => {
-                pickRandomPair(entities);
+                pickRandomPair(entities, newVotedSet);
                 setVoting(false);
             }, 400);
 
@@ -100,6 +156,7 @@ export const LeaderboardVote: React.FC<Props> = ({ leaderboard }) => {
             console.error('Vote failed:', err);
             showToast('Vote failed to submit', 'error');
             setVoting(false);
+            // Revert optimistic update? For now assume it's fine, user can refresh if needed.
         }
     };
 
@@ -117,6 +174,16 @@ export const LeaderboardVote: React.FC<Props> = ({ leaderboard }) => {
             </div>
             <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Not Enough Candidates</h3>
             <p className="max-w-xs mx-auto text-sm mb-6">Need at least 2 candidates to start a face-off. Add them in the Rankings tab!</p>
+        </div>
+    );
+
+    if (allCaughtUp) return (
+        <div className="flex flex-col items-center justify-center py-20 px-6 text-center text-slate-500">
+            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-6">
+                <Check size={32} className="text-emerald-500" />
+            </div>
+            <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">You're All Caught Up!</h3>
+            <p className="max-w-xs mx-auto text-sm mb-6">You've voted on enough random pairs for now. Check out the rankings to see who's winning!</p>
         </div>
     );
 

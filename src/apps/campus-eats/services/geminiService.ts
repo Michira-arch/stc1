@@ -11,7 +11,7 @@ export const generateFoodRecommendation = async (
     // Prepare context about available food from the dynamic state
     const menuContext = JSON.stringify(restaurants.map(r => ({
         restaurant: r.name,
-        menu: r.menu.map(m => ({ name: m.name, desc: m.description, price: `KES ${m.price}`, tags: m.tags }))
+        menu: r.menu?.map(m => ({ name: m.name, desc: m.description, price: `KES ${m.price}`, tags: m.tags })) || []
     })));
 
     const systemMessage = `${AI_SYSTEM_INSTRUCTION}\n\nContext Data (Available Campus Menus):\n${menuContext}`;
