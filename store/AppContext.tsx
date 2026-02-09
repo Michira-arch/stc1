@@ -52,7 +52,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // --- Auth State ---
   const [currentUser, setCurrentUser] = useState<User>({ id: 'guest', name: 'Guest', avatar: 'https://ui-avatars.com/api/?name=Guest', bio: 'Just passing through.' });
   const [isGuest, setIsGuest] = useState(true);
-  const [authPage, setAuthPage] = useState<'login' | 'signup' | 'forgot-password' | null>(null);
+  const [authPage, setAuthPage] = useState<'login' | 'signup' | 'forgot-password' | 'set-username' | null>(null);
 
   // --- Data State ---
   const [stories, setStories] = useState<Story[]>([]);

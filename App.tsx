@@ -17,6 +17,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { Login } from './pages/auth/Login';
 import { Signup } from './pages/auth/Signup';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
+import { SetUsername } from './pages/auth/SetUsername'; // New Import
 import { Onboarding } from './pages/Onboarding';
 import { GuestActionModal } from './components/GuestActionModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -199,11 +200,19 @@ const AppContent = () => {
     setAuthPage('login'); // Go to login after onboarding
   };
 
+  // Enforce Username Creation for Authenticated Users
+  useEffect(() => {
+    if (!isGuest && currentUser.id !== 'guest' && !currentUser.handle) {
+      setAuthPage('set-username');
+    }
+  }, [isGuest, currentUser.id, currentUser.handle]); // Re-run when user or handle changes
+
   const renderPage = () => {
     if (showOnboarding) return <Onboarding onComplete={handleOnboardingComplete} />;
     if (authPage === 'login') return <Login onNavigate={(page) => page === 'feed' ? setAuthPage(null) : setAuthPage(page)} />;
     if (authPage === 'signup') return <Signup onNavigate={(page) => page === 'feed' ? setAuthPage(null) : setAuthPage(page)} />;
     if (authPage === 'forgot-password') return <ForgotPassword onNavigate={(page) => page === 'feed' ? setAuthPage(null) : setAuthPage(page)} />;
+    if (authPage === 'set-username') return <SetUsername />; // New Route
 
     switch (activeTab) {
       case 'feed': return <Feed onStoryClick={handleStoryClick} onNavigate={setActiveTab} />;

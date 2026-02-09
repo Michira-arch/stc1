@@ -105,8 +105,8 @@ export interface AppContextType {
   isGuest: boolean;
 
   // Auth Navigation
-  authPage: 'login' | 'signup' | 'forgot-password' | null;
-  setAuthPage: (page: 'login' | 'signup' | 'forgot-password' | null) => void;
+  authPage: 'login' | 'signup' | 'forgot-password' | 'set-username' | null;
+  setAuthPage: (page: 'login' | 'signup' | 'forgot-password' | 'set-username' | null) => void;
 
   // Public Profile Viewing
   viewedProfile: User | null;
