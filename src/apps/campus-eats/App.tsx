@@ -124,26 +124,27 @@ const CampusEatsAppContent: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
         <div className="min-h-screen flex flex-col relative pb-20 bg-ceramic-base dark:bg-[#1A1D21]">
 
             {/* Navbar */}
-            <nav className="fixed top-0 w-full z-40 bg-ceramic-100/90 dark:bg-obsidian-800/90 backdrop-blur-md px-4 py-4 md:px-8 flex justify-between items-center shadow-sm">
-                <div className="flex items-center gap-2" onClick={() => { setSelectedRestaurant(null); setIsChefMode(false); setIsOrderHistoryOpen(false); }}>
+            <nav className="fixed top-0 w-full z-40 bg-ceramic-100/90 dark:bg-obsidian-800/90 backdrop-blur-md px-3 py-3 md:px-8 flex justify-between items-center shadow-sm transition-all">
+                <div className="flex items-center gap-1 md:gap-2" onClick={() => { setSelectedRestaurant(null); setIsChefMode(false); setIsOrderHistoryOpen(false); }}>
                     {onBack && (
-                        <NeuButton variant="icon" onClick={onBack} className="!w-8 !h-8 !p-1 mr-2">
+                        <NeuButton variant="icon" onClick={onBack} className="!w-8 !h-8 !p-1 mr-1 md:mr-2">
                             <span>←</span>
                         </NeuButton>
                     )}
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold cursor-pointer">C</div>
-                    <h1 className="text-xl font-bold tracking-tight text-slate-700 dark:text-slate-100 cursor-pointer">Campus<span className="text-emerald-500">Eats</span></h1>
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold cursor-pointer transform scale-90 md:scale-100">C</div>
+                    <h1 className="text-lg md:text-xl font-bold tracking-tight text-slate-700 dark:text-slate-100 cursor-pointer">Campus<span className="text-emerald-500">Eats</span></h1>
                 </div>
 
-                <div className="flex gap-4 items-center">
+                <div className="flex gap-2 md:gap-4 items-center">
                     <button
                         onClick={() => { setIsChefMode(!isChefMode); setSelectedRestaurant(null); setIsOrderHistoryOpen(false); }}
-                        className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${isChefMode ? 'bg-emerald-500 text-white' : 'text-slate-500 hover:text-emerald-500'}`}
+                        className={`text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg transition-colors whitespace-nowrap ${isChefMode ? 'bg-emerald-500 text-white' : 'text-slate-500 hover:text-emerald-500'}`}
                     >
-                        {isChefMode ? 'CHEF MODE' : 'USER MODE'}
+                        <span className="hidden sm:inline">{isChefMode ? 'CHEF MODE' : 'USER MODE'}</span>
+                        <span className="sm:hidden">{isChefMode ? 'CHEF' : 'USER'}</span>
                     </button>
 
-                    <NeuButton variant="icon" onClick={toggleTheme} className="!w-10 !h-10 !p-2">
+                    <NeuButton variant="icon" onClick={toggleTheme} className="!w-9 !h-9 !p-1.5 md:!w-10 md:!h-10 md:!p-2">
                         {isDark ? (
                             <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                         ) : (
@@ -152,17 +153,17 @@ const CampusEatsAppContent: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
                     </NeuButton>
 
                     {!isChefMode && (
-                        <NeuButton variant="icon" onClick={() => setIsOrderHistoryOpen(!isOrderHistoryOpen)} className={`!w-10 !h-10 !p-2 ${isOrderHistoryOpen ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' : ''}`}>
+                        <NeuButton variant="icon" onClick={() => setIsOrderHistoryOpen(!isOrderHistoryOpen)} className={`!w-9 !h-9 !p-1.5 md:!w-10 md:!h-10 md:!p-2 ${isOrderHistoryOpen ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' : ''}`}>
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                         </NeuButton>
                     )}
 
                     <div className="relative">
-                        <NeuButton variant="icon" onClick={() => setIsCartOpen(!isCartOpen)} className="!w-10 !h-10 !p-2">
+                        <NeuButton variant="icon" onClick={() => setIsCartOpen(!isCartOpen)} className="!w-9 !h-9 !p-1.5 md:!w-10 md:!h-10 md:!p-2">
                             <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                         </NeuButton>
                         {cart.length > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full border-2 border-ceramic-100 dark:border-obsidian-800">
+                            <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] w-4 h-4 md:text-xs md:w-5 md:h-5 flex items-center justify-center rounded-full border-2 border-ceramic-100 dark:border-obsidian-800">
                                 {cart.length}
                             </span>
                         )}

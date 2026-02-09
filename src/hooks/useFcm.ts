@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getToken, onMessage } from 'firebase/messaging';
-import { messaging } from '../lib/firebase';
+import { getMessagingInstance } from '../lib/firebase';
 import { supabase } from '../../store/supabaseClient';
 import { useApp } from '../../store/AppContext';
 
@@ -10,25 +10,19 @@ export const useFcm = () => {
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
         typeof Notification !== 'undefined' ? Notification.permission : 'default'
     );
+    const unsubscribeRef = useRef<(() => void) | null>(null);
 
     const requestPermission = async () => {
-        // Detect iOS (iPhone, iPad, iPod)
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-
-        if (isIOS) {
-            console.log("FCM is disabled on iOS to prevent rendering issues.");
-            return false;
-        }
-
-        // If messaging is not initialized (e.g. insecure context), return false
-        if (!messaging) {
-            console.warn("FCM messaging is not available.");
-            return false;
-        }
-
         // Safety check for Notification API
         if (typeof Notification === 'undefined') {
-            console.warn("Notification API not supported in this browser.");
+            console.warn("[FCM] Notification API not supported in this browser.");
+            return false;
+        }
+
+        // Get messaging instance (returns null on unsupported browsers like iOS Safari in-browser)
+        const messaging = await getMessagingInstance();
+        if (!messaging) {
+            console.warn("[FCM] Messaging not available on this platform.");
             return false;
         }
 
@@ -39,14 +33,13 @@ export const useFcm = () => {
             if (permission === 'granted') {
                 const registration = await navigator.serviceWorker.ready;
 
-                // Get the token
-                // You need your VAPID key here
                 const currentToken = await getToken(messaging, {
                     vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
                     serviceWorkerRegistration: registration
                 });
 
                 if (currentToken) {
+                    console.log('[FCM] Token acquired:', currentToken.substring(0, 20) + '...');
                     setFcmToken(currentToken);
 
                     // Save token to Supabase only if user is logged in (has valid UUID, not 'guest')
@@ -55,36 +48,53 @@ export const useFcm = () => {
                     }
                     return true;
                 } else {
+                    console.warn('[FCM] No token returned.');
                     return false;
                 }
             }
             return false;
         } catch (err) {
-            console.error('An error occurred while retrieving token.', err); // Added err argument for better debugging
+            console.error('[FCM] Error retrieving token:', err);
             return false;
         }
     };
 
-    // Check initial permission status without requesting
+    // If permission is already granted, re-acquire token on mount/user change
     useEffect(() => {
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-            // If already granted, ensure we have the token (in case app was reloaded)
             requestPermission();
         }
     }, [currentUser]);
 
+    // Set up foreground message listener
     useEffect(() => {
-        if (!messaging) return;
+        let cancelled = false;
 
-        // Listen for foreground messages
-        const unsubscribe = onMessage(messaging, (payload) => {
-            // Construct a toast or custom UI
-            const title = payload.notification?.title || 'New Notification';
-            const body = payload.notification?.body || '';
-            showToast(`${title}: ${body}`, 'info');
-        });
+        const setupListener = async () => {
+            const messaging = await getMessagingInstance();
+            if (!messaging || cancelled) return;
 
-        return () => unsubscribe();
+            // Clean up previous listener if any
+            if (unsubscribeRef.current) {
+                unsubscribeRef.current();
+            }
+
+            unsubscribeRef.current = onMessage(messaging, (payload) => {
+                const title = payload.notification?.title || 'New Notification';
+                const body = payload.notification?.body || '';
+                showToast(`${title}: ${body}`, 'info');
+            });
+        };
+
+        setupListener();
+
+        return () => {
+            cancelled = true;
+            if (unsubscribeRef.current) {
+                unsubscribeRef.current();
+                unsubscribeRef.current = null;
+            }
+        };
     }, [showToast]);
 
     const saveTokenToDatabase = async (token: string, userId: string) => {
@@ -99,12 +109,15 @@ export const useFcm = () => {
                 }, { onConflict: 'token' });
 
             if (error) {
-                console.error('Error saving FCM token:', error);
+                console.error('[FCM] Error saving token:', error);
+            } else {
+                console.log('[FCM] Token saved to database.');
             }
         } catch (error) {
-            console.error('Error saving FCM token:', error);
+            console.error('[FCM] Error saving token:', error);
         }
     };
 
     return { fcmToken, notificationPermission, requestPermission };
 };
+
