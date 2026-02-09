@@ -32,6 +32,13 @@ export const useFcm = () => {
 
             if (permission === 'granted') {
                 const registration = await navigator.serviceWorker.ready;
+                console.log('[FCM] SW scope:', registration.scope);
+                console.log('[FCM] SW state:', registration.active?.state);
+                console.log('[FCM] SW scriptURL:', registration.active?.scriptURL);
+
+                // Check existing push subscription for debugging
+                const existingSub = await registration.pushManager.getSubscription();
+                console.log('[FCM] Existing push subscription:', existingSub ? 'yes' : 'none');
 
                 const currentToken = await getToken(messaging, {
                     vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
