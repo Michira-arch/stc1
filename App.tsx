@@ -19,6 +19,8 @@ import { Signup } from './pages/auth/Signup';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { SetUsername } from './pages/auth/SetUsername'; // New Import
 import { Onboarding } from './pages/Onboarding';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfService } from './pages/TermsOfService';
 import { GuestActionModal } from './components/GuestActionModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MeetHome } from './pages/realtime/MeetHome';
@@ -93,11 +95,13 @@ const MeetWrapper = () => {
 // Import at the top
 import { useFcm } from './src/hooks/useFcm';
 
+import { useNotificationPreference } from './src/hooks/useNotificationPreference';
 import { NotificationPermissionModal } from './components/NotificationPermissionModal';
 
 const AppContent = () => {
   // Initialize FCM
   const { requestPermission, notificationPermission } = useFcm();
+  const { notificationsEnabled } = useNotificationPreference();
 
   // Initialize Remote Error Logging
   React.useEffect(() => {
@@ -107,14 +111,20 @@ const AppContent = () => {
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
   useEffect(() => {
+    // Detect Desktop
+    const isDesktop = typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
     // Show modal if permission is default (not yet prompted) and user hasn't dismissed it
+    // AND notifications are enabled in internal settings (IDB)
+    // AND not on desktop
     const hasDismissed = localStorage.getItem('has_dismissed_notification_modal');
-    if (notificationPermission === 'default' && !hasDismissed) {
+
+    if (notificationPermission === 'default' && !hasDismissed && notificationsEnabled && !isDesktop) {
       // Small delay to not overwhelm user immediately
       const timer = setTimeout(() => setIsNotificationModalOpen(true), 3000);
       return () => clearTimeout(timer);
     }
-  }, [notificationPermission]);
+  }, [notificationPermission, notificationsEnabled]);
 
   const handleEnableNotifications = async () => {
     const granted = await requestPermission();
@@ -271,6 +281,10 @@ const AppContent = () => {
         </Suspense>
       );
 
+      // Legal Pages
+      case 'privacy_policy': return <PrivacyPolicy onBack={() => setActiveTab('feed')} />;
+      case 'terms_of_service': return <TermsOfService onBack={() => setActiveTab('feed')} />;
+
       default: return <Feed onStoryClick={handleStoryClick} onNavigate={setActiveTab} />;
     }
   };
@@ -362,6 +376,7 @@ const AppContent = () => {
           <Settings
             onBack={() => setIsSettingsOpen(false)}
             onOpenFeedback={() => setIsFeedbackOpen(true)}
+            onNavigate={setActiveTab}
           />
         )}
       </AnimatePresence>

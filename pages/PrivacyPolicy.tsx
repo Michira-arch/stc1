@@ -1,0 +1,263 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Shield, Lock, Eye, Database, Mail, Scale } from 'lucide-react';
+import { CarvedButton } from '../components/CarvedButton';
+import { useApp } from '../store/AppContext';
+
+interface Props {
+    onBack: () => void;
+}
+
+export const PrivacyPolicy: React.FC<Props> = ({ onBack }) => {
+    return (
+        <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-50 bg-ceramic-base dark:bg-obsidian-base overflow-y-auto pt-safe pb-safe"
+        >
+            {/* Header */}
+            <div className="sticky top-0 z-10 px-4 py-4 flex items-center bg-ceramic-base/90 dark:bg-obsidian-base/90 backdrop-blur-lg">
+                <CarvedButton onClick={onBack} className="!w-12 !h-12 !rounded-full mr-4">
+                    <ArrowLeft size={20} />
+                </CarvedButton>
+                <h1 className="text-xl font-bold">Privacy Policy</h1>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 max-w-3xl mx-auto space-y-8 pb-24">
+
+                {/* Last Updated */}
+                <div className="text-center">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                        Last Updated: February 10, 2026
+                    </p>
+                </div>
+
+                {/* Introduction */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Shield size={24} />
+                        <h2 className="font-bold text-lg">Introduction</h2>
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Welcome to Student Center ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and web services.
+                    </p>
+                </section>
+
+                {/* Information We Collect */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Database size={24} />
+                        <h2 className="font-bold text-lg">Information We Collect</h2>
+                    </div>
+                    <div className="space-y-4 text-slate-700 dark:text-slate-300">
+                        <div>
+                            <h3 className="font-bold mb-2">Personal Information</h3>
+                            <ul className="list-disc list-inside space-y-1 ml-2">
+                                <li>Name and email address (when you create an account)</li>
+                                <li>Profile information (avatar, bio, handle)</li>
+                                <li>Authentication credentials (encrypted)</li>
+                                <li>User-generated content (posts, comments, images)</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className="font-bold mb-2">Usage Information</h3>
+                            <ul className="list-disc list-inside space-y-1 ml-2">
+                                <li>Device information (OS, browser type, device model)</li>
+                                <li>App usage data (features accessed, time spent)</li>
+                                <li>Error logs and crash reports</li>
+                                <li>IP address and general location data</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className="font-bold mb-2">Cookies and Tracking</h3>
+                            <ul className="list-disc list-inside space-y-1 ml-2">
+                                <li>Session cookies for authentication</li>
+                                <li>Local storage for app preferences</li>
+                                <li>Analytics cookies (anonymized)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                {/* How We Use Your Information */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Eye size={24} />
+                        <h2 className="font-bold text-lg">How We Use Your Information</h2>
+                    </div>
+                    <div className="space-y-3 text-slate-700 dark:text-slate-300">
+                        <p>We use the collected information for the following purposes:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                            <li><strong>Service Provision:</strong> To provide, maintain, and improve our services</li>
+                            <li><strong>Authentication:</strong> To verify your identity and manage your account</li>
+                            <li><strong>Communication:</strong> To send you notifications, updates, and support messages</li>
+                            <li><strong>Personalization:</strong> To customize your experience and content recommendations</li>
+                            <li><strong>Security:</strong> To detect, prevent, and address technical issues and fraud</li>
+                            <li><strong>Analytics:</strong> To understand usage patterns and improve our app</li>
+                            <li><strong>Legal Compliance:</strong> To comply with legal obligations and enforce our terms</li>
+                        </ul>
+                    </div>
+                </section>
+
+                {/* Information Sharing */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Lock size={24} />
+                        <h2 className="font-bold text-lg">Information Sharing and Disclosure</h2>
+                    </div>
+                    <div className="space-y-3 text-slate-700 dark:text-slate-300">
+                        <p>We do not sell your personal information. We may share your information in the following circumstances:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                            <li><strong>With Your Consent:</strong> When you explicitly authorize us to share information</li>
+                            <li><strong>Service Providers:</strong> With trusted third-party services (e.g., Supabase for database, Firebase for notifications) under strict confidentiality agreements</li>
+                            <li><strong>Public Content:</strong> Content you post publicly is visible to other users</li>
+                            <li><strong>Legal Requirements:</strong> When required by law, court order, or government request</li>
+                            <li><strong>Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets</li>
+                            <li><strong>Safety and Security:</strong> To protect the rights, property, or safety of our users or the public</li>
+                        </ul>
+                    </div>
+                </section>
+
+                {/* Data Security */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Shield size={24} />
+                        <h2 className="font-bold text-lg">Data Security</h2>
+                    </div>
+                    <div className="space-y-3 text-slate-700 dark:text-slate-300">
+                        <p>We implement industry-standard security measures to protect your information:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                            <li>End-to-end encryption for sensitive data</li>
+                            <li>Secure HTTPS connections</li>
+                            <li>Regular security audits and updates</li>
+                            <li>Access controls and authentication mechanisms</li>
+                            <li>Encrypted data storage</li>
+                        </ul>
+                        <p className="mt-3 text-sm italic">
+                            However, no method of transmission over the internet is 100% secure. While we strive to protect your information, we cannot guarantee absolute security.
+                        </p>
+                    </div>
+                </section>
+
+                {/* Legal Basis for Processing (Kenya DPA 2019) */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Scale size={24} />
+                        <h2 className="font-bold text-lg">Legal Basis for Processing</h2>
+                    </div>
+                    <div className="space-y-3 text-slate-700 dark:text-slate-300">
+                        <p>Under the Data Protection Act, 2019 (Kenya), we process your personal data under the following legal bases:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                            <li><strong>Consent:</strong> You have given clear consent for us to process your personal data for a specific purpose.</li>
+                            <li><strong>Contractual Necessity:</strong> Processing is necessary for the performance of a contract to which the data subject is a party.</li>
+                            <li><strong>Legal Obligation:</strong> Processing is necessary for compliance with a legal obligation to which the controller is subject.</li>
+                            <li><strong>Legitimate Interests:</strong> Processing is necessary for the purposes of the legitimate interests pursued by the data controller or by a third party.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                {/* Third-Party Service Providers */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Database size={24} />
+                        <h2 className="font-bold text-lg">Third-Party Service Providers</h2>
+                    </div>
+                    <div className="space-y-3 text-slate-700 dark:text-slate-300">
+                        <p>We may employ third-party companies and individuals to facilitate our Service ("Service Providers"), to provide the Service on our behalf, or to assist us in analyzing how our Service is used. These third parties have access to your Personal Data only to perform these tasks on our behalf and are obligated not to disclose or use it for any other purpose.</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                            <li><strong>Supabase:</strong> For database hosting and authentication services.</li>
+                            <li><strong>Google (Firebase):</strong> For push notifications and analytics.</li>
+                            <li><strong>Google (OAuth):</strong> For optional social login.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                {/* International Transfer of Data */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Lock size={24} />
+                        <h2 className="font-bold text-lg">International Transfer of Data</h2>
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Your information, including Personal Data, may be transferred to — and maintained on — computers located outside of Kenya, where the data protection laws may differ than those from your jurisdiction. By using our Service, you consent to the transfer of your information to countries where our servers are located (e.g., United States, EU) and the use of your information in accordance with this Privacy Policy.
+                    </p>
+                </section>
+
+                {/* Your Rights (Kenya & GDPR) */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Eye size={24} />
+                        <h2 className="font-bold text-lg">Your Data Protection Rights</h2>
+                    </div>
+                    <div className="space-y-3 text-slate-700 dark:text-slate-300">
+                        <p>In accordance with the Data Protection Act (Kenya) and other applicable laws, you have the right to:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                            <li><strong>Be Informed:</strong> Know exactly how your data is being used.</li>
+                            <li><strong>Access:</strong> Request copies of your personal data.</li>
+                            <li><strong>Rectification:</strong> Request correction of inaccurate information.</li>
+                            <li><strong>Erasure:</strong> Request deletion of your personal data ("Right to be Forgotten").</li>
+                            <li><strong>Object/Restrict:</strong> Object to or restrict processing of your data.</li>
+                            <li><strong>Data Portability:</strong> Request transfer of your data to another organization.</li>
+                            <li><strong>Automated Decision Making:</strong> Not to be subject to a decision based solely on automated processing.</li>
+                        </ul>
+                        <p className="mt-3">
+                            To exercise these rights, please contact us at <a href="mailto:dispatchatstc@gmail.com" className="font-bold underline">dispatchatstc@gmail.com</a>.
+                        </p>
+                    </div>
+                </section>
+
+                {/* Complaints */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Shield size={24} />
+                        <h2 className="font-bold text-lg">Complaints</h2>
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                        If you believe we have not processed your personal data in accordance with the law, you have the right to lodge a complaint with the <strong>Office of the Data Protection Commissioner (ODPC)</strong> in Kenya.
+                    </p>
+                </section>
+
+                {/* Children's Privacy */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Shield size={24} />
+                        <h2 className="font-bold text-lg">Children's Privacy</h2>
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Our service is intended for users aged 13 and older. We do not knowingly collect personal information from children under 13. If we become aware that we have collected information from a child under 13, we will take steps to delete such information promptly.
+                    </p>
+                </section>
+
+                {/* Changes to Policy */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Database size={24} />
+                        <h2 className="font-bold text-lg">Changes to This Policy</h2>
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                        We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the "Last Updated" date. Your continued use of the service after changes constitutes acceptance of the updated policy.
+                    </p>
+                </section>
+
+                {/* Contact */}
+                <section className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface neu-convex">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-600 dark:text-emerald-400">
+                        <Mail size={24} />
+                        <h2 className="font-bold text-lg">Contact Us</h2>
+                    </div>
+                    <div className="text-slate-700 dark:text-slate-300 space-y-2">
+                        <p>If you have questions or concerns about this Privacy Policy, please contact us:</p>
+                        <ul className="space-y-1 ml-2">
+                            <li><strong>Email:</strong> dispatchatstc@gmail.com</li>
+                            <li><strong>In-App:</strong> Use the feedback feature in Settings</li>
+                        </ul>
+                    </div>
+                </section>
+
+            </div>
+        </motion.div>
+    );
+};

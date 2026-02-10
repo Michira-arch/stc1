@@ -247,6 +247,19 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
             {isMe && notificationPermission !== 'granted' && (
               <CarvedButton
                 onClick={async () => {
+                  // Desktop check
+                  const isDesktop = typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+                  if (isDesktop) return; // Should be hidden anyway
+
+                  // iOS Standalone Check
+                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+                  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+
+                  if (isIOS && !isStandalone) {
+                    showToast("Install the app first to enable notifications on iOS.", "info");
+                    return;
+                  }
+
                   if (notificationPermission === 'default') {
                     // Request permission
                     await requestPermission();
@@ -254,7 +267,7 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
                     showToast('Notifications are blocked. Please enable them in your browser settings.', 'info');
                   }
                 }}
-                className="!h-9 !px-4 !text-xs font-bold text-emerald-600 dark:text-emerald-400"
+                className={`!h-9 !px-4 !text-xs font-bold text-emerald-600 dark:text-emerald-400 ${typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches ? 'hidden' : ''}`}
               >
                 <Bell size={14} className="mr-1" /> Enable Notifications
               </CarvedButton>

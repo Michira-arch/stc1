@@ -116,6 +116,7 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
                             <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                             <input
                                 type="text"
+                                inputMode="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Full Name"
@@ -145,6 +146,7 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
                             </div>
                             <input
                                 type="text"
+                                inputMode="text"
                                 value={handle}
                                 onChange={(e) => setHandle(e.target.value)}
                                 placeholder="Handle (optional)"
@@ -161,6 +163,7 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                             <input
                                 type="email"
+                                inputMode="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Email Address"
@@ -177,6 +180,7 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                             <input
                                 type="password"
+                                inputMode="text"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Password"
@@ -207,13 +211,18 @@ export const Signup: React.FC<Props> = ({ onNavigate }) => {
                             type="button"
                             onClick={async () => {
                                 try {
-                                    const { error } = await supabase.auth.signInWithOAuth({
+                                    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+                                    const { data, error } = await supabase.auth.signInWithOAuth({
                                         provider: 'google',
                                         options: {
                                             redirectTo: `${window.location.origin}/`,
+                                            skipBrowserRedirect: isStandalone,
                                         },
                                     });
                                     if (error) throw error;
+                                    if (isStandalone && data?.url) {
+                                        window.open(data.url, '_blank');
+                                    }
                                 } catch (err: any) {
                                     showToast(err.message || 'Google login failed', 'error');
                                 }

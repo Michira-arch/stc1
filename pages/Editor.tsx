@@ -188,7 +188,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
 
   const execCommand = (command: string, value: string | undefined = undefined) => {
     document.execCommand(command, false, value);
-    editorRef.current?.focus();
+    // Removed editorRef.current?.focus() to prevent iOS keyboard dismissal issues
     checkToolbarState();
   };
 
@@ -250,6 +250,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
         {/* Inputs */}
         <input
           type="text"
+          inputMode="text"
           placeholder="An interesting title... (optional)"
           className="w-full bg-transparent text-3xl font-bold text-slate-800 dark:text-white placeholder-slate-400/50 mb-4 outline-none"
           value={title}
@@ -258,6 +259,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
 
         <input
           type="text"
+          inputMode="text"
           placeholder="Short description / hook (appears in feed)..."
           className="w-full bg-transparent text-sm font-semibold text-slate-500 dark:text-slate-400 placeholder-slate-400/50 mb-6 outline-none pb-2 border-b border-slate-200 dark:border-slate-700"
           value={description}

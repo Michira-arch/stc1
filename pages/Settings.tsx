@@ -1,19 +1,27 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Type, Italic, Download, Bell, MessageSquare, Moon, Sun, Shield, Check } from 'lucide-react';
+import { ArrowLeft, Bell, Sun, Moon, Type, Italic, MessageSquare, Shield } from 'lucide-react';
+import { FileText, Scale } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { CarvedButton } from '../components/CarvedButton';
 import { InstallAppButton } from '../components/InstallAppButton';
 
+import { useNotificationPreference } from '../src/hooks/useNotificationPreference';
+
 interface Props {
   onBack: () => void;
   onOpenFeedback?: () => void;
+  onNavigate?: (page: string) => void;
 }
 
-export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
+export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }) => {
   const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme, currentUser, updatePrivacySettings, isGuest, isOnline } = useApp();
   const privacy = currentUser.privacySettings || { showBio: true, showTimeline: true, showName: true };
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  const { notificationsEnabled, setNotificationsEnabled } = useNotificationPreference();
+
+  // Detect Desktop (Hover capable + Fine pointer)
+  const isDesktop = typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   const handleUpdate = (newSettings: Partial<typeof settings>) => {
     updateSettings(newSettings);
@@ -116,20 +124,22 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
             </div>
           </CarvedButton>
 
-          {/* Push Notifications */}
-          <CarvedButton
-            active={notificationsEnabled}
-            onClick={toggleNotifications}
-            className="w-full py-4 flex justify-between px-6"
-          >
-            <div className="flex items-center gap-3">
-              <Bell size={18} />
-              <span>Push Notifications</span>
-            </div>
-            <div className={`w-10 h-5 rounded-full relative transition-colors ${notificationsEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-              <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-md transition-all ${notificationsEnabled ? 'left-6' : 'left-1'}`} />
-            </div>
-          </CarvedButton>
+          {/* Push Notifications - HIDDEN ON DESKTOP */}
+          {!isDesktop && (
+            <CarvedButton
+              active={notificationsEnabled}
+              onClick={toggleNotifications}
+              className="w-full py-4 flex justify-between px-6"
+            >
+              <div className="flex items-center gap-3">
+                <Bell size={18} />
+                <span>Push Notifications</span>
+              </div>
+              <div className={`w-10 h-5 rounded-full relative transition-colors ${notificationsEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-md transition-all ${notificationsEnabled ? 'left-6' : 'left-1'}`} />
+              </div>
+            </CarvedButton>
+          )}
 
           {/* Install App */}
           <InstallAppButton variant="settings" className="w-full py-4 flex justify-between px-6" />
@@ -167,6 +177,43 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback }) => {
             <span>Italicize Text</span>
             <div className={`w-10 h-5 rounded-full relative transition-colors ${settings.isItalic ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
               <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-md transition-all ${settings.isItalic ? 'left-6' : 'left-1'}`} />
+            </div>
+          </CarvedButton>
+        </section>
+
+        {/* Legal Section */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-bold uppercase text-slate-400 tracking-widest">Legal</h2>
+
+          {/* Privacy Policy */}
+          <CarvedButton
+            onClick={() => {
+              onBack(); // Close settings first
+              if (onNavigate) {
+                setTimeout(() => onNavigate('privacy_policy'), 100);
+              }
+            }}
+            className="w-full py-4 flex justify-between px-6"
+          >
+            <div className="flex items-center gap-3">
+              <FileText size={18} />
+              <span>Privacy Policy</span>
+            </div>
+          </CarvedButton>
+
+          {/* Terms of Service */}
+          <CarvedButton
+            onClick={() => {
+              onBack(); // Close settings first
+              if (onNavigate) {
+                setTimeout(() => onNavigate('terms_of_service'), 100);
+              }
+            }}
+            className="w-full py-4 flex justify-between px-6"
+          >
+            <div className="flex items-center gap-3">
+              <Scale size={18} />
+              <span>Terms of Service</span>
             </div>
           </CarvedButton>
         </section>
