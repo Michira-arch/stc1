@@ -19,8 +19,6 @@ import { Signup } from './pages/auth/Signup';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { SetUsername } from './pages/auth/SetUsername'; // New Import
 import { Onboarding } from './pages/Onboarding';
-import { PrivacyPolicy } from './pages/PrivacyPolicy';
-import { TermsOfService } from './pages/TermsOfService';
 import { GuestActionModal } from './components/GuestActionModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MeetHome } from './pages/realtime/MeetHome';
@@ -280,10 +278,6 @@ const AppContent = () => {
           <RunnerGame onBack={() => setActiveTab('profile')} />
         </Suspense>
       );
-
-      // Legal Pages
-      case 'privacy_policy': return <PrivacyPolicy onBack={() => setActiveTab('feed')} />;
-      case 'terms_of_service': return <TermsOfService onBack={() => setActiveTab('feed')} />;
 
       default: return <Feed onStoryClick={handleStoryClick} onNavigate={setActiveTab} />;
     }

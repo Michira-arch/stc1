@@ -187,12 +187,7 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
 
           {/* Privacy Policy */}
           <CarvedButton
-            onClick={() => {
-              onBack(); // Close settings first
-              if (onNavigate) {
-                setTimeout(() => onNavigate('privacy_policy'), 100);
-              }
-            }}
+            onClick={() => window.open('/privacy_policy.html', '_blank')}
             className="w-full py-4 flex justify-between px-6"
           >
             <div className="flex items-center gap-3">
@@ -203,12 +198,7 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
 
           {/* Terms of Service */}
           <CarvedButton
-            onClick={() => {
-              onBack(); // Close settings first
-              if (onNavigate) {
-                setTimeout(() => onNavigate('terms_of_service'), 100);
-              }
-            }}
+            onClick={() => window.open('/terms_of_service.html', '_blank')}
             className="w-full py-4 flex justify-between px-6"
           >
             <div className="flex items-center gap-3">
