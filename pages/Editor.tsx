@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../store/AppContext';
 import { CarvedButton } from '../components/CarvedButton';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Image as ImageIcon, Send, X, Mic, Square, Trash2, Bold, Italic, List, Type, PenTool } from 'lucide-react';
+import { Image as ImageIcon, Video, Send, X, Mic, Square, Trash2, Bold, Italic, List, Type, PenTool } from 'lucide-react';
 import { AudioPlayer } from '../components/AudioPlayer';
 
 interface Props {
@@ -13,7 +13,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
   const { addStory, currentUser, isGuest, editorDraft, setEditorDraft, showToast, sanitizeInput } = useApp();
 
   // Use context state instead of local state
-  const { title, description, content, isProMode, imageBase64, audioBase64, imageFile, isAnonymous } = editorDraft;
+  const { title, description, content, isProMode, imageBase64, audioBase64, imageFile, videoFile, videoPreview, isAnonymous } = editorDraft;
 
   // Helper to update draft
   const updateDraft = (updates: Partial<typeof editorDraft>) => {
@@ -40,6 +40,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
@@ -118,7 +119,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
       finalContent = editorRef.current.innerHTML; // Get latest DOM state
     }
 
-    if (!title.trim() && !finalContent && !imageBase64 && !audioBase64) return;
+    if (!title.trim() && !finalContent && !imageBase64 && !audioBase64 && !videoFile) return;
 
     if (isGuest) {
       window.dispatchEvent(new CustomEvent('guest-action-attempt', { detail: { action: 'publish a story' } }));
@@ -130,14 +131,15 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
     const cleanTitle = sanitizeInput(title.trim() || "Untitled Post");
     const cleanDesc = sanitizeInput(description.trim());
 
-    addStory(cleanTitle, cleanDesc, cleanContent, imageFile, audioBase64, isAnonymous);
+    addStory(cleanTitle, cleanDesc, cleanContent, imageFile, audioBase64, isAnonymous, videoFile);
     showToast("Story published successfully!", "success");
     clearDraft();
     onNavigate('feed');
   };
 
   const clearDraft = () => {
-    setEditorDraft({ title: '', description: '', content: '', isProMode: false, imageFile: undefined, imageBase64: undefined, audioBase64: undefined, isAnonymous: false });
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setEditorDraft({ title: '', description: '', content: '', isProMode: false, imageFile: undefined, imageBase64: undefined, audioBase64: undefined, videoFile: undefined, videoPreview: undefined, isAnonymous: false });
     if (editorRef.current) editorRef.current.innerHTML = '';
   };
 
@@ -147,6 +149,18 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
       const reader = new FileReader();
       reader.onloadend = () => updateDraft({ imageBase64: reader.result as string, imageFile: file });
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        showToast('Video must be under 100MB', 'error');
+        return;
+      }
+      const preview = URL.createObjectURL(file);
+      updateDraft({ videoFile: file, videoPreview: preview, imageBase64: undefined, imageFile: undefined });
     }
   };
 
@@ -192,7 +206,7 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
     checkToolbarState();
   };
 
-  const isDisabled = !title.trim() && !content.trim() && !imageBase64 && !audioBase64;
+  const isDisabled = !title.trim() && !content.trim() && !imageBase64 && !audioBase64 && !videoFile;
 
   return (
     <div className="pt-6 pb-32 px-4 max-w-2xl mx-auto min-h-screen flex flex-col">
@@ -326,9 +340,23 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
             {imageBase64 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative rounded-xl overflow-hidden border-2 border-dashed border-slate-300">
                 <img src={imageBase64} className="w-full h-48 object-cover opacity-80" />
-                <button onClick={() => setImageBase64(undefined)} className="absolute top-2 right-2 bg-black/50 p-1 rounded-full text-white">
+                <button onClick={() => updateDraft({ imageBase64: undefined, imageFile: undefined })} className="absolute top-2 right-2 bg-black/50 p-1 rounded-full text-white">
                   <X size={16} />
                 </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {videoPreview && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative rounded-xl overflow-hidden border-2 border-dashed border-emerald-400">
+                <video src={videoPreview} className="w-full h-48 object-cover opacity-80" controls />
+                <button onClick={() => { if (videoPreview) URL.revokeObjectURL(videoPreview); updateDraft({ videoFile: undefined, videoPreview: undefined }); }} className="absolute top-2 right-2 bg-black/50 p-1 rounded-full text-white">
+                  <X size={16} />
+                </button>
+                <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-lg">
+                  Video: {videoFile ? `${(videoFile.size / (1024 * 1024)).toFixed(1)}MB` : ''}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -349,11 +377,21 @@ export const Editor: React.FC<Props> = ({ onNavigate }) => {
         <div className="absolute bottom-6 right-6 left-6 flex justify-between items-center">
           <div className="flex gap-3 items-center">
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+            <input type="file" ref={videoInputRef} className="hidden" accept="video/*" onChange={handleVideoChange} />
             <CarvedButton
               onClick={() => fileInputRef.current?.click()}
-              className={`!w-12 !h-12 !rounded-full ${imageBase64 ? 'text-emerald-500' : 'text-slate-400'}`}
+              disabled={!!videoFile}
+              className={`!w-12 !h-12 !rounded-full ${imageBase64 ? 'text-emerald-500' : 'text-slate-400'} ${videoFile ? 'opacity-40' : ''}`}
             >
               <ImageIcon size={20} />
+            </CarvedButton>
+
+            <CarvedButton
+              onClick={() => videoInputRef.current?.click()}
+              disabled={!!imageBase64}
+              className={`!w-12 !h-12 !rounded-full ${videoFile ? 'text-emerald-500' : 'text-slate-400'} ${imageBase64 ? 'opacity-40' : ''}`}
+            >
+              <Video size={20} />
             </CarvedButton>
 
             {!isRecording ? (

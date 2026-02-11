@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@marketplace/components/ui/button";
 import { Input } from "@marketplace/components/ui/input";
-import { supabase } from "@marketplace/lib/supabase";
+import { uploadToR2 } from "../../../lib/r2";
 import { toast } from "sonner";
 import { Loader2, Upload } from "lucide-react";
 
@@ -35,21 +35,14 @@ export function SupabaseImageUpload({
 
         try {
             setIsUploading(true);
-            const fileExt = file.name.split(".").pop();
-            const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from("images")
-                .upload(filePath, file);
+            const publicUrl = await uploadToR2(file, 'images');
 
-            if (uploadError) {
-                throw uploadError;
+            if (!publicUrl) {
+                throw new Error('Upload failed — no URL returned');
             }
 
-            const { data } = supabase.storage.from("images").getPublicUrl(filePath);
-
-            onSuccess(data.publicUrl);
+            onSuccess(publicUrl);
             toast.success("Image uploaded successfully");
 
             // Reset input

@@ -180,7 +180,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
           bounce: isCollapsed ? 0.1 : 0.2,
           duration: 0.5
         }}
-        className="pointer-events-auto bg-ceramic-base dark:bg-obsidian-surface
+        className="pointer-events-auto bg-transparent backdrop-blur-xl
                     neu-convex border-t border-x border-white/5 shadow-2xl overflow-hidden fixed bottom-0 left-1/2
                     flex items-center justify-center max-w-md w-full z-50"
       >

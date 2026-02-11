@@ -244,6 +244,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         description: dbStory.description || '',
         content: dbStory.content || '',
         imageUrl: dbStory.image_url || undefined,
+        videoUrl: dbStory.video_url || undefined,
         audioUrl: dbStory.audio_url || undefined,
         likes: dbStory.likes.map((l: any) => l.user_id),
         comments: buildCommentTree(dbStory.comments || []),
@@ -673,7 +674,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const addStory = async (title: string, description: string, content: string, imageFile?: File, audioUrl?: string, isAnonymous: boolean = false) => {
+  const addStory = async (title: string, description: string, content: string, imageFile?: File, audioUrl?: string, isAnonymous: boolean = false, videoFile?: File) => {
     if (isGuest) return;
     triggerHaptic('success');
 
@@ -686,12 +687,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     }
 
+    let uploadedVideoUrl = null;
+    if (videoFile) {
+      const { uploadVideoToR2 } = await import('../src/lib/r2');
+      uploadedVideoUrl = await uploadVideoToR2(videoFile);
+      if (!uploadedVideoUrl) {
+        showToast('Failed to upload video', 'error');
+        return;
+      }
+    }
+
     const { error } = await supabase.from('stories').insert({
       author_id: currentUser.id,
       title,
       description,
       content,
       image_url: uploadedImageUrl,
+      video_url: uploadedVideoUrl,
       audio_url: audioUrl,
       is_anonymous: isAnonymous
     });

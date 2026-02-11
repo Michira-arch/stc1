@@ -7,6 +7,7 @@ import { timeAgo, triggerHaptic } from '../utils';
 import { CarvedButton } from './CarvedButton';
 
 import { AudioPlayer } from './AudioPlayer';
+import { FeedVideoPlayer } from './FeedVideoPlayer';
 import { cleanContent } from '../src/utils/textUtils';
 
 
@@ -403,6 +404,13 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
                           neu-concave">
             <img src={story.imageUrl} alt={story.title} className="max-w-full h-auto max-h-[500px] object-contain block" />
           </div>
+        </div>
+      )}
+
+      {/* Inline Video Player */}
+      {story.videoUrl && (
+        <div className="mb-4 w-full">
+          <FeedVideoPlayer src={story.videoUrl} />
         </div>
       )}
 

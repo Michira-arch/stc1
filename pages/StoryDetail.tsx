@@ -7,6 +7,7 @@ import { timeAgo } from '../utils';
 import { CarvedButton } from '../components/CarvedButton';
 import { Comment, User } from '../types';
 import { AudioPlayer } from '../components/AudioPlayer';
+import { VideoPlayer } from '../components/VideoPlayer';
 import { useScrollLock } from '../src/hooks/useScrollLock';
 import { invertHtmlColors } from '../src/utils/textUtils';
 
@@ -194,6 +195,17 @@ export const StoryDetail: React.FC<Props> = ({ storyId, onBack }) => {
                          dark:shadow-[inset_3px_3px_8px_#111214,inset_-3px_-3px_8px_#2e3036]"
           >
             <img src={story.imageUrl} className="w-full h-auto object-cover" alt={story.title} />
+          </motion.div>
+        )}
+
+        {/* Video Player */}
+        {story.videoUrl && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-8"
+          >
+            <VideoPlayer src={story.videoUrl} className="w-full rounded-3xl" />
           </motion.div>
         )}
 

@@ -395,19 +395,8 @@ export const CampusEatsApi = {
     // Storage
     uploadFile: async (file: File, path: string): Promise<string | null> => {
         try {
-            const { data, error } = await supabase.storage
-                .from('campuseats-assets')
-                .upload(path, file, {
-                    cacheControl: '3600',
-                    upsert: true
-                });
-
-            if (error) throw error;
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('campuseats-assets')
-                .getPublicUrl(path);
-
+            const { uploadToR2 } = await import('../../../lib/r2');
+            const publicUrl = await uploadToR2(file, 'campuseats-assets');
             return publicUrl;
         } catch (error) {
             console.error('Error uploading file:', error);

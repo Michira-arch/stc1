@@ -307,26 +307,13 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
     setUploadError(null);
 
     try {
-      // 1. Upload file to storage
-      // Use random UUID + timestamp to ensure uniqueness and prevent storage conflicts
-      const uniqueId = crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b => b.toString(16).padStart(2, '0')).join('');
-      const fileName = `${Date.now()}_${uniqueId}_${uploadForm.file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      // 1. Upload file to Cloudflare R2
+      const { uploadImage } = await import('../../../utils');
+      const publicUrl = await uploadImage(uploadForm.file, 'unicampus-papers');
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('unicampus-papers')
-        .upload(fileName, uploadForm.file, {
-          contentType: 'application/pdf',
-          cacheControl: '3600'
-        });
+      if (!publicUrl) throw new Error('Upload failed — no URL returned');
 
-      if (uploadError) throw uploadError;
-
-      // 2. Get public URL
-      const { data: urlData } = supabase.storage
-        .from('unicampus-papers')
-        .getPublicUrl(fileName);
-
-      // 3. Insert paper metadata
+      // 2. Insert paper metadata
       const { data: insertResult, error: insertError } = await (supabase as any)
         .from('unicampus_papers')
         .insert({
@@ -335,7 +322,7 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
           course_code: uploadForm.courseCode.toUpperCase(),
           year: uploadForm.year,
           category: uploadForm.category,
-          file_url: urlData.publicUrl,
+          file_url: publicUrl,
           uploaded_by: currentUser.id,
           uploader_name: currentUser.name || 'Anonymous'
         })

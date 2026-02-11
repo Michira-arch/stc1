@@ -1,4 +1,4 @@
-import { supabase } from './store/supabaseClient';
+import { uploadToR2 } from './src/lib/r2';
 
 export const triggerHaptic = (pattern: 'light' | 'medium' | 'heavy' | 'success' = 'light') => {
   if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -78,24 +78,28 @@ export const compressImage = async (file: File): Promise<File> => {
   });
 };
 
+/**
+ * Upload an image to Cloudflare R2.
+ * Bucket name maps to an R2 folder path. Maintains backward-compatible signature.
+ */
 export const uploadImage = async (file: File, bucket: string): Promise<string | null> => {
+  // Map old Supabase bucket names to R2 folder names
+  const folderMap: Record<string, string> = {
+    'avatars': 'avatars',
+    'covers': 'covers',
+    'story-content': 'story-content',
+    'images': 'images',
+    'campuseats-assets': 'campuseats-assets',
+    'unicampus-papers': 'unicampus-papers',
+  };
+
+  const folder = folderMap[bucket] || bucket;
+
   try {
-    const compressedFile = await compressImage(file);
-    const fileExt = 'jpg'; // We always convert to jpg
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, compressedFile);
-
-    if (uploadError) {
-      console.error('Upload Error:', uploadError);
-      throw uploadError;
-    }
-
-    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-    return data.publicUrl;
+    // PDFs should not be compressed
+    const skipCompression = file.type === 'application/pdf';
+    const url = await uploadToR2(file, folder as any, { skipCompression });
+    return url;
   } catch (error) {
     console.error('Error uploading image:', error);
     return null;

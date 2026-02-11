@@ -35,6 +35,7 @@ export interface Story {
   description?: string; // New field for feed preview/hook
   content: string; // Can be HTML
   imageUrl?: string;
+  videoUrl?: string; // Cloudflare R2 video URL
   audioUrl?: string; // Base64 audio string or URL
   likes: string[]; // Array of user IDs
   comments: Comment[];
@@ -81,7 +82,7 @@ export interface AppContextType {
   toggleLike: (storyId: string) => void;
   addComment: (storyId: string, text: string, parentId?: string) => void;
   deleteComment: (storyId: string, commentId: string) => void;
-  addStory: (title: string, description: string, content: string, imageFile?: File, audioUrl?: string, isAnonymous?: boolean) => Promise<void>; // Updated to Promise
+  addStory: (title: string, description: string, content: string, imageFile?: File, audioUrl?: string, isAnonymous?: boolean, videoFile?: File) => Promise<void>;
   deleteStory: (storyId: string) => void;
   incrementViews: (storyId: string) => void;
   toggleHideStory: (storyId: string) => void;
@@ -126,7 +127,9 @@ export interface AppContextType {
     isProMode: boolean;
     imageBase64?: string;
     audioBase64?: string;
-    imageFile?: File; // Added to store the actual file for upload
+    imageFile?: File;
+    videoFile?: File;
+    videoPreview?: string; // Object URL for preview
     isAnonymous: boolean;
   };
   setEditorDraft: (draft: {
@@ -137,6 +140,8 @@ export interface AppContextType {
     imageBase64?: string;
     audioBase64?: string;
     imageFile?: File;
+    videoFile?: File;
+    videoPreview?: string;
     isAnonymous: boolean;
   }) => void;
 
@@ -247,6 +252,7 @@ export type Database = {
           description: string | null
           content: string | null
           image_url: string | null
+          video_url: string | null
           audio_url: string | null
           views_count: number
           is_hidden: boolean
@@ -260,6 +266,7 @@ export type Database = {
           description?: string | null
           content?: string | null
           image_url?: string | null
+          video_url?: string | null
           audio_url?: string | null
           views_count?: number
           is_hidden?: boolean
@@ -273,6 +280,7 @@ export type Database = {
           description?: string | null
           content?: string | null
           image_url?: string | null
+          video_url?: string | null
           audio_url?: string | null
           views_count?: number
           is_hidden?: boolean
