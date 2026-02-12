@@ -3,6 +3,7 @@ import { Order } from '../types';
 import { CampusEatsApi } from '../services/api';
 import { NeuCard, NeuBadge } from './NeuComponents';
 import { useApp } from '../../../../store/AppContext';
+import { useToast } from './Toast';
 
 interface OrderHistoryProps {
     onBack: () => void;
@@ -10,6 +11,7 @@ interface OrderHistoryProps {
 
 export const OrderHistory: React.FC<OrderHistoryProps> = ({ onBack }) => {
     const { currentUser } = useApp();
+    const { showToast } = useToast();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -24,8 +26,9 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ onBack }) => {
                     // For now, reload is safe and easy.
                     loadOrders();
                 } else if (payload.eventType === 'UPDATE') {
+                    const mapped = CampusEatsApi.mapRawOrder(payload.new);
                     setOrders(prev => prev.map(o =>
-                        o.id === payload.new.id ? { ...o, ...payload.new } : o
+                        o.id === mapped.id ? { ...o, ...mapped } : o
                     ));
                 }
             }, { userId: currentUser.id });
@@ -57,15 +60,16 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ onBack }) => {
     };
 
     const handleCancel = async (orderId: string, restaurantId: string) => {
-        if (!confirm('Are you sure you want to cancel this order?')) return;
-
         // Optimistic update
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o));
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' as const } : o));
+        showToast('Cancelling order...', 'info');
 
         const success = await CampusEatsApi.cancelOrder(orderId, restaurantId);
         if (!success) {
-            alert('Failed to cancel order.');
+            showToast('Failed to cancel order.', 'error');
             loadOrders(); // Revert
+        } else {
+            showToast('Order cancelled.', 'success');
         }
     };
 

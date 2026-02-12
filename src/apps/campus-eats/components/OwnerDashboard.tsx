@@ -49,12 +49,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ restaurants, onA
             const subscription = CampusEatsApi.subscribeToOrders((payload) => {
                 const eventType = payload.eventType;
                 if (eventType === 'INSERT') {
-                    // Start simplified: reload to get relationships/orderNumber
                     loadOrders();
                     showToast('New Order Received!', 'info');
                 } else if (eventType === 'UPDATE') {
+                    const mapped = CampusEatsApi.mapRawOrder(payload.new);
                     setOrders(prev => prev.map(o =>
-                        o.id === payload.new.id ? { ...o, ...payload.new } : o
+                        o.id === mapped.id ? { ...o, ...mapped } : o
                     ));
                 }
             }, { restaurantId: selectedRestaurantId });

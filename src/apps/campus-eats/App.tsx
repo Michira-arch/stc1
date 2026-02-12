@@ -27,7 +27,62 @@ const CampusEatsAppContent: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
 
     useEffect(() => {
         loadRestaurants();
+
+        // Subscribe to restaurant-level changes (new restaurants, image/name updates)
+        const restaurantSub = CampusEatsApi.subscribeToRestaurantChanges((eventType, raw) => {
+            if (eventType === 'INSERT') {
+                loadRestaurants(); // Reload to get full restaurant with menu
+            } else if (eventType === 'UPDATE') {
+                setRestaurants(prev => prev.map(r =>
+                    r.id === raw.id ? {
+                        ...r,
+                        name: raw.name ?? r.name,
+                        description: raw.description ?? r.description,
+                        imageUrl: raw.image_url ?? r.imageUrl,
+                        deliveryTime: raw.delivery_time ?? r.deliveryTime,
+                        rating: raw.rating ?? r.rating,
+                        isActive: raw.is_active ?? r.isActive,
+                    } : r
+                ));
+            }
+        });
+
+        return () => { restaurantSub.unsubscribe(); };
     }, []);
+
+    // Subscribe to menu changes for the selected restaurant
+    useEffect(() => {
+        if (!selectedRestaurant) return;
+
+        const menuSub = CampusEatsApi.subscribeToMenuChanges(
+            selectedRestaurant.id,
+            (eventType, item, oldId) => {
+                setRestaurants(prev => prev.map(r => {
+                    if (r.id !== selectedRestaurant.id) return r;
+                    const menu = r.menu || [];
+                    if (eventType === 'INSERT' && item) {
+                        return { ...r, menu: [...menu, item] };
+                    } else if (eventType === 'UPDATE' && item) {
+                        return { ...r, menu: menu.map(m => m.id === item.id ? item : m) };
+                    } else if (eventType === 'DELETE' && oldId) {
+                        return { ...r, menu: menu.filter(m => m.id !== oldId) };
+                    }
+                    return r;
+                }));
+                // Also update the selectedRestaurant reference
+                setSelectedRestaurant(prev => {
+                    if (!prev || prev.id !== selectedRestaurant.id) return prev;
+                    const menu = prev.menu || [];
+                    if (eventType === 'INSERT' && item) return { ...prev, menu: [...menu, item] };
+                    if (eventType === 'UPDATE' && item) return { ...prev, menu: menu.map(m => m.id === item.id ? item : m) };
+                    if (eventType === 'DELETE' && oldId) return { ...prev, menu: menu.filter(m => m.id !== oldId) };
+                    return prev;
+                });
+            }
+        );
+
+        return () => { menuSub.unsubscribe(); };
+    }, [selectedRestaurant?.id]);
 
     const loadRestaurants = async () => {
         setLoading(true);

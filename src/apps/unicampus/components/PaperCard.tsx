@@ -1,15 +1,16 @@
 import React from 'react';
 import { Paper } from '../types';
-import { FileText, Download, Eye, School, Share2 } from 'lucide-react';
+import { FileText, Download, Eye, School, Share2, Trash2 } from 'lucide-react';
 
 interface PaperCardProps {
   paper: Paper;
   onPreview: (paper: Paper) => void;
   onShare: (paper: Paper) => void;
   onDownload: (paper: Paper) => void;
+  onDelete?: (paper: Paper) => void; // Optional delete handler
 }
 
-export const PaperCard: React.FC<PaperCardProps> = ({ paper, onPreview, onShare, onDownload }) => {
+export const PaperCard: React.FC<PaperCardProps> = ({ paper, onPreview, onShare, onDownload, onDelete }) => {
   return (
     <div className="
       group relative flex flex-col p-6 rounded-2xl transition-all duration-300
@@ -97,6 +98,21 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onPreview, onShare,
         >
           <Download size={16} />
         </button>
+
+        {onDelete && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(paper); }}
+            className="w-10 h-10 flex items-center justify-center rounded-lg text-red-500 transition-all
+              shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff]
+              dark:shadow-[4px_4px_8px_#151519,-4px_-4px_8px_#27272f]
+              active:shadow-[inset_2px_2px_4px_#b8b9be,inset_-2px_-2px_4px_#ffffff]
+              dark:active:shadow-[inset_2px_2px_4px_#151519,inset_-2px_-2px_4px_#27272f]
+              hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+            title="Delete Paper"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
     </div>
   );

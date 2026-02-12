@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudentCenter — Your Campus, In Your Pocket</title>
+    <meta name="description"
+        content="StudentCenter: The all-in-one campus app for stories, video calls, food, marketplace, and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════
+   RESET & FOUNDATIONS
+   ═══════════════════════════════════════════ */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+            overflow-x: hidden;
+            background: #050a08;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            color: #e8f5e9;
+            background: #050a08;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ═══════════════════════════════════════════
+   SCENE CONTAINER
+   ═══════════════════════════════════════════ */
+        .scene {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            scroll-snap-align: start;
+            padding: 2rem;
+        }
+
+        /* ═══════════════════════════════════════════
+   GLOBAL GLOW & ACCENT COLORS
+   ═══════════════════════════════════════════ */
+        :root {
+            --emerald: #10b981;
+            --emerald-light: #34d399;
+            --emerald-dark: #059669;
+            --emerald-glow: rgba(16, 185, 129, 0.4);
+            --cyan-glow: #00f2ff;
+            --bg-dark: #050a08;
+            --bg-surface: #0d1a14;
+        }
+
+        /* ═══════════════════════════════════════════
+   REVEAL ANIMATION SYSTEM
+   ═══════════════════════════════════════════ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(60px);
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 {
+            transition-delay: 0.15s;
+        }
+
+        .reveal-delay-2 {
+            transition-delay: 0.3s;
+        }
+
+        .reveal-delay-3 {
+            transition-delay: 0.45s;
+        }
+
+        .reveal-delay-4 {
+            transition-delay: 0.6s;
+        }
+
+        .reveal-delay-5 {
+            transition-delay: 0.75s;
+        }
+
+        .reveal-delay-6 {
+            transition-delay: 0.9s;
+        }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.7);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal-scale.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-100px);
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal-left.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(100px);
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal-right.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* ═══════════════════════════════════════════
+   SCENE 1: HERO
+   ═══════════════════════════════════════════ */
+        #hero {
+            background: radial-gradient(ellipse at 50% 50%, #0d2818 0%, #050a08 70%);
+            position: relative;
+        }
+
+        #hero-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        /* STC Logo */
+        .logo-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            animation: logoEntrance 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes logoEntrance {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(-180deg);
+            }
+
+            60% {
+                opacity: 1;
+                transform: scale(1.15) rotate(10deg);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .logo-bubble-1 {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 70%;
+            height: 70%;
+            background: var(--emerald);
+            border-radius: 50% 50% 50% 50%;
+            border-top-right-radius: 0;
+            z-index: 2;
+            box-shadow: 0 0 40px var(--emerald-glow), 0 0 80px rgba(16, 185, 129, 0.2);
+        }
+
+        .logo-bubble-2 {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 70%;
+            height: 70%;
+            background: var(--emerald-light);
+            border-radius: 50%;
+            border-bottom-left-radius: 0;
+            opacity: 0.9;
+            box-shadow: 0 0 30px rgba(52, 211, 153, 0.3);
+        }
+
+        .logo-overlap {
+            position: absolute;
+            top: 20%;
+            right: 20%;
+            width: 15%;
+            height: 15%;
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        .logo-pulse-ring {
+            position: absolute;
+            inset: -20px;
+            border-radius: 50%;
+            border: 2px solid var(--emerald);
+            opacity: 0;
+            animation: pulseRing 3s ease-out infinite 1.5s;
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(1.8);
+                opacity: 0;
+            }
+        }
+
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: clamp(2.8rem, 8vw, 6rem);
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #fff 0%, var(--emerald-light) 50%, var(--emerald) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            line-height: 1.1;
+            opacity: 0;
+            animation: titleFade 1s ease-out 0.8s forwards;
+        }
+
+        @keyframes titleFade {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+                letter-spacing: 0.3em;
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                letter-spacing: -0.03em;
+            }
+        }
+
+        .hero-tagline {
+            font-size: clamp(1.1rem, 3vw, 1.6rem);
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 1.4s forwards;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 2.2s forwards;
+        }
+
+        .scroll-indicator span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .scroll-arrow {
+            width: 24px;
+            height: 24px;
+            border-right: 2px solid var(--emerald);
+            border-bottom: 2px solid var(--emerald);
+            transform: rotate(45deg);
+            animation: bounceArrow 2s ease-in-out infinite;
+        }
+
+        @keyframes bounceArrow {
+
+            0%,
+            100% {
+                transform: rotate(45deg) translateY(0);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: rotate(45deg) translateY(8px);
+                opacity: 1;
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+   SCENE 2: THE PROBLEM
+   ═══════════════════════════════════════════ */
+        #problem {
+            background: #050a08;
+        }
+
+        .problem-title {
+            font-weight: 900;
+            font-size: clamp(2rem, 6vw, 4.5rem);
+            text-align: center;
+            line-height: 1.15;
+            max-width: 800px;
+        }
+
+        .problem-title .highlight {
+            color: #ef4444;
+            position: relative;
+        }
+
+        .problem-title .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #ef4444;
+            border-radius: 2px;
+            opacity: 0.6;
+        }
+
+        .scattered-icons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 3rem;
+            max-width: 500px;
+        }
+
+        .scattered-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+
+        .scattered-icon.visible {
+            animation: scatterFloat 4s ease-in-out infinite;
+        }
+
+        .scattered-icon:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .scattered-icon:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .scattered-icon:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        .scattered-icon:nth-child(4) {
+            animation-delay: 1.5s;
+        }
+
+        .scattered-icon:nth-child(5) {
+            animation-delay: 0.3s;
+        }
+
+        .scattered-icon:nth-child(6) {
+            animation-delay: 0.8s;
+        }
+
+        @keyframes scatterFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0.3;
+            }
+
+            25% {
+                transform: translate(10px, -15px) rotate(5deg);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: translate(-8px, 8px) rotate(-3deg);
+                opacity: 0.25;
+            }
+
+            75% {
+                transform: translate(5px, -5px) rotate(2deg);
+                opacity: 0.4;
+            }
+        }
+
+        .problem-sub {
+            margin-top: 2.5rem;
+            font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+            color: rgba(255, 255, 255, 0.35);
+            text-align: center;
+            font-weight: 400;
+            max-width: 500px;
+        }
+
+        /* ═══════════════════════════════════════════
+   SCENE 3: THE SOLUTION
+   ═══════════════════════════════════════════ */
+        #solution {
+            background: #050a08;
+            position: relative;
+        }
+
+        .solution-ring {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 2px solid var(--emerald);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.3);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .solution-ring.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .solution-ring::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0%, var(--emerald) 25%, transparent 50%);
+            animation: ringRotate 4s linear infinite;
+            mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+        }
+
+        @keyframes ringRotate {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .solution-ring::after {
+            content: '';
+            position: absolute;
+            inset: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+        }
+
+        .solution-logo {
+            width: 90px;
+            height: 90px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .solution-title {
+            font-weight: 900;
+            font-size: clamp(2rem, 6vw, 4.5rem);
+            text-align: center;
+            margin-top: 2.5rem;
+            max-width: 700px;
+            line-height: 1.15;
+        }
+
+        .solution-title .emerald {
+            color: var(--emerald-light);
+            text-shadow: 0 0 40px var(--emerald-glow);
+        }
+
+        /* ═══════════════════════════════════════════
+   PHONE MOCKUP (SHARED)
+   ═══════════════════════════════════════════ */
+        .phone-mockup {
+            width: 280px;
+            height: 560px;
+            background: #1a1d21;
+            border-radius: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 28px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+
+        .phone-screen {
+            position: absolute;
+            inset: 8px;
+            border-radius: 34px;
+            overflow: hidden;
+            background: #0d1a14;
+        }
+
+        .feature-row {
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .feature-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .feature-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--emerald);
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-title {
+            font-weight: 800;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            line-height: 1.15;
+            margin-bottom: 1rem;
+        }
+
+        .feature-desc {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.7;
+            font-weight: 400;
+        }
+
+        /* ═══════════════════════════════════════════
+   SCENE 4: SOCIAL FEED
+   ═══════════════════════════════════════════ */
+        #feed-scene {
+            background: linear-gradient(180deg, #050a08 0%, #0a1510 100%);
+        }
+
+        /* Feed mockup content */
+        .mock-story-bar {
+            display: flex;
+            gap: 10px;
+            padding: 12px;
+            overflow: hidden;
+        }
+
+        .mock-story {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid var(--emerald);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mock-story-inner {
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a3a2a, #0d1a14);
+        }
+
+        .mock-story:nth-child(2) {
+            border-color: #3b82f6;
+        }
+
+        .mock-story:nth-child(3) {
+            border-color: #f59e0b;
+        }
+
+        .mock-story:nth-child(4) {
+            border-color: #ec4899;
+        }
+
+        .mock-post {
+            margin: 8px 12px;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .mock-post-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .mock-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--emerald), var(--emerald-dark));
+        }
+
+        .mock-name {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .mock-time {
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .mock-text {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .mock-image {
+            width: 100%;
+            height: 120px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1a3a2a 0%, #0d2818 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mock-image::after {
+            content: '▶';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0.7;
+        }
+
+        .mock-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .mock-action-btn {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mock-action-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* ═══════════════════════════════════════════
+   SCENE 5: MEET & CONNECT
+   ═══════════════════════════════════════════ */
+        #meet-scene {
+            background: linear-gradient(180deg, #0a1510 0%, #050a08 100%);
+        }
+
+        .mock-video-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            padding: 50px 10px 10px;
+            height: 100%;
+        }
+
+        .mock-video-tile {
+            border-radius: 14px;
+            background: linear-gradient(135deg, #1a2a3a, #0d1820);
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+        }
+
+        .mock-video-tile::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            width: 50px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 7px;
+        }
+
+        .mock-video-tile.self {
+            background: linear-gradient(135deg, #0d2818, #0a1a12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .mock-video-tile .cam-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 1.2rem;
+        }
+
+        /* Blind Date card */
+        .blind-date-card {
+            margin: 12px;
+            padding: 20px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15));
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            text-align: center;
+        }
+
+        .blind-date-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .blind-date-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #f9a8d4;
+            margin-bottom: 4px;
+        }
+
+        .blind-date-sub {
+            font-size: 0.65rem;
+            color: rgba(249, 168, 212, 0.5);
+        }
+
+        .blind-date-btn {
+            margin-top: 12px;
+            padding: 8px 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: white;
+            border: none;
+            display: inline-block;
+        }
+
+        /* ═══════════════════════════════════════════
+   SCENE 6: CAMPUS APPS
+   ═══════════════════════════════════════════ */
+        #apps-scene {
+            background: #050a08;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            max-width: 700px;
+            width: 100%;
+            margin-top: 2.5rem;
+        }
+
+        .app-card {
+            padding: 1.5rem;
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-height: 150px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.4s ease;
+            cursor: default;
+        }
+
+        .app-card:hover {
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--card-from), var(--card-to));
+            opacity: 0.12;
+        }
+
+        .app-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-card-name {
+            font-weight: 800;
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-card-desc {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.4);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ═══════════════════════════════════════════
+   SCENE 7: GAMES & LEADERBOARDS
+   ═══════════════════════════════════════════ */
+        #games-scene {
+            background: linear-gradient(180deg, #050a08 0%, #0a0d12 50%, #050a08 100%);
+        }
+
+        .leaderboard-mockup {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+
+        .lb-header {
+            padding: 1.2rem 1.5rem;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.08));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .lb-trophy {
+            font-size: 1.5rem;
+        }
+
+        .lb-title {
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .lb-row.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .lb-rank {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: 1.1rem;
+            width: 32px;
+            text-align: center;
+        }
+
+        .lb-rank.gold {
+            color: #fbbf24;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+        }
+
+        .lb-rank.silver {
+            color: #94a3b8;
+        }
+
+        .lb-rank.bronze {
+            color: #d97706;
+        }
+
+        .lb-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .lb-info {
+            flex: 1;
+        }
+
+        .lb-name {
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .lb-score {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--emerald);
+        }
+
+        /* ═══════════════════════════════════════════
+   SCENE 8: CTA
+   ═══════════════════════════════════════════ */
+        #cta {
+            background: radial-gradient(ellipse at 50% 60%, #0d2818 0%, #050a08 70%);
+            position: relative;
+        }
+
+        .cta-logo {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            animation: ctaPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes ctaPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 20px var(--emerald-glow));
+            }
+
+            50% {
+                transform: scale(1.08);
+                filter: drop-shadow(0 0 40px var(--emerald-glow));
+            }
+        }
+
+        .cta-title {
+            font-weight: 900;
+            font-size: clamp(2.5rem, 8vw, 5.5rem);
+            text-align: center;
+            background: linear-gradient(135deg, #fff 30%, var(--emerald-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .cta-button {
+            margin-top: 2.5rem;
+            padding: 1.1rem 3rem;
+            border: none;
+            border-radius: 100px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: #fff;
+            background: linear-gradient(135deg, var(--emerald), var(--emerald-dark));
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 30px var(--emerald-glow), 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px var(--emerald-glow), 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: inherit;
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .cta-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-pwa {
+            margin-top: 1.2rem;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 400;
+        }
+
+        .cta-glow-orb {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            animation: orbFloat 8s ease-in-out infinite;
+        }
+
+        .cta-glow-orb.orb-1 {
+            top: -200px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+
+        .cta-glow-orb.orb-2 {
+            bottom: -200px;
+            left: -100px;
+            animation-delay: 4s;
+        }
+
+        @keyframes orbFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(30px, -20px) scale(1.1);
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+   AMBIENT GRADIENT DECORATIONS
+   ═══════════════════════════════════════════ */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--emerald-glow) 0%, transparent 70%);
+            opacity: 0.08;
+            pointer-events: none;
+            filter: blur(60px);
+        }
+
+        /* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            .feature-row {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .phone-mockup {
+                width: 220px;
+                height: 440px;
+            }
+
+            .apps-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+
+            .app-card {
+                padding: 1rem;
+                min-height: 120px;
+            }
+
+            .solution-ring {
+                width: 200px;
+                height: 200px;
+            }
+
+            .solution-logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .scattered-icons {
+                gap: 1rem;
+            }
+
+            .scattered-icon {
+                width: 56px;
+                height: 56px;
+                font-size: 1.4rem;
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+   CUSTOM SCROLLBAR
+   ═══════════════════════════════════════════ */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.5);
+        }
+
+        /* ═══════════════════════════════════════════
+   PROGRESS BAR
+   ═══════════════════════════════════════════ */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--emerald), var(--cyan-glow));
+            z-index: 100;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px var(--emerald-glow);
+        }
+
+        /* Section counter */
+        .section-counter {
+            position: fixed;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 50;
+        }
+
+        .section-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .section-dot.active {
+            background: var(--emerald);
+            box-shadow: 0 0 10px var(--emerald-glow);
+            transform: scale(1.4);
+        }
+
+        @media (max-width: 768px) {
+            .section-counter {
+                right: 0.75rem;
+                gap: 8px;
+            }
+
+            .section-dot {
+                width: 6px;
+                height: 6px;
+            }
+        }
+
+        /* Divider */
+        .scene-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.2) 50%, transparent 100%);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Section Navigation Dots -->
+    <nav class="section-counter" id="sectionNav" aria-label="Section navigation"></nav>
+
+    <!-- ═══════════════════════════════════════════
+     SCENE 1: HERO
+     ═══════════════════════════════════════════ -->
+    <section class="scene" id="hero">
+        <canvas id="hero-canvas"></canvas>
+        <div class="hero-content">
+            <div class="logo-container">
+                <div class="logo-bubble-1"></div>
+                <div class="logo-bubble-2"></div>
+                <div class="logo-overlap"></div>
+                <div class="logo-pulse-ring"></div>
+                <div class="logo-pulse-ring" style="animation-delay: 1s;"></div>
+            </div>
+            <h1 class="hero-title">StudentCenter</h1>
+            <p class="hero-tagline">Your campus, in your pocket.</p>
+        </div>
+        <div class="scroll-indicator">
+            <span>Scroll</span>
+            <div class="scroll-arrow"></div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+     SCENE 2: THE PROBLEM
+     ═══════════════════════════════════════════ -->
+    <section class="scene" id="problem">
+        <h2 class="problem-title reveal">
+            Campus life is<br><span class="highlight">scattered.</span>
+        </h2>
+        <div class="scattered-icons">
+            <div class="scattered-icon reveal reveal-delay-1">💬</div>
+            <div class="scattered-icon reveal reveal-delay-2">🍔</div>
+            <div class="scattered-icon reveal reveal-delay-3">📚</div>
+            <div class="scattered-icon reveal reveal-delay-4">🔍</div>
+            <div class="scattered-icon reveal reveal-delay-5">📅</div>
+            <div class="scattered-icon reveal reveal-delay-6">🏪</div>
+        </div>
+        <p class="problem-sub reveal reveal-delay-4">
+            Six different apps. Twelve group chats. Zero cohesion.<br>
+            You deserve better.
+        </p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+     SCENE 3: THE SOLUTION
+     ═══════════════════════════════════════════ -->
+    <section class="scene" id="solution">
+        <div class="ambient-glow" style="top: -200px; left: -200px;"></div>
+        <div class="solution-ring reveal-scale">
+            <div class="solution-logo">
+                <div
+                    style="position:absolute;bottom:0;left:0;width:70%;height:70%;background:var(--emerald);border-radius:50%;border-top-right-radius:0;z-index:2;box-shadow:0 0 30px var(--emerald-glow);">
+                </div>
+                <div
+                    style="position:absolute;top:0;right:0;width:70%;height:70%;background:var(--emerald-light);border-radius:50%;border-bottom-left-radius:0;opacity:0.9;">
+                </div>
+                <div
+                    style="position:absolute;top:20%;right:20%;width:15%;height:15%;background:rgba(255,255,255,0.35);border-radius:50%;filter:blur(2px);">
+                </div>
+            </div>
+        </div>
+        <h2 class="solution-title reveal reveal-delay-2">
+            One app to<br><span class="emerald">connect it all.</span>
+        </h2>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+     SCENE 4: SOCIAL FEED
+     ═══════════════════════════════════════════ -->
+    <section class="scene" id="feed-scene">
+        <div class="feature-row">
+            <div class="phone-mockup reveal-left">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <!-- Stories bar -->
+                    <div class="mock-story-bar">
+                        <div class="mock-story">
+                            <div class="mock-story-inner"></div>
+                        </div>
+                        <div class="mock-story">
+                            <div class="mock-story-inner"></div>
+                        </div>
+                        <div class="mock-story">
+                            <div class="mock-story-inner"></div>
+                        </div>
+                        <div class="mock-story">
+                            <div class="mock-story-inner"></div>
+                        </div>
+                    </div>
+                    <!-- Post 1 -->
+                    <div class="mock-post">
+                        <div class="mock-post-header">
+                            <div class="mock-avatar"></div>
+                            <div>
+                                <div class="mock-name">campus_vibes</div>
+                                <div class="mock-time">2 min ago</div>
+                            </div>
+                        </div>
+                        <div class="mock-text">The library at 2am hits different during finals week 📚🔥</div>
+                        <div class="mock-actions">
+                            <div class="mock-action-btn">
+                                <div class="mock-action-icon"></div> 42
+                            </div>
+                            <div class="mock-action-btn">
+                                <div class="mock-action-icon"></div> 18
+                            </div>
+                            <div class="mock-action-btn">
+                                <div class="mock-action-icon"></div> Share
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Post 2 with video -->
+                    <div class="mock-post">
+                        <div class="mock-post-header">
+                            <div class="mock-avatar" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                            </div>
+                            <div>
+                                <div class="mock-name">techie_kevin</div>
+                                <div class="mock-time">15 min ago</div>
+                            </div>
+                        </div>
+                        <div class="mock-image"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="feature-text reveal-right">
+                <div class="feature-label">Social Feed</div>
+                <h2 class="feature-title">Share stories.<br>Watch moments.<br>Stay in the loop.</h2>
+                <p class="feature-desc">
+                    Post anonymously or openly. Share photos, videos, and stories with your campus community. Engage
+                    with what matters to you.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+     SCENE 5: MEET & CONNECT
+     ═══════════════════════════════════════════ -->
+    <section class="scene" id="meet-scene">
+        <div class="feature-row" style="flex-direction: row-reverse;">
+            <div class="phone-mockup reveal-right">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <!-- Video grid -->
+                    <div class="mock-video-grid">
+                        <div class="mock-video-tile self">
+                            <div class="cam-icon">📷</div>
+                        </div>
+                        <div class="mock-video-tile">
+                            <div class="cam-icon">👤</div>
+                        </div>
+                        <div class="mock-video-tile">
+                            <div class="cam-icon">👤</div>
+                        </div>
+                        <div class="mock-video-tile">
+                            <div class="cam-icon">👤</div>
+                        </div>
+                    </div>
+                    <!-- Blind Date card (overlaid at bottom) -->
+                    <div class="blind-date-card" style="position:absolute;bottom:12px;left:12px;right:12px;">
+                        <div class="blind-date-emoji">💘</div>
+                        <div class="blind-date-title">Blind Date</div>
+                        <div class="blind-date-sub">Leave it to fate</div>
+                        <div class="blind-date-btn">Find a Match</div>
+                    </div>
+                </div>
+            </div>
+            <div class="feature-text reveal-left">
+                <div class="feature-label">Meet & Connect</div>
+                <h2 class="feature-title">Face to face.<br>Or leave it<br>to fate.</h2>
+                <p class="feature-desc">
+                    Jump into video rooms with friends, or try Blind Date — get matched randomly with someone new on
+                    campus. Real conversations, real connections.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+     SCENE 6: CAMPUS APPS
+     ═══════════════════════════════════════════ -->
+    <section class="scene" id="apps-scene">
+        <div class="feature-label reveal" style="text-align:center;">Ecosystem</div>
+        <h2 class="feature-title reveal reveal-delay-1" style="text-align:center; margin-bottom: 0.5rem;">
+            Everything you need.<br>Right here.
+        </h2>
+        <p class="feature-desc reveal reveal-delay-2" style="text-align:center; max-width: 500px; margin-bottom: 1rem;">
+            A suite of micro-apps built for campus life.
+        </p>
+        <div class="apps-grid">
+            <div class="app-card reveal reveal-delay-1" style="--card-from: #f97316; --card-to: #ef4444;">
+                <div class="app-card-icon">🍕</div>
+                <div class="app-card-name">Campus Eats</div>
+                <div class="app-card-desc">Food & delivery</div>
+            </div>
+            <div class="app-card reveal reveal-delay-2" style="--card-from: #ec4899; --card-to: #f43f5e;">
+                <div class="app-card-icon">🛍️</div>
+                <div class="app-card-name">Marketplace</div>
+                <div class="app-card-desc">Buy & sell</div>
+            </div>
+            <div class="app-card reveal reveal-delay-3" style="--card-from: #8b5cf6; --card-to: #7c3aed;">
+                <div class="app-card-icon">🔎</div>
+                <div class="app-card-name">Lost & Found</div>
+                <div class="app-card-desc">Find your stuff</div>
+            </div>
+            <div class="app-card reveal reveal-delay-4" style="--card-from: #10b981; --card-to: #059669;">
+                <div class="app-card-icon">💼</div>
+                <div class="app-card-name">Campus Hustle</div>
+                <div class="app-card-desc">Freelance & gigs</div>
+            </div>
+            <div class="app-card reveal reveal-delay-5" style="--card-from: #3b82f6; --card-to: #2563eb;">
+                <div class="app-card-icon">📖</div>
+                <div class="app-card-name">Freshman Pack</div>
+                <div class="app-card-desc">Campus survival guide</div>
+            </div>
+            <div class="app-card reveal reveal-delay-6" style="--card-from: #14b8a6; --card-to: #0d9488;">
+                <div class="app-card-icon">🎓</div>
+                <div class="app-card-name">Unicampus</div>
+                <div class="app-card-desc">Past papers</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+     SCENE 7: GAMES & LEADERBOARDS
+     ═══════════════════════════════════════════ -->
+    <section class="scene" id="games-scene">
+        <div class="feature-label reveal" style="text-align:center;">Compete</div>
+        <h2 class="feature-title reveal reveal-delay-1" style="text-align:center;">
+            Compete. Climb.<br>Get crowned.
+        </h2>
+        <div class="leaderboard-mockup reveal-scale reveal-delay-2">
+            <div class="lb-header">
+                <span class="lb-trophy">🏆</span>
+                <span class="lb-title">Campus Leaderboard</span>
+            </div>
+            <div class="lb-row" data-delay="0">
+                <span class="lb-rank gold">1</span>
+                <div class="lb-avatar" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);"></div>
+                <div class="lb-info">
+                    <div class="lb-name">speedster_k</div>
+                </div>
+                <div class="lb-score">12,840</div>
+            </div>
+            <div class="lb-row" data-delay="150">
+                <span class="lb-rank silver">2</span>
+                <div class="lb-avatar" style="background: linear-gradient(135deg, #94a3b8, #64748b);"></div>
+                <div class="lb-info">
+                    <div class="lb-name">night_owl</div>
+                </div>
+                <div class="lb-score">11,200</div>
+            </div>
+            <div class="lb-row" data-delay="300">
+                <span class="lb-rank bronze">3</span>
+                <div class="lb-avatar" style="background: linear-gradient(135deg, #d97706, #b45309);"></div>
+                <div class="lb-info">
+                    <div class="lb-name">campus_legend</div>
+                </div>
+                <div class="lb-score">9,750</div>
+            </div>
+            <div class="lb-row" data-delay="450">
+                <span class="lb-rank" style="color: rgba(255,255,255,0.4);">4</span>
+                <div class="lb-avatar"
+                    style="background: linear-gradient(135deg, var(--emerald), var(--emerald-dark));"></div>
+                <div class="lb-info">
+                    <div class="lb-name" style="color: var(--emerald-light);">You →</div>
+                </div>
+                <div class="lb-score">—</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+     SCENE 8: CTA
+     ═══════════════════════════════════════════ -->
+    <section class="scene" id="cta">
+        <div class="cta-glow-orb orb-1"></div>
+        <div class="cta-glow-orb orb-2"></div>
+        <div class="cta-logo reveal-scale">
+            <div
+                style="position:absolute;bottom:0;left:0;width:70%;height:70%;background:var(--emerald);border-radius:50%;border-top-right-radius:0;z-index:2;box-shadow:0 0 40px var(--emerald-glow),0 0 80px rgba(16,185,129,0.2);">
+            </div>
+            <div
+                style="position:absolute;top:0;right:0;width:70%;height:70%;background:var(--emerald-light);border-radius:50%;border-bottom-left-radius:0;opacity:0.9;">
+            </div>
+            <div
+                style="position:absolute;top:20%;right:20%;width:15%;height:15%;background:rgba(255,255,255,0.35);border-radius:50%;filter:blur(2px);">
+            </div>
+        </div>
+        <h2 class="cta-title reveal reveal-delay-1">StudentCenter</h2>
+        <a class="cta-button reveal reveal-delay-2" href="/" aria-label="Launch StudentCenter">
+            <span>Join the Movement</span>
+        </a>
+        <p class="cta-pwa reveal reveal-delay-3">Available now as a PWA — no download needed.</p>
+    </section>
+
+    <script>
+        // ═══════════════════════════════════════════
+        // PARTICLE CANVAS (HERO)
+        // ═══════════════════════════════════════════
+        (function () {
+            const canvas = document.getElementById('hero-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let w, h;
+            let animId;
+
+            function resize() {
+                w = canvas.width = canvas.offsetWidth;
+                h = canvas.height = canvas.offsetHeight;
+            }
+
+            function createParticles() {
+                particles = [];
+                const count = Math.min(80, Math.floor(w * h / 12000));
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: Math.random() * w,
+                        y: Math.random() * h,
+                        r: Math.random() * 2 + 0.5,
+                        vx: (Math.random() - 0.5) * 0.3,
+                        vy: (Math.random() - 0.5) * 0.3,
+                        alpha: Math.random() * 0.5 + 0.1,
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(16, 185, 129, ${p.alpha})`;
+                    ctx.fill();
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0) p.x = w;
+                    if (p.x > w) p.x = 0;
+                    if (p.y < 0) p.y = h;
+                    if (p.y > h) p.y = 0;
+                });
+
+                // Draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(16, 185, 129, ${0.08 * (1 - dist / 120)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                animId = requestAnimationFrame(draw);
+            }
+
+            resize();
+            createParticles();
+            draw();
+            window.addEventListener('resize', () => { resize(); createParticles(); });
+        })();
+
+        // ═══════════════════════════════════════════
+        // INTERSECTION OBSERVER (SCROLL REVEALS)
+        // ═══════════════════════════════════════════
+        (function () {
+            const revealEls = document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+            revealEls.forEach(el => observer.observe(el));
+        })();
+
+        // ═══════════════════════════════════════════
+        // LEADERBOARD ROW STAGGER
+        // ═══════════════════════════════════════════
+        (function () {
+            const rows = document.querySelectorAll('.lb-row');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const delay = parseInt(entry.target.dataset.delay) || 0;
+                        setTimeout(() => {
+                            entry.target.classList.add('visible');
+                        }, delay);
+                    }
+                });
+            }, { threshold: 0.3 });
+
+            rows.forEach(row => observer.observe(row));
+        })();
+
+        // ═══════════════════════════════════════════
+        // PROGRESS BAR
+        // ═══════════════════════════════════════════
+        (function () {
+            const bar = document.getElementById('progressBar');
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const progress = (scrollTop / docHeight) * 100;
+                bar.style.width = progress + '%';
+            }, { passive: true });
+        })();
+
+        // ═══════════════════════════════════════════
+        // SECTION NAVIGATION DOTS
+        // ═══════════════════════════════════════════
+        (function () {
+            const scenes = document.querySelectorAll('.scene');
+            const nav = document.getElementById('sectionNav');
+
+            scenes.forEach((scene, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'section-dot' + (i === 0 ? ' active' : '');
+                dot.addEventListener('click', () => {
+                    scene.scrollIntoView({ behavior: 'smooth' });
+                });
+                nav.appendChild(dot);
+            });
+
+            const dots = nav.querySelectorAll('.section-dot');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const idx = Array.from(scenes).indexOf(entry.target);
+                        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            scenes.forEach(s => observer.observe(s));
+        })();
+    </script>
+</body>
+
+</html>

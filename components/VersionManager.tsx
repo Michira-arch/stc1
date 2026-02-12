@@ -13,7 +13,14 @@ const VersionManager = () => {
                     console.log('New version detected:', serverVersion);
 
                     // Whitelist of keys to preserve
-                    const explicitPreserveKeys = ['theme', 'user_preferences'];
+                    const explicitPreserveKeys = [
+                        'theme', 'user_preferences',
+                        'STC_SESSION_BACKUP',       // Auth token backup for session recovery
+                        'dopamine_theme',            // User's light/dark preference
+                        'has_seen_onboarding',       // Don't re-show onboarding
+                        'has_dismissed_notification_modal', // Don't re-prompt notifications
+                        'has_seen_feedback',         // Don't re-prompt feedback
+                    ];
                     const preservedData: Record<string, string | null> = {};
 
                     // Backup explicitly preserved keys

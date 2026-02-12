@@ -1,26 +1,47 @@
 import React, { useRef, useState, useEffect, memo } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { useApp } from '../store/AppContext';
 
 interface FeedVideoPlayerProps {
     src: string;
     poster?: string;
+    onView?: () => void;
 }
 
 /**
  * Inline video player for the feed.
+ * - Autoplay when 80% visible, auto-pause when <30% visible
+ * - Global mute sync: toggling mute on one video affects all
+ * - Blurred portrait background fill on desktop (no empty sidebars)
+ * - iOS fix: #t=0.001 forces first-frame poster display
  * - Play/Mute glassmorphic buttons capture clicks (stopPropagation)
- * - Tapping anywhere else on the video lets the card click propagate (opens story)
- * - Portrait container on mobile, landscape-tolerant on desktop
- * - Auto-pause when scrolled off-screen via IntersectionObserver
+ * - Tapping anywhere else on the video lets the card click propagate
+ * - Tracks cumulative playtime and calls onView after 3s
  */
-export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, poster }) => {
+export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, poster, onView }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const bgVideoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isMuted, setIsMuted] = useState(true); // Start muted for autoplay
     const [progress, setProgress] = useState(0);
+    const { isVideoMuted, setIsVideoMuted } = useApp();
 
-    // Auto-pause when off-screen
+    // View counting refs
+    const accumulatedTimeRef = useRef(0);
+    const lastTimeRef = useRef(0);
+    const hasViewedRef = useRef(false);
+
+    // iOS first-frame fix: append #t=0.001 to force seek to first frame
+    const videoSrc = src + (src.includes('#') ? '' : '#t=0.001');
+
+    // Sync muted attribute with global state
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.muted = isVideoMuted;
+        }
+    }, [isVideoMuted]);
+
+    // Autoplay at 80% visible, auto-pause at <30% visible
     useEffect(() => {
         const video = videoRef.current;
         const container = containerRef.current;
@@ -28,16 +49,51 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
 
         const observer = new IntersectionObserver(
             ([entry]) => {
-                if (!entry.isIntersecting && !video.paused) {
-                    video.pause();
-                    setIsPlaying(false);
+                if (entry.intersectionRatio >= 0.8) {
+                    // Autoplay when 80% visible
+                    if (video.paused) {
+                        video.play().catch(() => { /* autoplay blocked */ });
+                    }
+                } else if (entry.intersectionRatio < 0.3) {
+                    // Pause when less than 30% visible
+                    if (!video.paused) {
+                        video.pause();
+                        setIsPlaying(false);
+                    }
                 }
             },
-            { threshold: 0.3 }
+            { threshold: [0.0, 0.3, 0.8] }
         );
 
         observer.observe(container);
         return () => observer.disconnect();
+    }, []);
+
+    // Keep background video in sync with main video time (for blurred bg)
+    useEffect(() => {
+        const video = videoRef.current;
+        const bgVideo = bgVideoRef.current;
+        if (!video || !bgVideo) return;
+
+        const syncBg = () => {
+            if (Math.abs(bgVideo.currentTime - video.currentTime) > 0.5) {
+                bgVideo.currentTime = video.currentTime;
+            }
+        };
+
+        const onPlay = () => { bgVideo.play().catch(() => { }); syncBg(); };
+        const onPause = () => { bgVideo.pause(); };
+        const onSeeked = () => { syncBg(); };
+
+        video.addEventListener('play', onPlay);
+        video.addEventListener('pause', onPause);
+        video.addEventListener('seeked', onSeeked);
+
+        return () => {
+            video.removeEventListener('play', onPlay);
+            video.removeEventListener('pause', onPause);
+            video.removeEventListener('seeked', onSeeked);
+        };
     }, []);
 
     const togglePlay = (e: React.MouseEvent) => {
@@ -52,15 +108,33 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
 
     const toggleMute = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!videoRef.current) return;
-        videoRef.current.muted = !isMuted;
-        setIsMuted(!isMuted);
+        setIsVideoMuted(!isVideoMuted); // Global toggle
     };
 
     const handleTimeUpdate = () => {
         if (!videoRef.current) return;
-        const pct = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+        const video = videoRef.current;
+        const pct = (video.currentTime / video.duration) * 100;
         setProgress(isNaN(pct) ? 0 : pct);
+
+        // Track cumulative playtime
+        if (!hasViewedRef.current && !video.paused && onView) {
+            const now = video.currentTime;
+            // Calculate delta since last update (only if positive and reasonable, e.g. < 1s jump)
+            const delta = now - lastTimeRef.current;
+            if (delta > 0 && delta < 1) {
+                accumulatedTimeRef.current += delta;
+            }
+            lastTimeRef.current = now;
+
+            if (accumulatedTimeRef.current >= 3) {
+                onView();
+                hasViewedRef.current = true;
+            }
+        } else {
+            // Keep lastTime synced even if paused/viewed, so next play starts correctly
+            lastTimeRef.current = video.currentTime;
+        }
     };
 
     return (
@@ -69,26 +143,35 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
             className="mb-4 w-full rounded-2xl overflow-hidden relative group
                  border-[3px] border-ceramic-base dark:border-obsidian-base neu-concave"
         >
-            {/* Video element — portrait on mobile, natural on desktop */}
+            {/* Blurred background video — fills empty space for portrait videos on desktop */}
+            <video
+                ref={bgVideoRef}
+                src={videoSrc}
+                className="absolute inset-0 w-full h-full object-cover scale-110
+                     filter blur-xl opacity-40 pointer-events-none
+                     hidden sm:block"
+                muted
+                playsInline
+                loop
+                preload="metadata"
+                aria-hidden="true"
+                tabIndex={-1}
+            />
+
+            {/* Main video */}
             <video
                 ref={videoRef}
-                src={src}
+                src={videoSrc}
                 poster={poster}
-                className="w-full object-cover block
+                className="relative w-full object-contain block
                    max-h-[70vh] min-h-[280px]
-                   sm:max-h-[500px] sm:object-contain"
-                style={{
-                    // Force portrait-ish aspect on mobile by using object-cover 
-                    // which fills the container height. On larger screens, 
-                    // sm:object-contain lets landscape videos show naturally.
-                    aspectRatio: 'auto',
-                }}
+                   sm:max-h-[500px]"
                 onTimeUpdate={handleTimeUpdate}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onEnded={() => { setIsPlaying(false); setProgress(0); }}
                 playsInline
-                muted={isMuted}
+                muted={isVideoMuted}
                 preload="metadata"
                 loop
             />
@@ -122,7 +205,7 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
                         />
                     </div>
 
-                    {/* Mute button */}
+                    {/* Mute button — toggles global state */}
                     <button
                         onClick={toggleMute}
                         className="w-11 h-11 rounded-full 
@@ -132,7 +215,7 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
                        hover:bg-white/25 active:scale-90
                        transition-all duration-200"
                     >
-                        {isMuted ? (
+                        {isVideoMuted ? (
                             <VolumeX size={16} className="text-white drop-shadow-md" />
                         ) : (
                             <Volume2 size={16} className="text-white drop-shadow-md" />

@@ -62,6 +62,8 @@ export interface AppContextType {
   users: Record<string, User>;
   stories: Story[];
   hiddenStories: Story[];
+  hasMoreStories: boolean;
+  isLoadingMore: boolean;
   theme: ThemeMode;
   settings: AppSettings;
   deferredPrompt: any;
@@ -87,6 +89,7 @@ export interface AppContextType {
   incrementViews: (storyId: string) => void;
   toggleHideStory: (storyId: string) => void;
   updateStory: (storyId: string, title: string, description: string, content: string, imageFile?: File | string) => Promise<void>;
+  fetchMoreStories: () => Promise<void>;
 
   // State
   feedScrollPosition: number;
@@ -118,6 +121,8 @@ export interface AppContextType {
   // System
   isAppInstalled: boolean;
   isOnline: boolean;
+  isVideoMuted: boolean;
+  setIsVideoMuted: (muted: boolean) => void;
 
   // Editor Draft (Session Only)
   editorDraft: {

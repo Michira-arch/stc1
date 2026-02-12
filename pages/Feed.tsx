@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
 import { useApp } from '../store/AppContext';
 import { StoryCard } from '../components/StoryCard';
 import { motion } from 'framer-motion';
@@ -7,17 +7,21 @@ import { CarvedButton } from '../components/CarvedButton';
 import { Logo } from '../components/Logo';
 
 export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) => void, onNavigate: (path: string) => void }) => {
-  const { stories, currentUser, feedScrollPosition, setFeedScrollPosition, isGuest, setAuthPage, theme, toggleTheme, deferredPrompt, installApp } = useApp();
+  const { stories, currentUser, feedScrollPosition, setFeedScrollPosition, isGuest, setAuthPage, theme, toggleTheme, deferredPrompt, installApp, hasMoreStories, isLoadingMore, fetchMoreStories } = useApp();
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'following'>('all');
 
   const visibleStories = stories.filter(s => !s.isHidden || s.authorId === currentUser.id);
 
-  // Simulate Skeleton Loading
+  // Adaptive Skeleton Loading: show skeleton until stories arrive (or 2s max)
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
+    if (stories.length > 0) {
+      setIsLoading(false);
+      return;
+    }
+    const timer = setTimeout(() => setIsLoading(false), 2000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [stories.length]);
 
   // Scroll Persistence
   const scrollRef = useRef(feedScrollPosition);
@@ -45,6 +49,27 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
       setFeedScrollPosition(scrollRef.current);
     };
   }, [setFeedScrollPosition]);
+
+  // --- Infinite Scroll ---
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const sentinelCallback = useCallback((node: HTMLDivElement | null) => {
+    sentinelRef.current = node;
+  }, []);
+
+  useEffect(() => {
+    if (!sentinelRef.current || isLoading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMoreStories && !isLoadingMore) {
+          fetchMoreStories();
+        }
+      },
+      { rootMargin: '200px' } // Start loading 200px before the sentinel is visible
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMoreStories, isLoadingMore, isLoading, fetchMoreStories]);
 
   const handleStoryClick = (id: string) => {
     // Unmount effect will handle saving scroll
@@ -137,10 +162,29 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
                 onClick={() => handleStoryClick(story.id)}
               />
             ))}
-            <div className="text-center py-10 opacity-50 snap-end">
-              <p className="text-sm tracking-widest uppercase">You're all caught up</p>
-              <div className="w-2 h-2 bg-accent rounded-full mx-auto mt-4 animate-pulse"></div>
-            </div>
+
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelCallback} className="h-4" />
+
+            {isLoadingMore && (
+              <div className="flex justify-center py-6">
+                <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+
+            {!hasMoreStories && visibleStories.length > 0 && (
+              <div className="text-center py-10 opacity-50 snap-end">
+                <p className="text-sm tracking-widest uppercase">You're all caught up</p>
+                <div className="w-2 h-2 bg-accent rounded-full mx-auto mt-4 animate-pulse"></div>
+              </div>
+            )}
+
+            {!isLoading && visibleStories.length === 0 && (
+              <div className="text-center py-16 opacity-60">
+                <p className="text-lg font-bold mb-2">No stories yet</p>
+                <p className="text-sm text-slate-500">Be the first to share something!</p>
+              </div>
+            )}
           </>
         )}
       </div>

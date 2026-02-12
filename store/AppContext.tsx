@@ -80,6 +80,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [editorDraft, setEditorDraft] = useState({ title: '', description: '', content: '', isProMode: false, isAnonymous: false });
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatContext, setChatContext] = useState<{ type: 'page' | 'post' | 'selection'; content: string; id?: string; imageUrl?: string } | null>(null);
+  const [isVideoMuted, setIsVideoMuted] = useState(true); // Global video mute (default: muted)
 
   const openChat = (context?: { type: 'page' | 'post' | 'selection'; content: string; id?: string; imageUrl?: string }) => {
     if (context) setChatContext(context);
@@ -217,72 +218,78 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  // --- Pagination State ---
+  const PAGE_SIZE = 20;
+  const [hasMoreStories, setHasMoreStories] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const STORY_SELECT = `
+    *,
+    author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle, is_certified),
+    likes(user_id),
+    comments(*)
+  `;
+
+  const processStories = (rawData: any[]) => {
+    return rawData.map(dbStory => ({
+      id: dbStory.id,
+      authorId: (dbStory.is_anonymous && dbStory.author_id !== currentUser.id) ? 'anonymous' : dbStory.author_id,
+      timestamp: new Date(dbStory.created_at).getTime(),
+      title: dbStory.title,
+      description: dbStory.description || '',
+      content: dbStory.content || '',
+      imageUrl: dbStory.image_url || undefined,
+      videoUrl: dbStory.video_url || undefined,
+      audioUrl: dbStory.audio_url || undefined,
+      likes: dbStory.likes.map((l: any) => l.user_id),
+      comments: buildCommentTree(dbStory.comments || []),
+      views: dbStory.views_count || 0,
+      isHidden: dbStory.is_hidden || false,
+      isAnonymous: dbStory.is_anonymous || false
+    }));
+  };
+
+  const updateUsersCache = (rawData: any[]) => {
+    const newUsers = { ...users };
+    rawData.forEach((item: any) => {
+      if (item.author && !item.is_anonymous) {
+        newUsers[item.author.id] = {
+          id: item.author.id,
+          name: item.author.full_name || 'Unknown',
+          handle: item.author.handle,
+          avatar: item.author.avatar_url || '',
+          isCertified: item.author.is_certified || false
+        };
+      }
+    });
+    setUsers(newUsers);
+  };
+
   const fetchStories = async () => {
-    // 1. Public Feed (Non-hidden)
+    // 1. Public Feed (Non-hidden) — first page
     const { data, error } = await supabase
       .from('stories')
-      .select(`
-        *,
-        author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle, is_certified),
-        likes(user_id),
-        comments(*)
-      `)
+      .select(STORY_SELECT)
       .eq('is_hidden', false)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE);
 
     if (error) {
       console.error('Error fetching stories:', error);
       return;
     }
 
-    const processStories = (rawData: any[]) => {
-      return rawData.map(dbStory => ({
-        id: dbStory.id,
-        authorId: (dbStory.is_anonymous && dbStory.author_id !== currentUser.id) ? 'anonymous' : dbStory.author_id,
-        timestamp: new Date(dbStory.created_at).getTime(),
-        title: dbStory.title,
-        description: dbStory.description || '',
-        content: dbStory.content || '',
-        imageUrl: dbStory.image_url || undefined,
-        videoUrl: dbStory.video_url || undefined,
-        audioUrl: dbStory.audio_url || undefined,
-        likes: dbStory.likes.map((l: any) => l.user_id),
-        comments: buildCommentTree(dbStory.comments || []),
-        views: dbStory.views_count || 0,
-        isHidden: dbStory.is_hidden || false,
-        isAnonymous: dbStory.is_anonymous || false
-      }));
-    };
-
     if (data) {
       setStories(processStories(data));
-
-      // Update Users Cache
-      const newUsers = { ...users };
-      data.forEach((item: any) => {
-        if (item.author && !item.is_anonymous) {
-          newUsers[item.author.id] = {
-            id: item.author.id,
-            name: item.author.full_name || 'Unknown',
-            handle: item.author.handle,
-            avatar: item.author.avatar_url || '',
-            isCertified: item.author.is_certified || false
-          };
-        }
-      });
-      setUsers(newUsers);
+      setHasMoreStories(data.length >= PAGE_SIZE);
+      updateUsersCache(data);
     }
 
     // 2. Fetch My Hidden Stories
     if (!isGuest && currentUser.id !== 'guest') {
       const { data: hiddenData } = await supabase
         .from('stories')
-        .select(`
-             *,
-             author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle, is_certified),
-             likes(user_id),
-             comments(*)
-           `)
+        .select(STORY_SELECT)
         .eq('author_id', currentUser.id)
         .eq('is_hidden', true)
         .order('created_at', { ascending: false });
@@ -293,6 +300,52 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } else {
       setHiddenStories([]);
     }
+  };
+
+  const fetchMoreStories = async () => {
+    if (isLoadingMore || !hasMoreStories) return;
+    setIsLoadingMore(true);
+
+    try {
+      // Use the oldest story's timestamp as cursor
+      const oldestStory = stories[stories.length - 1];
+      if (!oldestStory) { setIsLoadingMore(false); return; }
+
+      const { data, error } = await supabase
+        .from('stories')
+        .select(STORY_SELECT)
+        .eq('is_hidden', false)
+        .order('created_at', { ascending: false })
+        .lt('created_at', new Date(oldestStory.timestamp).toISOString())
+        .limit(PAGE_SIZE);
+
+      if (error) {
+        console.error('Error fetching more stories:', error);
+        return;
+      }
+
+      if (data) {
+        const newStories = processStories(data);
+        setStories(prev => [...prev, ...newStories]);
+        setHasMoreStories(data.length >= PAGE_SIZE);
+        updateUsersCache(data);
+      }
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // --- Delta realtime: fetch a single story by ID ---
+  const fetchSingleStory = async (storyId: string): Promise<Story | null> => {
+    const { data, error } = await supabase
+      .from('stories')
+      .select(STORY_SELECT)
+      .eq('id', storyId)
+      .single();
+
+    if (error || !data) return null;
+    updateUsersCache([data]);
+    return processStories([data])[0];
   };
 
   const buildCommentTree = (flatComments: any[]): Comment[] => {
@@ -325,10 +378,45 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     fetchStories();
 
-    // Realtime subscription for Stories
-    const channel = supabase.channel('public:stories')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'stories' }, (payload) => {
-        fetchStories(); // Brute force refresh for now, optimize later
+    // --- Delta Realtime: Stories ---
+    const storiesChannel = supabase.channel('public:stories:delta')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stories' }, async (payload) => {
+        const newStory = await fetchSingleStory(payload.new.id);
+        if (newStory && !newStory.isHidden) {
+          setStories(prev => [newStory, ...prev]);
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'stories' }, async (payload) => {
+        const updated = await fetchSingleStory(payload.new.id);
+        if (updated) {
+          if (updated.isHidden) {
+            // Story was hidden — remove from public feed
+            setStories(prev => prev.filter(s => s.id !== updated.id));
+          } else {
+            setStories(prev => prev.map(s => s.id === updated.id ? updated : s));
+          }
+        }
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'stories' }, (payload) => {
+        setStories(prev => prev.filter(s => s.id !== payload.old.id));
+      })
+      .subscribe();
+
+    // --- Delta Realtime: Likes & Comments → refresh only the affected story ---
+    const engagementChannel = supabase.channel('public:engagement:delta')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, async (payload) => {
+        const storyId = (payload.new as any)?.story_id || (payload.old as any)?.story_id;
+        if (storyId) {
+          const updated = await fetchSingleStory(storyId);
+          if (updated) setStories(prev => prev.map(s => s.id === storyId ? updated : s));
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, async (payload) => {
+        const storyId = (payload.new as any)?.story_id || (payload.old as any)?.story_id;
+        if (storyId) {
+          const updated = await fetchSingleStory(storyId);
+          if (updated) setStories(prev => prev.map(s => s.id === storyId ? updated : s));
+        }
       })
       .subscribe();
 
@@ -350,7 +438,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(storiesChannel);
+      supabase.removeChannel(engagementChannel);
       if (profileChannel) supabase.removeChannel(profileChannel);
     };
   }, [currentUser.id, isGuest]); // Refetch when user changes (for hidden stories)
@@ -782,6 +871,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       users,
       stories,
       hiddenStories,
+      hasMoreStories,
+      isLoadingMore,
       theme,
       settings,
       deferredPrompt,
@@ -799,6 +890,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       incrementViews,
       toggleHideStory,
       updateStory,
+      fetchMoreStories,
       showToast,
       removeToast,
       feedScrollPosition,
@@ -822,6 +914,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       isGuest,
       isAppInstalled,
       isOnline,
+      isVideoMuted,
+      setIsVideoMuted,
 
       authPage,
       setAuthPage,

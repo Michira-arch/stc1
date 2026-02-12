@@ -5,6 +5,7 @@ export interface Paper {
   courseCode: string;
   year: number;
   uploadedBy: string;
+  uploaderId: string; // New: for ownership check
   fileUrl: string; // Blob URL or Mock URL
   fileType: string;
   uploadDate: string;

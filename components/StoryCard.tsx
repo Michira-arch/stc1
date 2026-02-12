@@ -9,6 +9,7 @@ import { CarvedButton } from './CarvedButton';
 import { AudioPlayer } from './AudioPlayer';
 import { FeedVideoPlayer } from './FeedVideoPlayer';
 import { cleanContent } from '../src/utils/textUtils';
+import { useSmartView } from '../hooks/useSmartView';
 
 
 interface StoryCardProps {
@@ -99,7 +100,7 @@ const CommentNode = memo(({ comment, users, currentUser, storyAuthorId, depth = 
                      dark:shadow-[6px_6px_12px_#151618,-6px_-6px_12px_#35363e]
                      border border-white/20 dark:border-white/5"
       >
-        <img src={cUser?.avatar} className="w-8 h-8 rounded-full border border-slate-300 object-cover" alt="" />
+        <img src={cUser?.avatar} loading="lazy" className="w-8 h-8 rounded-full border border-slate-300 object-cover" alt="" />
         <div className="flex-1">
           <div className="flex items-baseline justify-between mb-1">
             <div className="flex items-center gap-2">
@@ -251,7 +252,7 @@ const LinkifiedText = memo(({ text }: { text: string }) => {
 // --- Main Component ---
 
 export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileClick }) => {
-  const { users, currentUser, toggleLike, incrementViews, setManagingStoryId, addComment, deleteComment, isGuest, loadPublicProfile, openChat } = useApp();
+  const { users, currentUser, toggleLike, incrementViews, setManagingStoryId, addComment, deleteComment, isGuest, loadPublicProfile, openChat, showToast } = useApp();
   const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);
@@ -283,9 +284,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
       } catch (err) { console.log("Share cancelled"); }
     } else {
       navigator.clipboard.writeText(shareUrl);
-      // We need showToast here but it is not destructured from useApp
-      // I need to add showToast to useApp destructuring above.
-      alert("Story link copied to clipboard!");
+      showToast("Story link copied!", "success");
     }
   };
 
@@ -307,7 +306,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
 
   const handleCardClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.comment-section-ignore')) return;
-    incrementViews(story.id);
+    // incrementViews(story.id); // Removed: now handled by smart view / play time
     onClick();
   };
 
@@ -359,8 +358,15 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
   const rawText = cleanContent(story.description || story.content);
   // Note: cleanContent handles HTML stripping and preserves structure w/ newlines.
 
+  // Smart View Counting
+  const viewRef = useSmartView({
+    onView: () => incrementViews(story.id),
+    enabled: !story.videoUrl // Only for non-video posts (dwell time). Videos use playtime.
+  });
+
   return (
     <motion.article
+      ref={viewRef as any} // Attach smart view ref
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
@@ -402,7 +408,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
         <div className="mb-4 w-full text-center">
           <div className="inline-block relative rounded-2xl overflow-hidden border-[3px] border-ceramic-base dark:border-obsidian-base 
                           neu-concave">
-            <img src={story.imageUrl} alt={story.title} className="max-w-full h-auto max-h-[500px] object-contain block" />
+            <img src={story.imageUrl} alt={story.title} loading="lazy" className="max-w-full h-auto max-h-[500px] object-contain block" />
           </div>
         </div>
       )}
@@ -410,7 +416,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
       {/* Inline Video Player */}
       {story.videoUrl && (
         <div className="mb-4 w-full">
-          <FeedVideoPlayer src={story.videoUrl} />
+          <FeedVideoPlayer src={story.videoUrl} onView={() => incrementViews(story.id)} />
         </div>
       )}
 

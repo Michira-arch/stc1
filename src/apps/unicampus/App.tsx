@@ -93,6 +93,7 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
         courseCode: p.course_code || '',
         year: p.year,
         uploadedBy: p.uploader_name || 'Anonymous',
+        uploaderId: p.uploaded_by, // Map from DB
         fileUrl: p.file_url,
         fileType: 'application/pdf',
         uploadDate: new Date(p.created_at).toISOString().split('T')[0],
@@ -272,6 +273,27 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
     document.body.removeChild(link);
 
     showNotification('Download started...');
+  };
+
+  const handleDelete = async (paper: Paper) => {
+    if (!confirm('Are you sure you want to delete this paper? This action cannot be undone.')) return;
+
+    // Optimistic UI update
+    setPapers(prev => prev.filter(p => p.id !== paper.id));
+
+    try {
+      const { error } = await (supabase as any)
+        .from('unicampus_papers')
+        .delete()
+        .eq('id', paper.id);
+
+      if (error) throw error;
+      showNotification('Paper deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete paper:', err);
+      showToast?.('Failed to delete paper', 'error');
+      fetchPapers(); // Revert
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -874,9 +896,10 @@ const App: React.FC<UnicampusAppProps> = ({ onBack }) => {
                   <PaperCard
                     key={paper.id}
                     paper={paper}
-                    onPreview={() => handlePreview(paper)}
+                    onPreview={handlePreview}
                     onShare={handleShare}
                     onDownload={handleDownload}
+                    onDelete={currentUser && currentUser.id === paper.uploaderId ? handleDelete : undefined}
                   />
                 ))}
               </div>

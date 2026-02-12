@@ -1,6 +1,34 @@
 import { supabase } from '../../../../store/supabaseClient';
 import { Restaurant, MenuItem, Order, OrderItem, Review } from '../types';
 
+/** Map raw DB row (snake_case) → camelCase Order */
+const mapRawOrder = (o: any): Partial<Order> => ({
+    id: o.id,
+    userId: o.user_id,
+    restaurantId: o.restaurant_id,
+    totalAmount: o.total_amount,
+    status: o.status,
+    paymentStatus: o.payment_status,
+    createdAt: o.created_at,
+    specialInstructions: o.special_instructions,
+    orderNumber: o.order_number,
+    reassignedToOrderId: o.reassigned_to_order_id,
+});
+
+/** Map raw DB row → camelCase MenuItem */
+const mapRawMenuItem = (m: any): MenuItem => ({
+    id: m.id,
+    restaurantId: m.restaurant_id,
+    name: m.name,
+    description: m.description,
+    price: m.price,
+    imageUrl: m.image_url,
+    category: m.category,
+    isAvailable: m.is_available,
+    calories: m.calories,
+    tags: m.tags || [],
+});
+
 export const CampusEatsApi = {
     // Restaurants
     fetchRestaurants: async (): Promise<Restaurant[]> => {
@@ -309,6 +337,10 @@ export const CampusEatsApi = {
         }
     },
 
+    /** Convert a realtime payload to a proper camelCase Order partial */
+    mapRawOrder,
+    mapRawMenuItem,
+
     subscribeToOrders: (
         callback: (payload: any) => void,
         filters: { restaurantId?: string, userId?: string }
@@ -317,12 +349,11 @@ export const CampusEatsApi = {
         if (filters.restaurantId) filterString = `restaurant_id=eq.${filters.restaurantId}`;
         if (filters.userId) filterString = `user_id=eq.${filters.userId}`;
 
-        // If filtering by user, we ideally only listen to that user's rows.
-        // However, RLS might handle visibility. Supabase realtime respects RLS if configured with WAL.
-        // We'll trust the client filter logic for now or listen to correct table.
+        // Unique channel name to avoid collision between OwnerDashboard + OrderHistory
+        const channelName = `campuseats-orders-${filters.restaurantId || filters.userId || 'all'}-${Date.now()}`;
 
         return supabase
-            .channel('campuseats-orders')
+            .channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -333,6 +364,55 @@ export const CampusEatsApi = {
                 },
                 (payload) => {
                     callback(payload);
+                }
+            )
+            .subscribe();
+    },
+
+    /** Subscribe to menu item changes for a specific restaurant */
+    subscribeToMenuChanges: (
+        restaurantId: string,
+        callback: (eventType: string, item: MenuItem | null, oldId?: string) => void
+    ) => {
+        const channelName = `campuseats-menu-${restaurantId}-${Date.now()}`;
+        return supabase
+            .channel(channelName)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'campuseats_menu_items',
+                    filter: `restaurant_id=eq.${restaurantId}`
+                },
+                (payload) => {
+                    const eventType = payload.eventType;
+                    if (eventType === 'DELETE') {
+                        callback('DELETE', null, (payload.old as any)?.id);
+                    } else {
+                        callback(eventType, mapRawMenuItem(payload.new), undefined);
+                    }
+                }
+            )
+            .subscribe();
+    },
+
+    /** Subscribe to restaurant-level changes (image, name, active status) */
+    subscribeToRestaurantChanges: (
+        callback: (eventType: string, restaurant: any) => void
+    ) => {
+        const channelName = `campuseats-restaurants-${Date.now()}`;
+        return supabase
+            .channel(channelName)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'campuseats_restaurants'
+                },
+                (payload) => {
+                    callback(payload.eventType, payload.new);
                 }
             )
             .subscribe();
