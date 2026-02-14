@@ -17,8 +17,26 @@ export default {
             },
         },
         extend: {
+            fontSize: {
+                xs: ['calc(0.75rem * var(--text-scale, 1))', { lineHeight: '1rem' }],
+                sm: ['calc(0.875rem * var(--text-scale, 1))', { lineHeight: '1.25rem' }],
+                base: ['calc(1rem * var(--text-scale, 1))', { lineHeight: '1.5rem' }],
+                lg: ['calc(1.125rem * var(--text-scale, 1))', { lineHeight: '1.75rem' }],
+                xl: ['calc(1.25rem * var(--text-scale, 1))', { lineHeight: '1.75rem' }],
+                '2xl': ['calc(1.5rem * var(--text-scale, 1))', { lineHeight: '2rem' }],
+                '3xl': ['calc(1.875rem * var(--text-scale, 1))', { lineHeight: '2.25rem' }],
+                '4xl': ['calc(2.25rem * var(--text-scale, 1))', { lineHeight: '2.5rem' }],
+                '5xl': ['calc(3rem * var(--text-scale, 1))', { lineHeight: '1' }],
+                '6xl': ['calc(3.75rem * var(--text-scale, 1))', { lineHeight: '1' }],
+                '7xl': ['calc(4.5rem * var(--text-scale, 1))', { lineHeight: '1' }],
+                '8xl': ['calc(6rem * var(--text-scale, 1))', { lineHeight: '1' }],
+                '9xl': ['calc(8rem * var(--text-scale, 1))', { lineHeight: '1' }],
+            },
             fontFamily: {
                 sans: ['Outfit', 'sans-serif'],
+                luxurious: ['"Luxurious Script"', 'cursive'],
+                imperial: ['"Imperial Script"', 'cursive'],
+                tangerine: ['Tangerine', 'cursive'],
             },
             colors: {
                 obsidian: {

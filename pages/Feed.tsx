@@ -35,15 +35,35 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
   }, [isLoading, feedScrollPosition]);
 
   // 2. Track scroll position continuously
+  const [showHeader, setShowHeader] = useState(true);
+  const lastScrollY = useRef(0);
+
+  // 2. Track scroll position continuously for header collapse
   useEffect(() => {
     const handleScroll = () => {
-      scrollRef.current = window.scrollY;
+      const currentScrollY = window.scrollY;
+
+      // Collapse logic
+      if (currentScrollY > 50) { // Only collapse after some scrolling
+        if (currentScrollY > lastScrollY.current + 10) {
+          // Scrolling Down
+          setShowHeader(false);
+        } else if (currentScrollY < lastScrollY.current - 10) {
+          // Scrolling Up
+          setShowHeader(true);
+        }
+      } else {
+        setShowHeader(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+      scrollRef.current = currentScrollY;
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 3. Save scroll position on unmount using the Ref (bypassing unmount layout shifts)
+  // 3. Save scroll position on unmount... (keep existing)
   useEffect(() => {
     return () => {
       setFeedScrollPosition(scrollRef.current);
@@ -80,14 +100,19 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
     <div
       className="pt-4 pb-32 px-4 max-w-2xl mx-auto min-h-screen"
     >
-      <header className="flex justify-between items-center mb-8 py-4 px-6 sticky top-0 z-30 bg-ceramic-base/80 dark:bg-obsidian-base/80 backdrop-blur-md transition-colors duration-500 rounded-3xl">
+      <motion.header
+        initial={{ y: 0 }}
+        animate={{ y: showHeader ? 0 : -100, opacity: showHeader ? 1 : 0 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="flex justify-between items-center mb-8 py-4 px-6 sticky top-4 z-30 bg-ceramic-base/90 dark:bg-obsidian-base/90 backdrop-blur-xl transition-colors duration-500 rounded-3xl neu-convex"
+      >
         <div className="flex items-center gap-3">
           <Logo size={42} />
           <div>
             <motion.h1
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-white dark:to-slate-400"
+              className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-white dark:to-slate-400 font-display"
             >
               StudentCenter
             </motion.h1>
@@ -119,7 +144,7 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
             {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
           </CarvedButton>
         </div>
-      </header>
+      </motion.header>
 
       {/* PWA Install Banner */}
       {deferredPrompt && (

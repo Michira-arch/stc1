@@ -42,8 +42,9 @@ const INITIAL_STORIES: Story[] = [
 ];
 
 const DEFAULT_SETTINGS: AppSettings = {
-  fontSize: 'base',
-  isItalic: false
+  textScale: 1,
+  isItalic: false,
+  fontFamily: 'sans'
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -69,6 +70,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     return 'light';
   });
+
+  const [clayMode, setClayMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('dopamine_clay_mode') === 'true';
+    }
+    return false;
+  });
+
+  const [colorfulMode, setColorfulMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('dopamine_colorful_mode') === 'true';
+    }
+    return false;
+  });
+
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -109,6 +125,47 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // --- Clay Mode Effect ---
+  useEffect(() => {
+    console.log("Clay Mode Effect Triggered:", clayMode);
+    const html = document.documentElement;
+    if (clayMode) {
+      html.classList.add('clay');
+      console.log("Added clay class.");
+    } else {
+      html.classList.remove('clay');
+      console.log("Removed clay class.");
+    }
+  }, [clayMode]);
+
+  const toggleClayMode = () => {
+    triggerHaptic('medium');
+    setClayMode(prev => {
+      const newState = !prev;
+      localStorage.setItem('dopamine_clay_mode', String(newState));
+      return newState;
+    });
+  };
+
+  // --- Colorful Mode Effect ---
+  useEffect(() => {
+    const html = document.documentElement;
+    if (colorfulMode) {
+      html.classList.add('colorful');
+    } else {
+      html.classList.remove('colorful');
+    }
+  }, [colorfulMode]);
+
+  const toggleColorfulMode = () => {
+    triggerHaptic('medium');
+    setColorfulMode(prev => {
+      const newState = !prev;
+      localStorage.setItem('dopamine_colorful_mode', String(newState));
+      return newState;
+    });
+  };
 
   const toggleTheme = () => {
     // Offline check removed for theme - local preference should always work
@@ -179,8 +236,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
 
     // Load local settings as fallback or initial
+    // Load local settings as fallback or initial
     const savedSettings = localStorage.getItem('dopamine_settings');
-    if (savedSettings) setSettings(JSON.parse(savedSettings));
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        setSettings(prev => ({ ...DEFAULT_SETTINGS, ...parsed, textScale: parsed.textScale || DEFAULT_SETTINGS.textScale }));
+      } catch (e) {
+        console.error("Error parsing settings", e);
+      }
+    }
 
     return () => subscription.unsubscribe();
   }, []);
@@ -208,11 +273,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setCurrentUser(user);
 
       // Sync settings if they exist in DB
+      // Sync settings if they exist in DB
       if (data.font_size) {
+        // Map old font_size to new textScale if needed, or just keep existing textScale
+        // For now, we ignore data.font_size mapping as we moved to textScale
         setSettings(prev => ({
           ...prev,
-          fontSize: data.font_size as 'sm' | 'base' | 'lg',
-          isItalic: data.is_italic || false
+          isItalic: data.is_italic !== undefined ? data.is_italic : prev.isItalic
         }));
       }
     }
@@ -458,15 +525,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [theme]);
 
-  // Global Font Scaling
+  // Global Font Scaling & Family
   useEffect(() => {
-    const sizeMap = {
-      'sm': '14px',
-      'base': '16px',
-      'lg': '18px'
+    // Apply Text Scale
+    document.documentElement.style.setProperty('--text-scale', settings.textScale.toString());
+
+    // Font Family Application
+    const familyMap = {
+      'sans': 'Outfit, sans-serif',
+      'luxurious': '"Luxurious Script", cursive',
+      'imperial': '"Imperial Script", cursive',
+      'tangerine': 'Tangerine, cursive'
     };
-    document.documentElement.style.fontSize = sizeMap[settings.fontSize];
-  }, [settings.fontSize]);
+    document.documentElement.style.setProperty('--font-sans', familyMap[settings.fontFamily || 'sans']);
+
+  }, [settings.textScale, settings.fontFamily]);
 
   useEffect(() => {
     // Check if already installed (standalone mode)
@@ -535,10 +608,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!isGuest && currentUser.id) {
       // Persist to DB
       await supabase.from('profiles').update({
-        font_size: newSettings.fontSize || settings.fontSize,
-        is_italic: newSettings.isItalic !== undefined ? newSettings.isItalic : settings.isItalic
+        // font_size: newSettings.fontSize || settings.fontSize, // Deprecated in favor of textScale
+        // Storing textScale in metadata or similar would be ideal, but for now we rely on LocalStorage.
+        // If we strictly needed DB persistence for this new field, we'd add 'text_scale' column.
+        // For this iteration, we keep the other fields and trust localStorage for textScale.
+        is_italic: newSettings.isItalic !== undefined ? newSettings.isItalic : settings.isItalic,
       }).eq('id', currentUser.id);
     }
+    // Local Storage Backup for settings (Good for Guest & Persistence)
+    localStorage.setItem('dopamine_settings', JSON.stringify({ ...settings, ...newSettings }));
   };
 
   const updateUserImage = async (type: 'avatar' | 'cover', file: File) => {
@@ -879,6 +957,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       toasts,
       installApp,
       toggleTheme,
+      clayMode,
+      toggleClayMode,
+      colorfulMode,
+      toggleColorfulMode,
       updateSettings,
       updateUserImage,
       updateUserBio,

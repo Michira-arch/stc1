@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }) => {
-  const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme, currentUser, updatePrivacySettings, isGuest, isOnline } = useApp();
+  const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme, clayMode, toggleClayMode, colorfulMode, toggleColorfulMode, currentUser, updatePrivacySettings, isGuest, isOnline } = useApp();
   const privacy = currentUser.privacySettings || { showBio: true, showTimeline: true, showName: true };
 
   const { notificationsEnabled, setNotificationsEnabled } = useNotificationPreference();
@@ -109,6 +109,45 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
             </CarvedButton>
           )}
 
+          {/* Clay Mode Toggle */}
+          <CarvedButton
+            active={clayMode}
+            onClick={toggleClayMode}
+            className="w-full py-4 flex justify-between px-6 mb-4"
+          >
+            <div className="flex items-center gap-3">
+              <span role="img" aria-label="clay">🏺</span>
+              <span>Clay Mode</span>
+            </div>
+            <div className={`w-10 h-5 rounded-full relative transition-colors ${clayMode ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+              <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-md transition-all ${clayMode ? 'left-6' : 'left-1'}`} />
+            </div>
+          </CarvedButton>
+
+          {/* Colorful Mode Toggle - Only visible if Clay Mode is ON */}
+          {clayMode && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <CarvedButton
+                active={colorfulMode}
+                onClick={toggleColorfulMode}
+                className="w-full py-4 flex justify-between px-6 mb-4"
+              >
+                <div className="flex items-center gap-3">
+                  <span role="img" aria-label="rainbow">🌈</span>
+                  <span>Colorful Mode</span>
+                </div>
+                <div className={`w-10 h-5 rounded-full relative transition-colors ${colorfulMode ? 'bg-purple-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                  <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-md transition-all ${colorfulMode ? 'left-6' : 'left-1'}`} />
+                </div>
+              </CarvedButton>
+            </motion.div>
+          )}
+
           {/* Dark Mode */}
           <CarvedButton
             active={theme === 'dark'}
@@ -150,17 +189,70 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
           <h2 className="text-sm font-bold uppercase text-slate-400 mb-4 tracking-widest flex items-center gap-2">
             <Type size={16} /> Typography Size
           </h2>
-          <div className="flex gap-4">
-            {(['sm', 'base', 'lg'] as const).map((size) => (
-              <CarvedButton
-                key={size}
-                active={settings.fontSize === size}
-                onClick={() => handleUpdate({ fontSize: size })}
-                className="flex-1 py-4 capitalize"
-              >
-                {size === 'sm' ? 'Small' : size === 'base' ? 'Normal' : 'Large'}
-              </CarvedButton>
-            ))}
+
+          <div className="mb-6 px-2">
+            <div className="flex justify-between text-xs text-slate-500 mb-2">
+              <span>Small</span>
+              <span>Normal</span>
+              <span>Large</span>
+            </div>
+            <input
+              type="range"
+              min="0.75"
+              max="1.5"
+              step="0.05"
+              value={settings.textScale}
+              onChange={(e) => handleUpdate({ textScale: parseFloat(e.target.value) })}
+              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-emerald-500"
+            />
+            <div className="text-center mt-2 font-mono text-xs text-slate-400">
+              Scale: {Math.round(settings.textScale * 100)}%
+            </div>
+          </div>
+
+          {/* Family */}
+          <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-widest">Font Style</h3>
+          <div
+            className="mt-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-center"
+            style={{
+              fontFamily: settings.fontFamily === 'sans' || !settings.fontFamily ? 'Outfit, sans-serif' :
+                settings.fontFamily === 'luxurious' ? '"Luxurious Script", cursive' :
+                  settings.fontFamily === 'imperial' ? '"Imperial Script", cursive' :
+                    'Tangerine, cursive'
+            }}
+          >
+            <p className="text-lg">The quick brown fox jumps over the lazy dog.</p>
+            <p className="text-sm mt-1 opacity-70">1234 567 890</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <CarvedButton
+              active={settings.fontFamily === 'sans' || !settings.fontFamily}
+              onClick={() => handleUpdate({ fontFamily: 'sans' })}
+              className="py-3 font-sans"
+            >
+              Modern (Default)
+            </CarvedButton>
+            <CarvedButton
+              active={settings.fontFamily === 'luxurious'}
+              onClick={() => handleUpdate({ fontFamily: 'luxurious' })}
+              className="py-3 font-luxurious text-lg"
+            >
+              Luxurious
+            </CarvedButton>
+            <CarvedButton
+              active={settings.fontFamily === 'imperial'}
+              onClick={() => handleUpdate({ fontFamily: 'imperial' })}
+              className="py-3 font-imperial text-xl"
+            >
+              Imperial
+            </CarvedButton>
+            <CarvedButton
+              active={settings.fontFamily === 'tangerine'}
+              onClick={() => handleUpdate({ fontFamily: 'tangerine' })}
+              className="py-3 font-tangerine text-2xl"
+            >
+              Tangerine
+            </CarvedButton>
           </div>
         </section>
 
@@ -214,7 +306,7 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
           <div className="p-6 rounded-3xl bg-ceramic-base dark:bg-obsidian-surface 
                             shadow-[8px_8px_16px_#bebebe,-8px_-8px_16px_#ffffff] 
                             dark:shadow-[10px_10px_20px_#151618,-10px_-10px_20px_#35363e]">
-            <p className={`text-${settings.fontSize} ${settings.isItalic ? 'italic' : ''} text-slate-600 dark:text-slate-300`}>
+            <p className={`text-base ${settings.isItalic ? 'italic' : ''} text-slate-600 dark:text-slate-300`}>
               "The details are not the details. They make the design."
             </p>
           </div>

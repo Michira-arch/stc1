@@ -6,19 +6,16 @@ interface FeedVideoPlayerProps {
     src: string;
     poster?: string;
     onView?: () => void;
+    cleanMode?: boolean; // New prop for Split Layout
 }
 
 /**
  * Inline video player for the feed.
- * - Autoplay when 80% visible, auto-pause when <30% visible
- * - Global mute sync: toggling mute on one video affects all
- * - Blurred portrait background fill on desktop (no empty sidebars)
- * - iOS fix: #t=0.001 forces first-frame poster display
- * - Play/Mute glassmorphic buttons capture clicks (stopPropagation)
- * - Tapping anywhere else on the video lets the card click propagate
- * - Tracks cumulative playtime and calls onView after 3s
+ * - cleanMode: removes borders and padding for split layout
  */
-export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, poster, onView }) => {
+export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, poster, onView, cleanMode = false }) => {
+    const [isPortrait, setIsPortrait] = useState(false);
+
     const videoRef = useRef<HTMLVideoElement>(null);
     const bgVideoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -33,6 +30,11 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
 
     // iOS first-frame fix: append #t=0.001 to force seek to first frame
     const videoSrc = src + (src.includes('#') ? '' : '#t=0.001');
+
+    const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+        const video = e.currentTarget;
+        setIsPortrait(video.videoHeight > video.videoWidth);
+    };
 
     // Sync muted attribute with global state
     useEffect(() => {
@@ -140,16 +142,19 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
     return (
         <div
             ref={containerRef}
-            className="mb-4 w-full rounded-2xl overflow-hidden relative group
-                 border-[3px] border-ceramic-base dark:border-obsidian-base neu-concave"
+            className={`w-full relative group
+                 ${cleanMode
+                    ? (isPortrait ? 'h-[80vh] sm:h-auto' : '') + ' rounded-none border-b border-t border-slate-200 dark:border-white/5' // Clean mode
+                    : 'mb-4 rounded-2xl border-[3px] border-ceramic-base dark:border-obsidian-base neu-concave' // Standard mode
+                } overflow-hidden`}
         >
-            {/* Blurred background video — fills empty space for portrait videos on desktop */}
+            {/* Blurred background video — fills empty space for portrait videos */}
             <video
                 ref={bgVideoRef}
                 src={videoSrc}
-                className="absolute inset-0 w-full h-full object-cover scale-110
+                className={`absolute inset-0 w-full h-full object-cover scale-110
                      filter blur-xl opacity-40 pointer-events-none
-                     hidden sm:block"
+                     ${isPortrait ? 'block' : 'hidden sm:block'}`}
                 muted
                 playsInline
                 loop
@@ -163,9 +168,12 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
                 ref={videoRef}
                 src={videoSrc}
                 poster={poster}
-                className="relative w-full object-contain block
-                   max-h-[70vh] min-h-[280px]
-                   sm:max-h-[500px]"
+                onLoadedMetadata={handleLoadedMetadata}
+                className={`relative w-full block
+                   ${cleanMode && isPortrait
+                        ? 'h-full object-contain' // Immersive portrait: fill container height
+                        : 'object-contain max-h-[70vh] min-h-[280px] sm:max-h-[500px]' // Standard
+                    }`}
                 onTimeUpdate={handleTimeUpdate}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}

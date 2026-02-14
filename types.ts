@@ -47,8 +47,9 @@ export interface Story {
 export type ThemeMode = 'light' | 'dark';
 
 export interface AppSettings {
-  fontSize: 'sm' | 'base' | 'lg';
+  textScale: number; // 0.75 to 1.5
   isItalic: boolean;
+  fontFamily: 'sans' | 'luxurious' | 'imperial' | 'tangerine';
 }
 
 export interface Toast {
@@ -65,6 +66,8 @@ export interface AppContextType {
   hasMoreStories: boolean;
   isLoadingMore: boolean;
   theme: ThemeMode;
+  clayMode: boolean;
+  colorfulMode: boolean; // New Colorful Mode
   settings: AppSettings;
   deferredPrompt: any;
   toasts: Toast[];
@@ -72,6 +75,8 @@ export interface AppContextType {
   // Actions
   installApp: () => void;
   toggleTheme: () => void;
+  toggleClayMode: () => void;
+  toggleColorfulMode: () => void; // Toggle Colorful Mode
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   updateUserImage: (type: 'avatar' | 'cover', file: File) => void;
   updateUserBio: (bio: string) => void;

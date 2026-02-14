@@ -371,12 +371,18 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       onClick={handleCardClick}
-      className="snap-start scroll-m-4 mb-8 p-5 rounded-[2rem] bg-ceramic-base dark:bg-obsidian-surface 
-                 neu-convex
-                 cursor-pointer transform transition-transform duration-300"
+      className={`snap-start scroll-m-4 mb-8 cursor-pointer transform transition-transform duration-300
+                  ${story.videoUrl
+          ? 'bg-transparent' // Split Layout: No padding, transparent
+          : 'p-5 rounded-[2rem] bg-ceramic-base dark:bg-obsidian-surface neu-convex' // Standard Card
+        }`}
     >
       {/* Header */}
-      <div className="flex justify-between items-start mb-4 px-1">
+      <div className={`flex justify-between items-start mb-4 
+                      ${story.videoUrl
+          ? 'p-5 pb-3 rounded-t-[2.5rem] bg-ceramic-base dark:bg-obsidian-surface neu-convex mb-0 relative z-10' // Top Card for Video
+          : 'px-1' // Standard
+        }`}>
         <div className="flex items-center gap-3">
           <div className="relative cursor-pointer" onClick={handleProfileClick}>
             {/* Active Glow Ring */}
@@ -415,134 +421,141 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
 
       {/* Inline Video Player */}
       {story.videoUrl && (
-        <div className="mb-4 w-full">
-          <FeedVideoPlayer src={story.videoUrl} onView={() => incrementViews(story.id)} />
+        <div className="w-full -mt-1 -mb-1 relative z-0">
+          <FeedVideoPlayer src={story.videoUrl} onView={() => incrementViews(story.id)} cleanMode={true} />
         </div>
       )}
 
-      {/* Voice Note Player */}
-      {story.audioUrl && (
-        <div className="mb-4 px-1" onClick={e => e.stopPropagation()}>
-          <AudioPlayer src={story.audioUrl} onPlay={() => incrementViews(story.id)} />
-        </div>
-      )}
+      {/* Footer Card (Content + Actions) for Split Layout */}
+      <div className={`${story.videoUrl
+        ? 'p-5 pt-3 rounded-b-[2.5rem] bg-ceramic-base dark:bg-obsidian-surface neu-convex -mt-1 relative z-10'
+        : ''
+        }`}>
 
-      {/* Double Tap Area (Content) */}
-      <div
-        className="px-1 mb-4"
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          toggleLike(story.id);
-        }}
-      >
-        {story.title && <h2 className="text-lg font-bold mb-2 leading-tight text-slate-800 dark:text-slate-100">{story.title}</h2>}
-        <p className="text-slate-600 dark:text-[#aab2bd] text-sm leading-relaxed line-clamp-3">
-          <LinkifiedText text={rawText} />
-        </p>
-      </div>
-
-      <div className="px-1 mb-3 flex items-center gap-1 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-        <Eye size={12} />
-        <span>{story.views} Views</span>
-      </div>
-
-      <div className="flex items-center justify-between px-1 pt-2 relative z-10">
-        <div className="flex items-center gap-3">
-          <CarvedButton onClick={(e) => { e.stopPropagation(); toggleLike(story.id); }}
-            className={`!w-12 !h-12 !rounded-full transition-shadow duration-300 ${isLiked ? 'text-emerald-500' : 'text-slate-400'}`}
-            active={isLiked}>
-            <motion.div variants={heartVariants} animate={isLiked ? "liked" : "idle"}>
-              <Heart className={isLiked ? "fill-current drop-shadow-[0_0_5px_rgba(16,185,129,0.8)]" : ""} size={20} />
-            </motion.div>
-          </CarvedButton>
-
-          <CarvedButton onClick={toggleComments} active={isCommentsExpanded} className={`!px-4 !h-12 !rounded-xl text-slate-500 dark:text-[#aab2bd] gap-2`}>
-            <MessageCircle size={20} />
-            <span className="text-xs font-bold">{story.comments.length}</span>
-          </CarvedButton>
-
-          <CarvedButton onClick={handleShare} className="!w-12 !h-12 !rounded-full text-slate-400">
-            <Share2 size={20} />
-          </CarvedButton>
-
-          <CarvedButton onClick={handleAskAI} className="!w-12 !h-12 !rounded-full text-indigo-400">
-            <Sparkles size={20} />
-          </CarvedButton>
-        </div>
-
-        {story.likes.length > 0 && (
-          <div className="text-[10px] font-bold text-slate-400 tracking-widest bg-ceramic-surface dark:bg-obsidian-highlight px-3 py-1 rounded-full neu-concave">
-            {story.likes.length} {story.likes.length === 1 ? 'LIKE' : 'LIKES'}
+        {/* Voice Note Player */}
+        {story.audioUrl && (
+          <div className="mb-4 px-1" onClick={e => e.stopPropagation()}>
+            <AudioPlayer src={story.audioUrl} onPlay={() => incrementViews(story.id)} />
           </div>
         )}
-      </div>
 
-      <AnimatePresence>
-        {isCommentsExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden comment-section-ignore"
-          >
-            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/5 relative">
+        {/* Double Tap Area (Content) */}
+        <div
+          className="px-1 mb-4"
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            toggleLike(story.id);
+          }}
+        >
+          {story.title && <h2 className="text-lg font-bold mb-2 leading-tight text-slate-800 dark:text-slate-100">{story.title}</h2>}
+          <p className="text-slate-600 dark:text-[#aab2bd] text-sm leading-relaxed line-clamp-3">
+            <LinkifiedText text={rawText} />
+          </p>
+        </div>
 
-              {/* Close Button Header */}
-              <div className="flex justify-between items-center mb-4 px-1">
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Discussion</h4>
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleComments(e); }}
-                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </div>
+        <div className="px-1 mb-3 flex items-center gap-1 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
+          <Eye size={12} />
+          <span>{story.views} Views</span>
+        </div>
 
-              <div className="absolute right-1 top-16 bottom-8 w-1 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
-                <motion.div
-                  style={{ height: `${Math.max(10, scrollProgress)}%`, top: `${scrollProgress}%` }}
-                  className="w-full bg-accent-glow rounded-full absolute transition-all duration-150 shadow-[0_0_5px_#00f2ff]"
-                />
-              </div>
+        <div className="flex items-center justify-between px-1 pt-2 relative z-10">
+          <div className="flex items-center gap-3">
+            <CarvedButton onClick={(e) => { e.stopPropagation(); toggleLike(story.id); }}
+              className={`!w-12 !h-12 !rounded-full transition-shadow duration-300 ${isLiked ? 'text-emerald-500' : 'text-slate-400'}`}
+              active={isLiked}>
+              <motion.div variants={heartVariants} animate={isLiked ? "liked" : "idle"}>
+                <Heart className={isLiked ? "fill-current drop-shadow-[0_0_5px_rgba(16,185,129,0.8)]" : ""} size={20} />
+              </motion.div>
+            </CarvedButton>
 
-              {!replyToId && (
-                <CommentInput
-                  value={commentText}
-                  onChange={handleSetCommentText}
-                  onSubmit={handleSubmitComment}
-                />
-              )}
+            <CarvedButton onClick={toggleComments} active={isCommentsExpanded} className={`!px-4 !h-12 !rounded-xl text-slate-500 dark:text-[#aab2bd] gap-2`}>
+              <MessageCircle size={20} />
+              <span className="text-xs font-bold">{story.comments.length}</span>
+            </CarvedButton>
 
-              <div
-                ref={commentContainerRef}
-                onScroll={handleScroll}
-                className="max-h-60 overflow-y-auto pr-4 no-scrollbar"
-                onTouchStart={(e) => e.stopPropagation()}
-              >
-                {story.comments.length === 0 ? (
-                  <p className="text-center text-xs text-slate-400 py-2">No comments yet.</p>
-                ) : (
-                  story.comments.slice().reverse().map(c => (
-                    <CommentNode
-                      key={c.id}
-                      comment={c}
-                      users={users}
-                      currentUser={currentUser}
-                      storyAuthorId={story.authorId}
-                      replyToId={replyToId}
-                      commentText={commentText}
-                      onSetReplyId={handleSetReplyId}
-                      onSetCommentText={handleSetCommentText}
-                      onSubmit={handleSubmitComment}
-                      onDelete={handleDeleteComment}
-                    />
-                  ))
-                )}
-              </div>
+            <CarvedButton onClick={handleShare} className="!w-12 !h-12 !rounded-full text-slate-400">
+              <Share2 size={20} />
+            </CarvedButton>
+
+            <CarvedButton onClick={handleAskAI} className="!w-12 !h-12 !rounded-full text-indigo-400">
+              <Sparkles size={20} />
+            </CarvedButton>
+          </div>
+
+          {story.likes.length > 0 && (
+            <div className="text-[10px] font-bold text-slate-400 tracking-widest bg-ceramic-surface dark:bg-obsidian-highlight px-3 py-1 rounded-full neu-concave">
+              {story.likes.length} {story.likes.length === 1 ? 'LIKE' : 'LIKES'}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {isCommentsExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden comment-section-ignore"
+            >
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/5 relative">
+
+                {/* Close Button Header */}
+                <div className="flex justify-between items-center mb-4 px-1">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Discussion</h4>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleComments(e); }}
+                    className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div className="absolute right-1 top-16 bottom-8 w-1 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                  <motion.div
+                    style={{ height: `${Math.max(10, scrollProgress)}%`, top: `${scrollProgress}%` }}
+                    className="w-full bg-accent-glow rounded-full absolute transition-all duration-150 shadow-[0_0_5px_#00f2ff]"
+                  />
+                </div>
+
+                {!replyToId && (
+                  <CommentInput
+                    value={commentText}
+                    onChange={handleSetCommentText}
+                    onSubmit={handleSubmitComment}
+                  />
+                )}
+
+                <div
+                  ref={commentContainerRef}
+                  onScroll={handleScroll}
+                  className="max-h-60 overflow-y-auto pr-4 no-scrollbar"
+                  onTouchStart={(e) => e.stopPropagation()}
+                >
+                  {story.comments.length === 0 ? (
+                    <p className="text-center text-xs text-slate-400 py-2">No comments yet.</p>
+                  ) : (
+                    story.comments.slice().reverse().map(c => (
+                      <CommentNode
+                        key={c.id}
+                        comment={c}
+                        users={users}
+                        currentUser={currentUser}
+                        storyAuthorId={story.authorId}
+                        replyToId={replyToId}
+                        commentText={commentText}
+                        onSetReplyId={handleSetReplyId}
+                        onSetCommentText={handleSetCommentText}
+                        onSubmit={handleSubmitComment}
+                        onDelete={handleDeleteComment}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.article>
   );
 };
