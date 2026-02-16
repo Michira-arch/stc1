@@ -9,6 +9,7 @@ import { Profile } from './pages/Profile';
 import { Explore } from './pages/Explore';
 import { StoryDetail } from './pages/StoryDetail';
 import { Settings } from './pages/Settings';
+import { Events } from './pages/Events';
 import { PostManagementModal } from './components/PostManagementModal';
 import { ToastContainer } from './components/ToastContainer';
 import { FeedbackModal } from './components/FeedbackModal';
@@ -224,10 +225,17 @@ const AppContent = () => {
 
     switch (activeTab) {
       case 'feed': return <Feed onStoryClick={handleStoryClick} onNavigate={setActiveTab} />;
+      case 'events': return <Events />;
       case 'editor': return <Editor onNavigate={(path) => setActiveTab(path)} />;
-      case 'profile': return <Profile onStoryClick={handleStoryClick} onOpenSettings={() => setIsSettingsOpen(true)} onPlayGame={() => setActiveTab('runner')} />;
+      case 'profile': return <Profile onStoryClick={handleStoryClick} onOpenSettings={() => setIsSettingsOpen(true)} onPlayGame={() => setActiveTab('runner')} onOpenRealtime={() => setActiveTab('meet')} />;
       case 'explore': return <Explore onStoryClick={handleStoryClick} />;
-      case 'meet': return <MeetWrapper />;
+      case 'meet':
+        // Gate handling
+        if (currentUser.role !== 'admin') {
+          setTimeout(() => setActiveTab('feed'), 0);
+          return null;
+        }
+        return <MeetWrapper />;
       // case 'runner': return <RunnerGame onBack={() => setActiveTab('profile')} />; // Removed static import
 
       // STC Apps Routes
@@ -338,7 +346,8 @@ const AppContent = () => {
 
             if (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) {
               // Swiped Left (Next)
-              if (activeTab === 'feed') setActiveTab('explore');
+              if (activeTab === 'feed') setActiveTab('events');
+              else if (activeTab === 'events') setActiveTab('explore');
               else if (activeTab === 'explore') setActiveTab('meet'); // Updated order: feed -> explore -> meet -> editor -> profile
               else if (activeTab === 'meet') setActiveTab('editor');
               else if (activeTab === 'editor') setActiveTab('profile');
@@ -350,7 +359,8 @@ const AppContent = () => {
               }
               else if (activeTab === 'editor') setActiveTab('meet');
               else if (activeTab === 'meet') setActiveTab('explore');
-              else if (activeTab === 'explore') setActiveTab('feed');
+              else if (activeTab === 'explore') setActiveTab('events');
+              else if (activeTab === 'events') setActiveTab('feed');
             }
           }}
         >

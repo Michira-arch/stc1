@@ -167,6 +167,32 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   };
 
+  const [sleekMode, setSleekMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('dopamine_sleek_mode') === 'true';
+    }
+    return false;
+  });
+
+  // --- Sleek Mode Effect ---
+  useEffect(() => {
+    const html = document.documentElement;
+    if (sleekMode) {
+      html.classList.add('sleek');
+    } else {
+      html.classList.remove('sleek');
+    }
+  }, [sleekMode]);
+
+  const toggleSleekMode = () => {
+    triggerHaptic('medium');
+    setSleekMode(prev => {
+      const newState = !prev;
+      localStorage.setItem('dopamine_sleek_mode', String(newState));
+      return newState;
+    });
+  };
+
   const toggleTheme = () => {
     // Offline check removed for theme - local preference should always work
     triggerHaptic('medium');
@@ -1012,7 +1038,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       isChatOpen,
       chatContext,
       openChat,
-      closeChat
+      closeChat,
+      sleekMode,
+      toggleSleekMode
     }}>
       {children}
     </AppContext.Provider>

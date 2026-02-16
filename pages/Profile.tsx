@@ -1,20 +1,23 @@
 import React, { useRef } from 'react';
 import { useApp } from '../store/AppContext';
 import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, Edit2, Camera, User, Download, Check, MapPin, Link as LinkIcon, Share2, Eye, Heart, Gamepad2, Bell } from 'lucide-react';
+import { Settings as SettingsIcon, Edit2, Camera, User, Download, Check, MapPin, Link as LinkIcon, Share2, Eye, Heart, Gamepad2, Bell, Video } from 'lucide-react';
 import { CarvedButton } from '../components/CarvedButton';
 import { timeAgo } from '../utils';
 import { StoryCard } from '../components/StoryCard';
 import { InstallAppButton } from '../components/InstallAppButton';
 import { useFcm } from '../src/hooks/useFcm';
 
+import { StreamingAccessModal } from '../components/StreamingAccessModal';
+
 interface Props {
   onStoryClick: (id: string) => void;
   onOpenSettings: () => void;
   onPlayGame: () => void;
+  onOpenRealtime?: () => void;
 }
 
-export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayGame }) => {
+export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayGame, onOpenRealtime }) => {
   const { currentUser, stories, hiddenStories, isGuest, deferredPrompt, installApp, setManagingStoryId, updateUserImage, updateUserBio, updateUserName, setAuthPage, viewedProfile, clearViewedProfile, isOnline, showToast } = useApp();
   const [showHidden, setShowHidden] = React.useState(false);
   const { notificationPermission, requestPermission } = useFcm();
@@ -38,6 +41,7 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
   const [isEditingName, setIsEditingName] = React.useState(false);
   const [nameText, setNameText] = React.useState(userToDisplay.name || '');
   const [bioText, setBioText] = React.useState(userToDisplay.bio || '');
+  const [isStreamingModalOpen, setIsStreamingModalOpen] = React.useState(false);
 
   // Update local state when user changes
   React.useEffect(() => {
@@ -291,6 +295,24 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
             >
               <Share2 size={14} className="mr-1" /> Share
             </CarvedButton>
+
+            {isMe && (
+              <CarvedButton
+                onClick={() => {
+                  if (userToDisplay.role === 'admin') {
+                    // Navigate to Meet (need to lift state or use window location as quick fix if prop not available?)
+                    // Prop `onPlayGame` is for Runner. `onOpenSettings` is for Settings.
+                    // I need to add a new prop `onOpenRealtime` to Profile.
+                    if (onOpenRealtime) onOpenRealtime();
+                  } else {
+                    setIsStreamingModalOpen(true);
+                  }
+                }}
+                className={`!h-9 !px-4 !text-xs font-bold ${userToDisplay.role === 'admin' ? 'text-red-500' : 'text-slate-400'}`}
+              >
+                <Video size={14} className="mr-1" /> {userToDisplay.role === 'admin' ? 'Go Live' : 'Stream'}
+              </CarvedButton>
+            )}
           </div>
 
           {/* Stats */}
@@ -428,6 +450,12 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
           </div>
         )}
       </div>
+
+
+      <StreamingAccessModal
+        isOpen={isStreamingModalOpen}
+        onClose={() => setIsStreamingModalOpen(false)}
+      />
     </div >
   );
 };

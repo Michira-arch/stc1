@@ -8,6 +8,7 @@ export interface User {
   // added specifically for DB sync
   email?: string;
   handle?: string;
+  role?: string;
   privacySettings?: PrivacySettings;
   isCertified?: boolean;
 }
@@ -44,12 +45,26 @@ export interface Story {
   isAnonymous?: boolean;
 }
 
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string; // ISO string
+  location: string;
+  imageUrl?: string;
+  organizerId: string;
+  organizerName: string;
+  isOfficial: boolean; // True if created by admin or organization
+  attendees: string[]; // User IDs
+}
+
 export type ThemeMode = 'light' | 'dark';
 
 export interface AppSettings {
   textScale: number; // 0.75 to 1.5
   isItalic: boolean;
   fontFamily: 'sans' | 'luxurious' | 'imperial' | 'tangerine';
+  fontSize: 'sm' | 'base' | 'lg';
 }
 
 export interface Toast {
@@ -77,6 +92,8 @@ export interface AppContextType {
   toggleTheme: () => void;
   toggleClayMode: () => void;
   toggleColorfulMode: () => void; // Toggle Colorful Mode
+  sleekMode: boolean; // New Sleek Mode
+  toggleSleekMode: () => void; // Toggle Sleek Mode
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   updateUserImage: (type: 'avatar' | 'cover', file: File) => void;
   updateUserBio: (bio: string) => void;
@@ -208,6 +225,7 @@ export type Database = {
           cover_url: string | null
           bio: string | null
           handle: string | null
+          role: string | null
           font_size: 'sm' | 'base' | 'lg' | null
           is_italic: boolean | null
           privacy_settings: PrivacySettings | null

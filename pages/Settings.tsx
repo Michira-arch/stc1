@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }) => {
-  const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme, clayMode, toggleClayMode, colorfulMode, toggleColorfulMode, currentUser, updatePrivacySettings, isGuest, isOnline } = useApp();
+  const { settings, updateSettings, showToast, deferredPrompt, installApp, theme, toggleTheme, clayMode, toggleClayMode, colorfulMode, toggleColorfulMode, sleekMode, toggleSleekMode, currentUser, updatePrivacySettings, isGuest, isOnline } = useApp();
   const privacy = currentUser.privacySettings || { showBio: true, showTimeline: true, showName: true };
 
   const { notificationsEnabled, setNotificationsEnabled } = useNotificationPreference();
@@ -147,6 +147,21 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
               </CarvedButton>
             </motion.div>
           )}
+
+          {/* Sleek Mode Toggle */}
+          <CarvedButton
+            active={sleekMode}
+            onClick={toggleSleekMode}
+            className="w-full py-4 flex justify-between px-6 mb-4"
+          >
+            <div className="flex items-center gap-3">
+              <span role="img" aria-label="sparkles">✨</span>
+              <span>Sleek Mode</span>
+            </div>
+            <div className={`w-10 h-5 rounded-full relative transition-colors ${sleekMode ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+              <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-md transition-all ${sleekMode ? 'left-6' : 'left-1'}`} />
+            </div>
+          </CarvedButton>
 
           {/* Dark Mode */}
           <CarvedButton

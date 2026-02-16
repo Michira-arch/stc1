@@ -144,7 +144,7 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
             ref={containerRef}
             className={`w-full relative group
                  ${cleanMode
-                    ? (isPortrait ? 'h-[80vh] sm:h-auto' : '') + ' rounded-none border-b border-t border-slate-200 dark:border-white/5' // Clean mode
+                    ? (isPortrait ? 'h-[90vh] sm:h-auto' : '') + ' rounded-none border-b border-t border-slate-200 dark:border-white/5' // Clean mode
                     : 'mb-4 rounded-2xl border-[3px] border-ceramic-base dark:border-obsidian-base neu-concave' // Standard mode
                 } overflow-hidden`}
         >
@@ -153,7 +153,7 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
                 ref={bgVideoRef}
                 src={videoSrc}
                 className={`absolute inset-0 w-full h-full object-cover scale-110
-                     filter blur-xl opacity-40 pointer-events-none
+                     filter blur-xl opacity-20 pointer-events-none
                      ${isPortrait ? 'block' : 'hidden sm:block'}`}
                 muted
                 playsInline

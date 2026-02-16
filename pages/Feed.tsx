@@ -3,6 +3,7 @@ import { useApp } from '../store/AppContext';
 import { StoryCard } from '../components/StoryCard';
 import { motion } from 'framer-motion';
 import { Sun, Moon, Download, Grid } from 'lucide-react';
+import { Loader } from '../components/Loader';
 import { CarvedButton } from '../components/CarvedButton';
 import { Logo } from '../components/Logo';
 
@@ -13,12 +14,21 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
 
   const visibleStories = stories.filter(s => !s.isHidden || s.authorId === currentUser.id);
 
-  // Adaptive Skeleton Loading: show skeleton until stories arrive (or 2s max)
+  // Adaptive Skeleton Loading: show skeleton until stories arrive, but replace empty state with Loader on delay/offline
   useEffect(() => {
     if (stories.length > 0) {
       setIsLoading(false);
       return;
     }
+    // Extended timeout to allow for "delayed" state perception before showing strictly empty state
+    // Actually, we want to SHOW the loader if there's a delay.
+    // So let's keep isLoading true for a bit (Skeleton), then maybe switch to Loader logic if we want?
+    // User request: "shows when there's a delay in loading stories, instead of showing 'no stories yet'"
+    // Implementation: 
+    // 1. isLoading = true (Standard Skeleton)
+    // 2. After 2s, isLoading = false. 
+    // 3. Render logic: If visibleStories.length === 0, show Loader instead of "No stories yet".
+
     const timer = setTimeout(() => setIsLoading(false), 2000);
     return () => clearTimeout(timer);
   }, [stories.length]);
@@ -205,9 +215,8 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
             )}
 
             {!isLoading && visibleStories.length === 0 && (
-              <div className="text-center py-16 opacity-60">
-                <p className="text-lg font-bold mb-2">No stories yet</p>
-                <p className="text-sm text-slate-500">Be the first to share something!</p>
+              <div className="flex justify-center py-10 opacity-80">
+                <Loader />
               </div>
             )}
           </>

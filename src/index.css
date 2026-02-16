@@ -36,25 +36,26 @@
 
   --shadow-light-lm: rgba(255, 255, 255, 0.8);
   --shadow-dark-lm: rgba(163, 177, 198, 0.6);
+  --shadow-blur: 15px;
 }
 
 .dark {
   color-scheme: dark;
 }
 
-/* --- CLAYMORPHISM MODE --- */
-.clay {
-  --color-ceramic-base: #eef2f6;
-  /* Porcelain / slightly cool white */
-  --color-ceramic-surface: #eef2f6;
+/* --- SLEEK MODE --- */
+.sleek {
+  --shadow-x: 2.4px;
+  --shadow-y: 2.4px;
+  --shadow-blur: 4.8px;
 
-  /* Softer, more diffuse shadows for "inflated" look */
-  --shadow-light-lm: rgba(255, 255, 255, 1);
-  --shadow-dark-lm: rgba(174, 185, 206, 0.5);
-  /* Blue-ish tint to shadow */
+  /* Sleek Colors */
+  --shadow-dark-lm: #C8D0E8;
+  --shadow-light-lm: #FFFFFF;
 
-  /* Clay Border Radius Override - more rounded */
-  --radius-clay: 30px;
+  /* Dark Mode equivalents for Sleek (Derived/Guessed to maintain contrast) */
+  --shadow-dark-dm: #1a1d21;
+  --shadow-light-dm: #3e424a;
 }
 
 /* Clay overrides for neumorphic classes */
@@ -177,15 +178,15 @@ body {
 
 .dark .neu-convex {
   box-shadow:
-    var(--shadow-x) var(--shadow-y) 15px var(--shadow-dark-dm),
-    var(--light-x) var(--light-y) 15px var(--shadow-light-dm);
+    var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-dark-dm),
+    var(--light-x) var(--light-y) var(--shadow-blur) var(--shadow-light-dm);
   border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 .neu-convex {
   box-shadow:
-    var(--shadow-x) var(--shadow-y) 15px var(--shadow-dark-lm),
-    var(--light-x) var(--light-y) 15px var(--shadow-light-lm);
+    var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-dark-lm),
+    var(--light-x) var(--light-y) var(--shadow-blur) var(--shadow-light-lm);
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
@@ -203,8 +204,8 @@ body {
 
 .neu-concave {
   box-shadow:
-    inset 5px 5px 10px var(--shadow-dark-lm),
-    inset -5px -5px 10px var(--shadow-light-lm);
+    inset var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-dark-lm),
+    inset var(--light-x) var(--light-y) var(--shadow-blur) var(--shadow-light-lm);
 }
 
 /* Glow Effects */

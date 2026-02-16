@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { House, Compass, PenTool, User as UserIcon, ChevronDown, Video } from 'lucide-react';
+import { House, Compass, PenTool, User as UserIcon, ChevronDown, Video, Calendar } from 'lucide-react';
 import { CarvedButton } from './CarvedButton';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 
@@ -15,8 +15,9 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
 
   const navItems = [
     { id: 'feed', icon: <House size={24} />, label: 'Home' },
+    { id: 'events', icon: <Calendar size={24} />, label: 'Events' },
     { id: 'explore', icon: <Compass size={24} />, label: 'Explore' },
-    { id: 'meet', icon: <Video size={24} />, label: 'Meet' },
+    // { id: 'meet', icon: <Video size={24} />, label: 'Meet' }, // Removed from Dock
     { id: 'editor', icon: <PenTool size={24} />, label: 'Create' },
     { id: 'profile', icon: <UserIcon size={24} />, label: 'Profile' },
   ];
