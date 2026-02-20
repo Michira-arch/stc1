@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Search, ShoppingBag, Trophy, ArrowLeft, Utensils, Briefcase, GraduationCap } from 'lucide-react';
+import { BookOpen, Search, ShoppingBag, Trophy, ArrowLeft, Utensils, Briefcase, GraduationCap, Database } from 'lucide-react';
 import { CarvedButton } from '../../components/CarvedButton';
 
 interface AppsLauncherProps {
@@ -97,6 +97,18 @@ export const AppsLauncher: React.FC<AppsLauncherProps> = ({ onBack, onNavigate }
             iconBg: 'bg-white/60 dark:bg-teal-500/20',
             iconColor: 'text-teal-600 dark:text-teal-300',
             shadow: 'shadow-teal-500/10 dark:shadow-teal-900/20',
+        },
+        {
+            id: 'open-datasets',
+            name: 'Open Datasets',
+            icon: <Database strokeWidth={2} size={28} />,
+            description: 'Research data',
+            gradient: 'from-indigo-100 to-violet-200 dark:from-indigo-900/40 dark:to-violet-900/40',
+            textColor: 'text-indigo-900 dark:text-indigo-100',
+            descColor: 'text-indigo-700 dark:text-indigo-300',
+            iconBg: 'bg-white/60 dark:bg-indigo-500/20',
+            iconColor: 'text-indigo-600 dark:text-indigo-300',
+            shadow: 'shadow-indigo-500/10 dark:shadow-indigo-900/20',
         },
     ];
 

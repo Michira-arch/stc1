@@ -41,6 +41,7 @@ const CampusHustleApp = React.lazy(() => import('./src/apps/campus-hustle/App'))
 const MarketplaceApp = React.lazy(() => import('./src/features/marketplace/MarketplaceApp'));
 const LeaderboardWrapper = React.lazy(() => import('./pages/leaderboard/LeaderboardWrapper').then(module => ({ default: module.LeaderboardWrapper })));
 const UnicampusApp = React.lazy(() => import('./src/apps/unicampus/App'));
+const OpenDatasetsApp = React.lazy(() => import('./src/apps/open-datasets/App'));
 const RunnerGame = React.lazy(() => import('./pages/games/runner/RunnerGame')); // Default export
 
 // Loading Component
@@ -280,6 +281,11 @@ const AppContent = () => {
           <UnicampusApp onBack={() => setActiveTab('apps')} />
         </Suspense>
       );
+      case 'open-datasets': return (
+        <Suspense fallback={<PageLoader />}>
+          <OpenDatasetsApp onBack={() => setActiveTab('apps')} />
+        </Suspense>
+      );
 
       case 'runner': return (
         <Suspense fallback={<PageLoader />}>
@@ -339,7 +345,7 @@ const AppContent = () => {
           dragElastic={0.2}
           onDragEnd={(e, info) => {
             // Disable swipe if in STC Apps sub-pages
-            if (['freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards', 'unicampus'].includes(activeTab)) return;
+            if (['freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards', 'unicampus', 'open-datasets'].includes(activeTab)) return;
 
             const threshold = 100; // Drag distance threshold
             const velocityThreshold = 500; // Speed threshold
@@ -387,7 +393,7 @@ const AppContent = () => {
 
       {/* Hide navigation when viewing a story or settings or inside apps */}
       {!viewedStoryId && !isSettingsOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
-        !['apps', 'freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards', 'unicampus'].includes(activeTab) && (
+        !['apps', 'freshman', 'food', 'lost-found', 'marketplace', 'campus-hustle', 'leaderboards', 'unicampus', 'open-datasets'].includes(activeTab) && (
           <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
         )}
 

@@ -15,12 +15,21 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&family=Luxurious+Script&family=Imperial+Script&family=Tangerine:wght@400;700&display=swap"
     rel="stylesheet">
-  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
   <script>
-    // Initialize vConsole
-    var vConsole = new VConsole();
-    console.log('vConsole initialized');
-
+    // Initialize vConsole only if not in production (.co.ke)
+    if (!window.location.hostname.endsWith('.co.ke')) {
+      var script = document.createElement('script');
+      script.src = "https://unpkg.com/vconsole@latest/dist/vconsole.min.js";
+      script.onload = function () {
+        var vConsole = new window.VConsole();
+        console.log('vConsole initialized for debugging');
+      };
+      document.head.appendChild(script);
+    } else {
+      console.log('Production mode: vConsole disabled');
+    }
+  </script>
+  <script>
     // Global Error Trap
     window.onerror = function (message, source, lineno, colno, error) {
       console.error(message, source, lineno, colno, error);

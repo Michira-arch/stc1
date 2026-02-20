@@ -2,6 +2,102 @@ import React, { useRef, useState, useEffect, memo } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 
+// ─── Liquid Gooey Loading Animation ──────────────────────────────────────────
+// Pure CSS implementation — no styled-components dependency needed.
+const liquidStyles = `
+  @keyframes vid-rotate {
+    0%   { transform: rotate(360deg); }
+    50%  { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+  }
+  @keyframes vid-ani1 {
+    0%   { top: 0; }
+    50%  { top: 100%; }
+    100% { top: 100%; }
+  }
+  @keyframes vid-ani2 {
+    0%   { left: 0; }
+    50%  { left: 100%; }
+    100% { left: 100%; }
+  }
+  @keyframes vid-ani3 {
+    0%   { left: 100%; }
+    50%  { left: 0; }
+    100% { left: 0; }
+  }
+  @keyframes vid-ani4 {
+    0%   { top: 100%; }
+    50%  { top: 0; }
+    100% { top: 0; }
+  }
+  .vid-loader-wrap {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    animation: vid-rotate 4s ease-in-out infinite;
+    filter: url("#vid-gooey");
+  }
+  .vid-liquid {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(90deg, rgba(99,102,241,1) 0%, rgba(168,85,247,1) 100%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+  .vid-liquid:nth-child(1) { top: 0;    animation: vid-ani1 4s ease-in-out infinite; }
+  .vid-liquid:nth-child(2) { left: 0;   animation: vid-ani2 4s ease-in-out infinite; }
+  .vid-liquid:nth-child(3) { left: 100%; animation: vid-ani3 4s ease-in-out infinite; }
+  .vid-liquid:nth-child(4) { top: 100%; animation: vid-ani4 4s ease-in-out infinite; }
+`;
+
+const VideoLoader: React.FC = () => (
+    <>
+        {/* Inject keyframes once */}
+        <style>{liquidStyles}</style>
+
+        {/* SVG gooey filter */}
+        <svg style={{ width: 0, height: 0, position: 'absolute' }} aria-hidden="true">
+            <defs>
+                <filter id="vid-gooey">
+                    <feGaussianBlur stdDeviation="8" in="SourceGraphic" result="blur" />
+                    <feColorMatrix
+                        in="blur"
+                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10"
+                    />
+                </filter>
+            </defs>
+        </svg>
+
+        <div
+            style={{
+                position: 'absolute', inset: 0,
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: '16px',
+                background: 'rgba(0,0,0,0.08)',
+                backdropFilter: 'blur(2px)',
+            }}
+        >
+            <div className="vid-loader-wrap">
+                <div className="vid-liquid" />
+                <div className="vid-liquid" />
+                <div className="vid-liquid" />
+                <div className="vid-liquid" />
+            </div>
+            <p style={{
+                fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)',
+                textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+            }}>
+                Loading video…
+            </p>
+        </div>
+    </>
+);
+
 interface FeedVideoPlayerProps {
     src: string;
     poster?: string;
@@ -15,6 +111,7 @@ interface FeedVideoPlayerProps {
  */
 export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, poster, onView, cleanMode = false }) => {
     const [isPortrait, setIsPortrait] = useState(false);
+    const [isBuffering, setIsBuffering] = useState(true); // show loader until video can play
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const bgVideoRef = useRef<HTMLVideoElement>(null);
@@ -178,6 +275,9 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onEnded={() => { setIsPlaying(false); setProgress(0); }}
+                onWaiting={() => setIsBuffering(true)}
+                onCanPlay={() => setIsBuffering(false)}
+                onPlaying={() => setIsBuffering(false)}
                 playsInline
                 muted={isVideoMuted}
                 preload="metadata"
@@ -233,7 +333,7 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
             </div>
 
             {/* Large play icon when paused (doesn't capture clicks — lets them fall through to card) */}
-            {!isPlaying && (
+            {!isPlaying && !isBuffering && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-16 h-16 rounded-full bg-black/30 backdrop-blur-sm 
                           flex items-center justify-center
@@ -243,6 +343,9 @@ export const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = memo(({ src, post
                     </div>
                 </div>
             )}
+
+            {/* Liquid gooey loading animation */}
+            {isBuffering && <VideoLoader />}
         </div>
     );
 });
