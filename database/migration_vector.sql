@@ -51,6 +51,8 @@ end;
 $$;
 
 -- 5. Create RPC function to search stories by similarity
+-- Queries from formatted_stories view (not the base table) to bypass RLS
+-- The view already filters is_hidden = false and masks anonymous author_ids
 create or replace function match_stories (
   query_embedding vector(384),
   match_threshold float,
@@ -60,36 +62,24 @@ returns table (
     id uuid,
     author_id uuid,
     title text,
-    description text,
-    content text,
-    image_url text,
-    audio_url text,
-    views_count int,
-    is_hidden boolean,
-    created_at timestamptz,
-    updated_at timestamptz,
+    formatted_text text,
     similarity float
 )
 language plpgsql
+security definer
 as $$
 begin
   return query
   select
-    stories.id,
-    stories.author_id,
-    stories.title,
-    stories.description,
-    stories.content,
-    stories.image_url,
-    stories.audio_url,
-    stories.views_count,
-    stories.is_hidden,
-    stories.created_at,
-    stories.updated_at,
-    1 - (stories.embedding <=> query_embedding) as similarity
-  from stories
-  where 1 - (stories.embedding <=> query_embedding) > match_threshold
-  order by stories.embedding <=> query_embedding
+    fs.id,
+    fs.author_id,
+    fs.title,
+    fs.formatted_text,
+    1 - (s.embedding <=> query_embedding) as similarity
+  from public.formatted_stories fs
+  join public.stories s on s.id = fs.id
+  where 1 - (s.embedding <=> query_embedding) > match_threshold
+  order by s.embedding <=> query_embedding
   limit match_count;
 end;
 $$;

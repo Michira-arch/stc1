@@ -9,7 +9,6 @@ import { Profile } from './pages/Profile';
 import { Explore } from './pages/Explore';
 import { StoryDetail } from './pages/StoryDetail';
 import { Settings } from './pages/Settings';
-import { Events } from './pages/Events';
 import { PostManagementModal } from './components/PostManagementModal';
 import { ToastContainer } from './components/ToastContainer';
 import { FeedbackModal } from './components/FeedbackModal';
@@ -97,6 +96,7 @@ import { useFcm } from './src/hooks/useFcm';
 
 import { useNotificationPreference } from './src/hooks/useNotificationPreference';
 import { NotificationPermissionModal } from './components/NotificationPermissionModal';
+import { useRegisterPages } from './src/hooks/useRegisterPages';
 
 const AppContent = () => {
   // Initialize FCM
@@ -140,6 +140,9 @@ const AppContent = () => {
 
   const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile, isChatOpen, openChat, loadPublicProfile, clearViewedProfile } = useApp();
   const [activeTab, setActiveTab] = useState('feed');
+
+  // Register all pages with AI AppRegistry
+  useRegisterPages(activeTab);
   const [viewedStoryId, setViewedStoryId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -226,7 +229,6 @@ const AppContent = () => {
 
     switch (activeTab) {
       case 'feed': return <Feed onStoryClick={handleStoryClick} onNavigate={setActiveTab} />;
-      case 'events': return <Events />;
       case 'editor': return <Editor onNavigate={(path) => setActiveTab(path)} />;
       case 'profile': return <Profile onStoryClick={handleStoryClick} onOpenSettings={() => setIsSettingsOpen(true)} onPlayGame={() => setActiveTab('runner')} onOpenRealtime={() => setActiveTab('meet')} />;
       case 'explore': return <Explore onStoryClick={handleStoryClick} />;
@@ -352,8 +354,7 @@ const AppContent = () => {
 
             if (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) {
               // Swiped Left (Next)
-              if (activeTab === 'feed') setActiveTab('events');
-              else if (activeTab === 'events') setActiveTab('explore');
+              if (activeTab === 'feed') setActiveTab('explore');
               else if (activeTab === 'explore') setActiveTab('meet'); // Updated order: feed -> explore -> meet -> editor -> profile
               else if (activeTab === 'meet') setActiveTab('editor');
               else if (activeTab === 'editor') setActiveTab('profile');
@@ -365,8 +366,7 @@ const AppContent = () => {
               }
               else if (activeTab === 'editor') setActiveTab('meet');
               else if (activeTab === 'meet') setActiveTab('explore');
-              else if (activeTab === 'explore') setActiveTab('events');
-              else if (activeTab === 'events') setActiveTab('feed');
+              else if (activeTab === 'explore') setActiveTab('feed');
             }
           }}
         >

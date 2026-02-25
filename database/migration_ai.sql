@@ -23,20 +23,27 @@ drop view if exists public.formatted_stories;
 
 create or replace view public.formatted_stories as
 select
-  id,
-  -- Anonymity Logic: Nullify author_id if is_anonymous is true
+  s.id,
+  -- Anonymity Logic: Nullify author_id and mask handle if is_anonymous is true
   case 
-    when is_anonymous then null 
-    else author_id 
+    when s.is_anonymous then null 
+    else s.author_id 
   end as author_id,
-  title,
-  -- Combine title, description, and content into a single context chunk
+  case
+    when s.is_anonymous then 'Anonymous Student'
+    else coalesce(p.handle, p.full_name, 'Student')
+  end as author_handle,
+  s.title,
+  s.created_at,
+  -- Combine title, author, date, description, and content into a single context chunk
   concat(
-    'Title: ', title, E'\n', 
-    'Description: ', coalesce(description, ''), E'\n', 
-    'Content: ', substring(content from 1 for 1000), E'\n',
-    'Is Anonymous: ', case when is_anonymous then 'Yes' else 'No' end
+    'Title: ', s.title, E'\n', 
+    'Author: ', case when s.is_anonymous then 'Anonymous Student' else coalesce(p.handle, p.full_name, 'Student') end, E'\n',
+    'Posted on: ', to_char(s.created_at, 'YYYY-MM-DD HH24:MI'), E'\n',
+    'Description: ', coalesce(s.description, ''), E'\n', 
+    'Content: ', substring(s.content from 1 for 1000)
   ) as formatted_text,
-  embedding
-from public.stories
-where is_hidden = false;
+  s.embedding
+from public.stories s
+left join public.profiles p on p.id = s.author_id
+where s.is_hidden = false;

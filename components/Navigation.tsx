@@ -15,7 +15,6 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
 
   const navItems = [
     { id: 'feed', icon: <House size={24} />, label: 'Home' },
-    { id: 'events', icon: <Calendar size={24} />, label: 'Events' },
     { id: 'explore', icon: <Compass size={24} />, label: 'Explore' },
     // { id: 'meet', icon: <Video size={24} />, label: 'Meet' }, // Removed from Dock
     { id: 'editor', icon: <PenTool size={24} />, label: 'Create' },

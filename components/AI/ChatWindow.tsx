@@ -2,8 +2,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Send, Bot, User, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Send, Bot, User, RefreshCw, AlertTriangle, Wrench, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { ChatMessage } from '../../types';
+import { AgentAction } from '../../src/ai/agentActions';
 import { supabase } from '../../store/supabaseClient';
 import { useApp } from '../../store/AppContext';
 import { motion } from 'framer-motion';
@@ -14,16 +15,36 @@ interface Props {
     isLoading: boolean;
     error: string | null;
     activeContext?: { type: 'page' | 'post' | 'selection'; content: string; id?: string } | null;
+    pendingActions?: AgentAction[];
+    toolInProgress?: string | null;
 }
 
-export const ChatWindow: React.FC<Props> = ({ messages, onSendMessage, isLoading, error, activeContext }) => {
+const ACTION_STATUS_ICONS: Record<string, React.ReactNode> = {
+    proposed: <Clock size={14} className="text-amber-500" />,
+    approved: <CheckCircle size={14} className="text-blue-500" />,
+    executing: <RefreshCw size={14} className="text-blue-500 animate-spin" />,
+    executed: <CheckCircle size={14} className="text-emerald-500" />,
+    denied: <XCircle size={14} className="text-red-500" />,
+    failed: <XCircle size={14} className="text-red-500" />,
+};
+
+const ACTION_STATUS_LABELS: Record<string, string> = {
+    proposed: 'Waiting for approval',
+    approved: 'Approved',
+    executing: 'Executing...',
+    executed: 'Completed',
+    denied: 'Denied',
+    failed: 'Failed',
+};
+
+export const ChatWindow: React.FC<Props> = ({ messages, onSendMessage, isLoading, error, activeContext, pendingActions = [], toolInProgress }) => {
     const [input, setInput] = useState('');
     const bottomRef = useRef<HTMLDivElement>(null);
     const { currentUser } = useApp();
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isLoading]);
+    }, [messages, isLoading, pendingActions]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,7 +74,6 @@ export const ChatWindow: React.FC<Props> = ({ messages, onSendMessage, isLoading
                             </p>
                         )}
                     </div>
-                    {/* Optional: Close button to clear context? For now we keep it simple. */}
                 </div>
             )}
 
@@ -63,7 +83,7 @@ export const ChatWindow: React.FC<Props> = ({ messages, onSendMessage, isLoading
                     <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-70">
                         <Bot size={48} className="mb-2 text-emerald-500" />
                         <p className="font-medium text-lg">Ask STC Bot anything!</p>
-                        <p className="text-sm">"How do I find food?" or "Where is the library?"</p>
+                        <p className="text-sm text-center">"Show me latest stories" or "Post a story for me"</p>
                         {activeContext && (
                             <div className="mt-4 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-100 dark:border-indigo-800">
                                 <p className="text-xs text-indigo-600 dark:text-indigo-300">
@@ -109,7 +129,62 @@ export const ChatWindow: React.FC<Props> = ({ messages, onSendMessage, isLoading
                     </motion.div>
                 ))}
 
-                {isLoading && (
+                {/* Tool in Progress Indicator */}
+                {toolInProgress && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex gap-3"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                            <Bot size={16} className="text-white" />
+                        </div>
+                        <div className="bg-white dark:bg-[#2A2D35] rounded-2xl rounded-tl-none p-3 shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                <Wrench size={14} className="text-indigo-500 animate-pulse" />
+                                <span className="font-medium">{toolInProgress}</span>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Pending Agent Actions */}
+                {pendingActions.map((action) => (
+                    <motion.div
+                        key={action.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex gap-3"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+                            <Wrench size={14} className="text-white" />
+                        </div>
+                        <div className="max-w-[80%] rounded-2xl rounded-tl-none p-3 shadow-sm border-2 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/10">
+                            <div className="flex items-center gap-2 mb-1">
+                                {ACTION_STATUS_ICONS[action.status]}
+                                <span className="text-xs font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wider">
+                                    {ACTION_STATUS_LABELS[action.status]}
+                                </span>
+                            </div>
+                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                {action.label}
+                            </p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                {action.description}
+                            </p>
+                            {action.result && (
+                                <div className={`mt-2 text-xs px-2 py-1 rounded-lg ${action.result.success
+                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                                    }`}>
+                                    {action.result.message}
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                ))}
+
+                {isLoading && !toolInProgress && (
                     <div className="flex gap-3">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
                             <Bot size={16} className="text-white" />

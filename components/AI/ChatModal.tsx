@@ -1,19 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare, History, Plus } from 'lucide-react';
+import { X, MessageSquare, History, Plus, Shield } from 'lucide-react';
 import { ChatWindow } from './ChatWindow';
-import { ChatMessage, Conversation } from '../../types';
-import { supabase } from '../../store/supabaseClient';
+import { ActionConfirmationModal } from './ActionConfirmationModal';
+import { ChatMessage } from '../../types';
 import { getConversations, saveConversation, getConversation } from '../../src/services/chatStorage';
-import { v4 as uuidv4 } from 'uuid';
 
 import { useApp } from '../../store/AppContext';
 import { usePageContext } from '../../src/hooks/usePageContext';
-import { sendMessageToAI, AIContext } from '../../src/services/aiService';
+import { sendMessageToAI, confirmAgentAction, AIContext } from '../../src/services/aiService';
+import { AgentAction, createAgentAction, executeAgentAction, denyAgentAction, getToolCategory, isReadOnlyTool, ProposedAction } from '../../src/ai/agentActions';
+import { trustManager } from '../../src/ai/trustManager';
+
+interface Conversation {
+    id: string;
+    title: string;
+    lastMessage: string;
+    timestamp: number;
+    messages: ChatMessage[];
+}
 
 export const ChatModal: React.FC = () => {
-    const { isChatOpen, closeChat, chatContext } = useApp();
+    const { isChatOpen, closeChat, chatContext, currentUser } = useApp();
     const { getPageContext } = usePageContext();
 
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -22,6 +31,11 @@ export const ChatModal: React.FC = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [toolInProgress, setToolInProgress] = useState<string | null>(null);
+
+    // Agent action state
+    const [pendingActions, setPendingActions] = useState<AgentAction[]>([]);
+    const [actionToConfirm, setActionToConfirm] = useState<AgentAction | null>(null);
 
     // Load history on open
     useEffect(() => {
@@ -32,15 +46,16 @@ export const ChatModal: React.FC = () => {
 
     const loadHistory = async () => {
         const convs = await getConversations();
-        // Sort descending
         setHistory(convs.sort((a, b) => b.timestamp - a.timestamp));
     };
 
     const startNewChat = () => {
-        setActiveConversationId(uuidv4());
+        setActiveConversationId(crypto.randomUUID());
         setMessages([]);
+        setPendingActions([]);
         setShowHistory(false);
         setError(null);
+        setToolInProgress(null);
     };
 
     const loadConversation = async (id: string) => {
@@ -49,6 +64,7 @@ export const ChatModal: React.FC = () => {
             setMessages(conv.messages);
             setActiveConversationId(conv.id);
             setShowHistory(false);
+            setPendingActions([]);
         }
     };
 
@@ -82,13 +98,15 @@ export const ChatModal: React.FC = () => {
                 botContent += chunk;
                 setMessages(prev => {
                     const last = prev[prev.length - 1];
-                    // Ensure we are updating the last assistant message
                     if (last.role === 'assistant') {
                         return [...prev.slice(0, -1), { ...last, content: botContent }];
                     }
                     return prev;
                 });
             });
+
+            // Check for frontend actions in the response (navigation, theme, etc.)
+            handleFrontendActions(botContent);
 
             // Save to IndexDB
             if (activeConversationId) {
@@ -100,16 +118,109 @@ export const ChatModal: React.FC = () => {
                     timestamp: Date.now(),
                     messages: finalMsgs
                 });
-                loadHistory(); // Refresh history list
+                loadHistory();
             }
 
         } catch (err: any) {
             setError(err.message || "Something went wrong");
-            // Remove the empty placeholder if failed? Or show error in it?
-            // Existing UI has error banner, so maybe just leave it
         } finally {
             setIsLoading(false);
+            setToolInProgress(null);
         }
+    };
+
+    /**
+     * Detect and handle frontend-only actions embedded in AI responses.
+     * These come from tools like navigate_to_page and update_theme.
+     */
+    const handleFrontendActions = (content: string) => {
+        // The backend returns JSON-like results for frontend actions
+        // We check for specific patterns in the response
+        try {
+            // Check for navigation instructions
+            const navMatch = content.match(/navigate_to_page|Navigating to (\w+)/i);
+            if (navMatch) {
+                // Navigation will be handled via the action confirmation flow
+                // if the user trusts navigation actions
+            }
+        } catch {
+            // Not a structured response, just normal text
+        }
+    };
+
+    /**
+     * Handle action approval from the confirmation modal.
+     */
+    const handleApproveAction = async (action: AgentAction, alwaysTrust: boolean) => {
+        setActionToConfirm(null);
+
+        // Update trust if checkbox was checked
+        if (alwaysTrust) {
+            await trustManager.updateTrust(action.category, 'auto');
+        }
+
+        // Update action status
+        const updatedAction = { ...action, status: 'executing' as const };
+        setPendingActions(prev =>
+            prev.map(a => a.id === action.id ? updatedAction : a)
+        );
+
+        try {
+            // Execute via backend confirmation endpoint
+            let resultContent = '';
+            await confirmAgentAction(
+                action.toolName,
+                action.id,
+                action.params,
+                (chunk) => {
+                    resultContent += chunk;
+                }
+            );
+
+            // Update action as executed
+            setPendingActions(prev =>
+                prev.map(a => a.id === action.id ? {
+                    ...a,
+                    status: 'executed' as const,
+                    result: { success: true, message: resultContent }
+                } : a)
+            );
+
+            // Add result to chat
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: resultContent
+            }]);
+
+        } catch (err: any) {
+            setPendingActions(prev =>
+                prev.map(a => a.id === action.id ? {
+                    ...a,
+                    status: 'failed' as const,
+                    result: { success: false, message: err.message }
+                } : a)
+            );
+        }
+    };
+
+    /**
+     * Handle action denial from the confirmation modal.
+     */
+    const handleDenyAction = async (action: AgentAction) => {
+        setActionToConfirm(null);
+
+        setPendingActions(prev =>
+            prev.map(a => a.id === action.id ? { ...a, status: 'denied' as const } : a)
+        );
+
+        if (currentUser.id !== 'guest') {
+            await denyAgentAction(action, currentUser.id);
+        }
+
+        setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: `⛔ Action "${action.label}" was denied. Is there anything else I can help with?`
+        }]);
     };
 
     return (
@@ -139,7 +250,7 @@ export const ChatModal: React.FC = () => {
                                 <div>
                                     <h3 className="font-bold text-slate-800 dark:text-white">STC Assistant</h3>
                                     <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                                        {isLoading ? 'Thinking...' : 'Online'}
+                                        {toolInProgress ? '🔧 Using tools...' : isLoading ? 'Thinking...' : 'Agent Online'}
                                     </p>
                                 </div>
                             </div>
@@ -184,11 +295,20 @@ export const ChatModal: React.FC = () => {
                                         isLoading={isLoading}
                                         error={error}
                                         activeContext={chatContext}
+                                        pendingActions={pendingActions}
+                                        toolInProgress={toolInProgress}
                                     />
                                 </div>
                             )}
                         </div>
                     </motion.div>
+
+                    {/* Action Confirmation Modal */}
+                    <ActionConfirmationModal
+                        action={actionToConfirm}
+                        onApprove={handleApproveAction}
+                        onDeny={handleDenyAction}
+                    />
                 </>
             )}
         </AnimatePresence>

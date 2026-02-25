@@ -1,6 +1,7 @@
 
 import { supabase } from '../../store/supabaseClient';
 import { ChatMessage } from '../../types';
+import { appRegistry } from '../ai/appRegistry';
 
 export interface AIContext {
     type: 'page' | 'post' | 'selection';
@@ -9,70 +10,79 @@ export interface AIContext {
     imageUrl?: string;
 }
 
+const EDGE_FUNCTION_URL = 'https://njzdblwjpuogbjujrxrw.supabase.co/functions/v1/chat-with-ai';
+
+/**
+ * Get auth token for API calls.
+ */
+async function getAuthToken(): Promise<string> {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error("Please log in to use AI chat.");
+    return token;
+}
+
+/**
+ * Build enriched page context from the AppRegistry + optional manual context.
+ */
+async function buildPageContext(context?: AIContext | null): Promise<string> {
+    let pageContext = '';
+
+    // Get structured context from the App Registry
+    try {
+        const registryContext = await appRegistry.getEnrichedContext();
+        pageContext += registryContext;
+    } catch {
+        // Fallback — registry might not be initialized
+    }
+
+    // Add manual context (from specific posts, selections, etc.)
+    if (context) {
+        pageContext += `\n\n--- User Context (${context.type}) ---\n${context.content}`;
+    }
+
+    return pageContext;
+}
+
+/**
+ * Send a message to the AI with streaming response.
+ */
 export const sendMessageToAI = async (
     messages: ChatMessage[],
     context?: AIContext | null,
     onStream?: (chunk: string) => void
 ): Promise<string> => {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        const token = await getAuthToken();
+        const pageContext = await buildPageContext(context);
 
-        if (!token) throw new Error("Please log in to use AI chat.");
-
-        // Prepare messages with context
-        const contextMessage = context
-            ? `\n\n[Current Content Context (${context.type})]:\n${context.content}`
-            : '';
-
-        // We append context to the last user message or as a system message?
-        // The backend expects specific role structure? likely just openai format.
-        // We'll append it to the system instructions if possible, or prepended to the last user message.
-        // Since we don't control the system prompt on client easily (it's in Edge Function), 
-        // we will prepend it to verify strict adherence.
-        // ACTUALLY, the user wants to "add context from what is on the page".
-
+        // Prepare messages with image context if present
         const preparedMessages = [...messages];
-        if (context) {
-            // If image is present, we attach it to the latest user message
-            // OR create a new user message if the last one isn't user (unlikely for a chat start, but possible)
-            // Groq/OpenAI expects:
-            // content: [ { type: "text", text: "..." }, { type: "image_url", image_url: { url: "..." } } ]
+        if (context?.imageUrl && preparedMessages.length > 0) {
+            const lastMsgIndex = preparedMessages.length - 1;
+            const lastMsg = preparedMessages[lastMsgIndex];
 
-            if (context.imageUrl && preparedMessages.length > 0) {
-                const lastMsgIndex = preparedMessages.length - 1;
-                const lastMsg = preparedMessages[lastMsgIndex];
-
-                if (lastMsg.role === 'user') {
-                    // Convert string content to array if needed
-                    const textContent = typeof lastMsg.content === 'string' ? lastMsg.content : '';
-                    // Note: if content was already array, we'd need more complex handling, but usually it's string in our app.
-
-                    preparedMessages[lastMsgIndex] = {
-                        ...lastMsg,
-                        content: [
-                            { type: "text", text: textContent },
-                            { type: "image_url", image_url: { url: context.imageUrl } }
-                        ]
-                    };
-                }
+            if (lastMsg.role === 'user') {
+                const textContent = typeof lastMsg.content === 'string' ? lastMsg.content : '';
+                preparedMessages[lastMsgIndex] = {
+                    ...lastMsg,
+                    content: [
+                        { type: "text", text: textContent },
+                        { type: "image_url", image_url: { url: context.imageUrl } }
+                    ] as any
+                };
             }
-
-            // Also append text context as system message
-            preparedMessages.splice(preparedMessages.length - 1, 0, {
-                role: 'system',
-                content: `Context Information for the user's current view:\n${contextMessage}`
-            });
         }
 
-        const response = await fetch('https://njzdblwjpuogbjujrxrw.supabase.co/functions/v1/chat-with-ai', {
+        const response = await fetch(EDGE_FUNCTION_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                messages: preparedMessages
+                messages: preparedMessages,
+                page_context: pageContext,
             })
         });
 
@@ -83,37 +93,89 @@ export const sendMessageToAI = async (
 
         if (!response.body) throw new Error("No response body");
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullText = '';
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value);
-
-            // Simple stream parsing
-            const lines = chunk.split('\n');
-            for (const line of lines) {
-                if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                    try {
-                        const json = JSON.parse(line.substring(6));
-                        const content = json.choices[0]?.delta?.content || '';
-                        if (content) {
-                            fullText += content;
-                            if (onStream) onStream(content);
-                        }
-                    } catch (e) {
-                        // ignore
-                    }
-                }
-            }
-        }
-
-        return fullText;
+        return await processStream(response.body, onStream);
 
     } catch (error: any) {
         console.error("AI Service Error:", error);
         throw error;
     }
 };
+
+/**
+ * Confirm and execute a proposed agent action.
+ */
+export const confirmAgentAction = async (
+    toolName: string,
+    toolCallId: string,
+    params: Record<string, any>,
+    onStream?: (chunk: string) => void
+): Promise<string> => {
+    try {
+        const token = await getAuthToken();
+
+        const response = await fetch(EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                messages: [],
+                confirm_action: {
+                    tool_name: toolName,
+                    tool_call_id: toolCallId,
+                    params,
+                },
+            })
+        });
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || "Action execution failed");
+        }
+
+        if (!response.body) throw new Error("No response body");
+
+        return await processStream(response.body, onStream);
+
+    } catch (error: any) {
+        console.error("Action Confirmation Error:", error);
+        throw error;
+    }
+};
+
+/**
+ * Process an SSE stream from the edge function.
+ */
+async function processStream(
+    body: ReadableStream,
+    onStream?: (chunk: string) => void
+): Promise<string> {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                try {
+                    const json = JSON.parse(line.substring(6));
+                    const content = json.choices?.[0]?.delta?.content || '';
+                    if (content) {
+                        fullText += content;
+                        if (onStream) onStream(content);
+                    }
+                } catch {
+                    // ignore parse errors
+                }
+            }
+        }
+    }
+
+    return fullText;
+}

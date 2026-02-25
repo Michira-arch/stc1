@@ -1,5 +1,4 @@
-/*
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+/*import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 export const createSupabaseClient = (req: Request) => {
     return createClient(
@@ -23,7 +22,8 @@ export interface UserUsage {
     is_premium: boolean;
 }
 
-// Check and Update Quota
+// ─── Check and Update Quota ──────────────────────────────────────
+
 export const checkAndIncrementQuota = async (supabase: any, userId: string): Promise<{ allowed: boolean; isPremium: boolean; error?: string }> => {
     const today = new Date().toISOString().split('T')[0];
     const FREE_QUOTA = 20;
@@ -47,6 +47,8 @@ export const checkAndIncrementQuota = async (supabase: any, userId: string): Pro
         usage = newUsage;
     }
 
+    if (!usage) return { allowed: false, isPremium: false, error: 'Could not load usage data' };
+
     // 2. Reset Quota if new day
     if (usage.last_reset_date !== today) {
         const { data: updated, error: resetError } = await supabase
@@ -64,11 +66,7 @@ export const checkAndIncrementQuota = async (supabase: any, userId: string): Pro
         return { allowed: false, isPremium: false, error: 'Daily quota exceeded' };
     }
 
-    // 4. Increment (Optimistic - we do this before the expensive AI call for simplicity, or after if strictly needed)
-    // We'll increment here to prevent spam.
-    await supabase.rpc('increment_ai_usage', { user_id_param: userId }); // We might need a simple RPC for atomic increment or just update
-
-    // Fallback update if RPC not made
+    // 4. Increment
     await supabase
         .from('user_ai_usage')
         .update({ requests_today: usage.requests_today + 1 })
@@ -77,9 +75,34 @@ export const checkAndIncrementQuota = async (supabase: any, userId: string): Pro
     return { allowed: true, isPremium: usage.is_premium };
 }
 
-// RAG Search
+// ─── Action Logging ──────────────────────────────────────────────
+
+export const logAgentAction = async (
+    supabase: any,
+    userId: string,
+    actionId: string,
+    toolName: string,
+    params: any,
+    status: string,
+    result?: any
+): Promise<void> => {
+    try {
+        await supabase.from('ai_action_log').insert({
+            user_id: userId,
+            action_id: actionId,
+            tool_name: toolName,
+            params,
+            status,
+            result,
+        });
+    } catch (e) {
+        console.warn('Failed to log agent action:', e);
+    }
+}
+
+// ─── RAG Search ──────────────────────────────────────────────────
+
 export const searchContext = async (supabase: any, query: string, embedding: number[]) => {
-    // 1. Search Stories
     const { data: stories } = await supabase.rpc('match_stories', {
         query_embedding: embedding,
         match_threshold: 0.5,

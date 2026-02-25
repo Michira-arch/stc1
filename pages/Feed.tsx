@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
 import { useApp } from '../store/AppContext';
 import { StoryCard } from '../components/StoryCard';
+import { FeedAd } from '../components/FeedAd';
 import { motion } from 'framer-motion';
 import { Sun, Moon, Download, Grid } from 'lucide-react';
 import { Loader } from '../components/Loader';
@@ -190,12 +191,15 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
           ))
         ) : (
           <>
-            {visibleStories.map((story) => (
-              <StoryCard
-                key={story.id}
-                story={story}
-                onClick={() => handleStoryClick(story.id)}
-              />
+            {visibleStories.map((story, index) => (
+              <React.Fragment key={story.id}>
+                <StoryCard
+                  story={story}
+                  onClick={() => handleStoryClick(story.id)}
+                />
+                {/* Insert an in-feed ad after every 5th post */}
+                {(index + 1) % 5 === 0 && <FeedAd cardId={story.id} />}
+              </React.Fragment>
             ))}
 
             {/* Infinite scroll sentinel */}
