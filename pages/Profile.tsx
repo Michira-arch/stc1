@@ -242,7 +242,7 @@ export const Profile: React.FC<Props> = ({ onStoryClick, onOpenSettings, onPlayG
             )}
           </div>
 
-          <div className="flex gap-3 mb-6">
+          <div className="flex flex-wrap justify-center gap-3 mb-6">
             {isMe && (
               <InstallAppButton className="!h-9 !px-4 !text-xs" />
             )}

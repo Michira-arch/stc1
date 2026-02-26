@@ -65,6 +65,7 @@ export interface AppSettings {
   isItalic: boolean;
   fontFamily: 'sans' | 'luxurious' | 'imperial' | 'tangerine';
   fontSize: 'sm' | 'base' | 'lg';
+  hideAIIcon?: boolean;
 }
 
 export interface Toast {

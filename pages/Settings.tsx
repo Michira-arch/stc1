@@ -178,6 +178,21 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
             </div>
           </CarvedButton>
 
+          {/* Hide AI Icon */}
+          <CarvedButton
+            active={!!settings.hideAIIcon}
+            onClick={() => handleUpdate({ hideAIIcon: !settings.hideAIIcon })}
+            className="w-full py-4 flex justify-between px-6 mb-4"
+          >
+            <div className="flex items-center gap-3">
+              <span role="img" aria-label="robot">🤖</span>
+              <span>Hide AI Assistant Icon</span>
+            </div>
+            <div className={`w-10 h-5 rounded-full relative transition-colors ${settings.hideAIIcon ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+              <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-md transition-all ${settings.hideAIIcon ? 'left-6' : 'left-1'}`} />
+            </div>
+          </CarvedButton>
+
           {/* Push Notifications - HIDDEN ON DESKTOP */}
           {!isDesktop && (
             <CarvedButton

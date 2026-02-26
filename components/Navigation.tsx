@@ -9,8 +9,17 @@ interface Props {
 }
 
 export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    return localStorage.getItem('dock_is_collapsed') === 'true';
+  });
+  const [dragPosition, setDragPosition] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dock_drag_position');
+      return saved ? JSON.parse(saved) : { x: 0, y: 0 };
+    } catch {
+      return { x: 0, y: 0 };
+    }
+  });
   const isDragging = useRef(false);
 
   const navItems = [
@@ -41,6 +50,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
   const handleCollapse = () => {
     setIsCollapsed(true);
     setShowCollapseHint(false);
+    localStorage.setItem('dock_is_collapsed', 'true');
     localStorage.setItem('dock_onboarding_collapse', 'true');
 
     // Show gesture hint if first time collapsing
@@ -113,11 +123,13 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
     const deltaY = targetY - layoutCenterY;
 
     setDragPosition({ x: deltaX, y: deltaY });
+    localStorage.setItem('dock_drag_position', JSON.stringify({ x: deltaX, y: deltaY }));
   };
 
   const handleCollapsedClick = () => {
     if (isDragging.current) return;
     setIsCollapsed(false);
+    localStorage.setItem('dock_is_collapsed', 'false');
   };
 
   return (
@@ -129,7 +141,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-20 left-1/2 translate-x-[60px] bg-accent text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg pointer-events-auto whitespace-nowrap"
+            className="absolute bottom-20 left-1/2 translate-x-[110px] bg-accent text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg pointer-events-auto whitespace-nowrap"
             onClick={() => { setShowCollapseHint(false); localStorage.setItem('dock_onboarding_collapse', 'true'); }}
           >
             Try collapsing the dock!

@@ -249,6 +249,46 @@ const LinkifiedText = memo(({ text }: { text: string }) => {
   return <>{parts}</>;
 });
 
+// --- Story Image with Sweep-Shimmer Loader ---
+const StoryImage = memo(({ url, alt }: { url: string; alt: string }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  return (
+    <div className="mb-4 w-full text-center">
+      <div className="inline-block relative rounded-2xl overflow-hidden border-[3px] border-ceramic-base dark:border-obsidian-base neu-concave max-w-full">
+        {/* Sweep-shimmer skeleton shown while image loads */}
+        {!loaded && !error && (
+          <div
+            className="w-full bg-slate-200 dark:bg-obsidian-highlight rounded-xl overflow-hidden"
+            style={{ height: '260px' }}
+          >
+            {/* Sweeping highlight overlay */}
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%)',
+                backgroundSize: '200% 100%',
+                animation: 'storyImageSweep 1.4s ease-in-out infinite',
+              }}
+            />
+          </div>
+        )}
+        <img
+          src={url}
+          alt={alt}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          onError={() => { setLoaded(true); setError(true); }}
+          className="max-w-full h-auto max-h-[500px] object-contain block transition-opacity duration-500"
+          style={{ opacity: loaded ? 1 : 0, position: loaded ? 'static' : 'absolute', top: 0, left: 0 }}
+        />
+      </div>
+    </div>
+  );
+});
+
 // --- Main Component ---
 
 export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileClick }) => {
@@ -411,12 +451,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, onClick, onProfileC
       </div>
 
       {story.imageUrl && (
-        <div className="mb-4 w-full text-center">
-          <div className="inline-block relative rounded-2xl overflow-hidden border-[3px] border-ceramic-base dark:border-obsidian-base 
-                          neu-concave">
-            <img src={story.imageUrl} alt={story.title} loading="lazy" className="max-w-full h-auto max-h-[500px] object-contain block" />
-          </div>
-        </div>
+        <StoryImage url={story.imageUrl} alt={story.title} />
       )}
 
       {/* Inline Video Player */}

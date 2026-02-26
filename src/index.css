@@ -224,3 +224,14 @@ body {
 .neu-text-glow {
   text-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
 }
+
+/* --- Story Image Sweep Shimmer --- */
+@keyframes storyImageSweep {
+  0% {
+    background-position: -100% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}

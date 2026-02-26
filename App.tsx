@@ -19,6 +19,7 @@ import { Signup } from './pages/auth/Signup';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { SetUsername } from './pages/auth/SetUsername'; // New Import
 import { Onboarding } from './pages/Onboarding';
+import { OnboardingTour } from './components/OnboardingTour';
 import { GuestActionModal } from './components/GuestActionModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MeetHome } from './pages/realtime/MeetHome';
@@ -140,6 +141,15 @@ const AppContent = () => {
 
   const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile, isChatOpen, openChat, loadPublicProfile, clearViewedProfile } = useApp();
   const [activeTab, setActiveTab] = useState('feed');
+
+  const [aiIconPos, setAiIconPos] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ai_icon_position');
+      return saved ? JSON.parse(saved) : { x: 0, y: 0 };
+    } catch {
+      return { x: 0, y: 0 };
+    }
+  });
 
   // Register all pages with AI AppRegistry
   useRegisterPages(activeTab);
@@ -333,6 +343,9 @@ const AppContent = () => {
       {/* Toast Notifications */}
       <ToastContainer />
 
+      {/* Contextual Tour */}
+      {!authPage && !showOnboarding && <OnboardingTour activeTab={activeTab} />}
+
       {/* Main Tab Content */}
       {!viewedStoryId && !isSettingsOpen && (
         <motion.main
@@ -355,8 +368,8 @@ const AppContent = () => {
             if (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) {
               // Swiped Left (Next)
               if (activeTab === 'feed') setActiveTab('explore');
-              else if (activeTab === 'explore') setActiveTab('meet'); // Updated order: feed -> explore -> meet -> editor -> profile
-              else if (activeTab === 'meet') setActiveTab('editor');
+              else if (activeTab === 'explore') setActiveTab('editor'); // Bypass meet
+              else if (activeTab === 'meet') setActiveTab('editor'); // Keep for safety
               else if (activeTab === 'editor') setActiveTab('profile');
             } else if (info.offset.x > threshold || info.velocity.x > velocityThreshold) {
               // Swiped Right (Prev)
@@ -364,7 +377,7 @@ const AppContent = () => {
                 if (viewedProfile) clearViewedProfile();
                 setActiveTab('editor');
               }
-              else if (activeTab === 'editor') setActiveTab('meet');
+              else if (activeTab === 'editor') setActiveTab('explore'); // Bypass meet
               else if (activeTab === 'meet') setActiveTab('explore');
               else if (activeTab === 'explore') setActiveTab('feed');
             }
@@ -419,16 +432,23 @@ const AppContent = () => {
       {/* AI Chat Bot */}
       <ChatModal />
 
-      {!isChatOpen && !authPage && !showOnboarding && activeTab !== 'runner' &&
+      {!isChatOpen && !authPage && !showOnboarding && activeTab !== 'runner' && !settings.hideAIIcon &&
         !['food', 'marketplace', 'campus-hustle'].includes(activeTab) && (
           <motion.div
             drag
             dragMomentum={false}
+            initial={aiIconPos}
+            onDragEnd={(e, info) => {
+              const newX = aiIconPos.x + info.offset.x;
+              const newY = aiIconPos.y + info.offset.y;
+              setAiIconPos({ x: newX, y: newY });
+              localStorage.setItem('ai_icon_position', JSON.stringify({ x: newX, y: newY }));
+            }}
             whileHover={{ scale: 1.1 }}
             whileDrag={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => openChat()}
-            className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white border-2 border-white/20 backdrop-blur-sm cursor-grab active:cursor-grabbing"
+            className="fixed bottom-32 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white border-2 border-white/20 backdrop-blur-sm cursor-grab active:cursor-grabbing"
           >
             <Bot size={28} />
             <span className="absolute -top-1 -right-1 flex h-3 w-3">
