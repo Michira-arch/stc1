@@ -120,7 +120,14 @@ const AppContent = () => {
     // AND not on desktop
     const hasDismissed = localStorage.getItem('has_dismissed_notification_modal');
 
-    if (notificationPermission === 'default' && !hasDismissed && notificationsEnabled && !isDesktop) {
+    // iOS Standalone Check
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+
+    // On iOS, only show if installed as PWA. Otherwise, it's useless for push.
+    const isEligibleIOS = !isIOS || isStandalone;
+
+    if (notificationPermission === 'default' && !hasDismissed && notificationsEnabled && !isDesktop && isEligibleIOS) {
       // Small delay to not overwhelm user immediately
       const timer = setTimeout(() => setIsNotificationModalOpen(true), 3000);
       return () => clearTimeout(timer);
@@ -128,10 +135,8 @@ const AppContent = () => {
   }, [notificationPermission, notificationsEnabled]);
 
   const handleEnableNotifications = async () => {
-    const granted = await requestPermission();
-    if (granted) {
-      setIsNotificationModalOpen(false);
-    }
+    handleCloseNotificationModal();
+    await requestPermission();
   };
 
   const handleCloseNotificationModal = () => {
