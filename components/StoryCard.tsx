@@ -111,7 +111,7 @@ const CommentNode = memo(({ comment, users, currentUser, storyAuthorId, depth = 
             <div className="flex items-center gap-3">
               <button
                 onClick={(e) => { e.stopPropagation(); onSetReplyId(comment.id); onSetCommentText(''); }}
-                className="opacity-0 group-hover:opacity-100 text-[9px] font-bold text-accent uppercase transition-opacity"
+                className="text-[9px] font-bold text-accent uppercase transition-opacity"
               >
                 Reply
               </button>
@@ -127,7 +127,7 @@ const CommentNode = memo(({ comment, users, currentUser, storyAuthorId, depth = 
                     </button>
                   ) : (
                     <div
-                      className="opacity-0 group-hover:opacity-100 cursor-pointer"
+                      className="cursor-pointer"
                       onClick={(e) => { e.stopPropagation(); setShowManage(true); setTimeout(() => setShowManage(false), 3000); }}
                     >
                       <OutsetDots />

@@ -320,7 +320,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     *,
     author:profiles!stories_author_id_fkey(id, full_name, avatar_url, handle, is_certified),
     likes(user_id),
-    comments(*)
+    comments(*, user:profiles(id, full_name, avatar_url, handle, is_certified))
   `;
 
   const processStories = (rawData: any[]) => {
@@ -353,6 +353,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           avatar: item.author.avatar_url || '',
           isCertified: item.author.is_certified || false
         };
+      }
+      if (item.comments && Array.isArray(item.comments)) {
+        item.comments.forEach((c: any) => {
+          if (c.user) {
+            newUsers[c.user.id] = {
+              id: c.user.id,
+              name: c.user.full_name || 'Unknown',
+              handle: c.user.handle,
+              avatar: c.user.avatar_url || '',
+              isCertified: c.user.is_certified || false
+            };
+          }
+        });
       }
     });
     setUsers(newUsers);

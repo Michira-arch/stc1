@@ -69,7 +69,7 @@ const CommentNode = memo(({ comment, depth = 0, users, replyToId, onSetReplyId, 
 
             <button
               onClick={() => onSetReplyId(comment.id)}
-              className="absolute bottom-2 right-4 text-[10px] font-bold text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute bottom-2 right-4 text-[10px] font-bold text-emerald-500 transition-opacity"
             >
               REPLY
             </button>

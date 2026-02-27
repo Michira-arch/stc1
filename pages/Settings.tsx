@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Bell, Sun, Moon, Type, Italic, MessageSquare, Shield } from 'lucide-react';
 import { FileText, Scale } from 'lucide-react';
@@ -23,9 +23,19 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
   // Detect Desktop (Hover capable + Fine pointer)
   const isDesktop = typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-  const handleUpdate = (newSettings: Partial<typeof settings>) => {
+  const handleUpdate = (newSettings: Partial<typeof settings>, skipToast: boolean = false) => {
     updateSettings(newSettings);
-    showToast('Settings updated', 'success');
+    if (!skipToast) {
+      showToast('Settings updated', 'success');
+    }
+
+    if (newSettings.fontFamily && newSettings.fontFamily !== 'sans') {
+      if (settings.textScale < 1.2) {
+        setTimeout(() => {
+          showToast('For cursive fonts, consider increasing the text size for better readability.', 'info');
+        }, 1500); // slight delay so it doesn't overlap the success toast completely
+      }
+    }
   };
 
   const toggleNotifications = () => {
@@ -232,7 +242,9 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
               max="1.5"
               step="0.05"
               value={settings.textScale}
-              onChange={(e) => handleUpdate({ textScale: parseFloat(e.target.value) })}
+              onChange={(e) => handleUpdate({ textScale: parseFloat(e.target.value) }, true)}
+              onPointerUp={() => showToast('Text scale updated', 'success')}
+              onTouchEnd={() => showToast('Text scale updated', 'success')}
               className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-emerald-500"
             />
             <div className="text-center mt-2 font-mono text-xs text-slate-400">
@@ -258,28 +270,32 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
             <CarvedButton
               active={settings.fontFamily === 'sans' || !settings.fontFamily}
               onClick={() => handleUpdate({ fontFamily: 'sans' })}
-              className="py-3 font-sans"
+              className="py-3"
+              style={{ fontFamily: 'Outfit, sans-serif' }}
             >
               Modern (Default)
             </CarvedButton>
             <CarvedButton
               active={settings.fontFamily === 'luxurious'}
               onClick={() => handleUpdate({ fontFamily: 'luxurious' })}
-              className="py-3 font-luxurious text-lg"
+              className="py-3 text-lg"
+              style={{ fontFamily: '"Luxurious Script", cursive' }}
             >
               Luxurious
             </CarvedButton>
             <CarvedButton
               active={settings.fontFamily === 'imperial'}
               onClick={() => handleUpdate({ fontFamily: 'imperial' })}
-              className="py-3 font-imperial text-xl"
+              className="py-3 text-xl"
+              style={{ fontFamily: '"Imperial Script", cursive' }}
             >
               Imperial
             </CarvedButton>
             <CarvedButton
               active={settings.fontFamily === 'tangerine'}
               onClick={() => handleUpdate({ fontFamily: 'tangerine' })}
-              className="py-3 font-tangerine text-2xl"
+              className="py-3 text-2xl"
+              style={{ fontFamily: 'Tangerine, cursive' }}
             >
               Tangerine
             </CarvedButton>
