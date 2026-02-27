@@ -12,6 +12,7 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('dock_is_collapsed') === 'true';
   });
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [dragPosition, setDragPosition] = useState(() => {
     try {
       const saved = localStorage.getItem('dock_drag_position');
@@ -45,6 +46,27 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
       }, 60000); // 1 minute
       return () => clearTimeout(timer);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        setIsKeyboardOpen(true);
+      }
+    };
+
+    const handleFocusOut = () => {
+      setIsKeyboardOpen(false);
+    };
+
+    window.addEventListener('focusin', handleFocusIn);
+    window.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+      window.removeEventListener('focusin', handleFocusIn);
+      window.removeEventListener('focusout', handleFocusOut);
+    };
   }, []);
 
   const handleCollapse = () => {
@@ -187,14 +209,15 @@ export const Navigation: React.FC<Props> = ({ activeTab, onTabChange }) => {
           x: isCollapsed ? dragPosition.x : '-50%', // Centered when expanded
           y: isCollapsed ? dragPosition.y : 0,
         }}
+        style={{ display: isKeyboardOpen ? 'none' : 'flex' }}
         transition={{
           type: "spring",
           bounce: isCollapsed ? 0.1 : 0.2,
           duration: 0.5
         }}
-        className="pointer-events-auto bg-transparent backdrop-blur-xl
+        className={`pointer-events-auto bg-transparent backdrop-blur-xl
                     neu-convex border-t border-x border-white/5 shadow-2xl overflow-hidden fixed bottom-0 left-1/2
-                    flex items-center justify-center max-w-md w-full z-50"
+                    flex items-center justify-center max-w-md w-full z-50 ${isKeyboardOpen ? 'pointer-events-none' : ''}`}
       >
         <AnimatePresence mode="popLayout" initial={false}>
           {!isCollapsed ? (

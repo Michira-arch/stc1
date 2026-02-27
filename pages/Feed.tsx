@@ -40,8 +40,12 @@ export const Feed = ({ onStoryClick, onNavigate }: { onStoryClick: (id: string) 
   // 1. Restore scroll position only when loading is done
   useLayoutEffect(() => {
     if (!isLoading) {
-      window.scrollTo(0, feedScrollPosition);
-      scrollRef.current = feedScrollPosition;
+      // Small timeout for iOS DOM paint cycle before scrolling
+      const timer = setTimeout(() => {
+        window.scrollTo(0, feedScrollPosition);
+        scrollRef.current = feedScrollPosition;
+      }, 10);
+      return () => clearTimeout(timer);
     }
   }, [isLoading, feedScrollPosition]);
 

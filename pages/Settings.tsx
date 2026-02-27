@@ -51,7 +51,15 @@ export const Settings: React.FC<Props> = ({ onBack, onOpenFeedback, onNavigate }
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-50 bg-ceramic-base dark:bg-obsidian-base overflow-y-auto pt-safe pb-safe"
+      drag={typeof window !== 'undefined' && window.innerWidth <= 768 && 'ontouchstart' in window ? "x" : false}
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={{ left: 0, right: 0.5 }}
+      onDragEnd={(e, info) => {
+        if (info.offset.x > 100 || info.velocity.x > 500) {
+          onBack();
+        }
+      }}
+      className="fixed inset-0 z-50 bg-ceramic-base dark:bg-obsidian-base overflow-y-auto pt-safe pb-safe touch-pan-y"
     >
       <div className="sticky top-0 z-10 px-4 py-4 flex items-center bg-ceramic-base/90 dark:bg-obsidian-base/90 backdrop-blur-lg">
         <CarvedButton onClick={onBack} className="!w-12 !h-12 !rounded-full mr-4">
