@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { BrowserRouter, useLocation } from 'react-router-dom';
+import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 import VersionManager from './components/VersionManager';
 import { AppProvider, useApp } from './store/AppContext';
 import { Navigation } from './components/Navigation';
@@ -145,7 +145,52 @@ const AppContent = () => {
   };
 
   const { settings, currentUser, isGuest, authPage, setAuthPage, viewedProfile, isChatOpen, openChat, loadPublicProfile, clearViewedProfile } = useApp();
-  const [activeTab, setActiveTab] = useState('feed');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const getTabFromPath = (path: string) => {
+    const rawPath = path.startsWith('/') ? path.slice(1) : path;
+    if (!rawPath) return 'feed';
+    const validTabs = ['feed', 'editor', 'profile', 'explore', 'meet', 'apps', 'freshman', 'food', 'lost-found', 'campus-hustle', 'marketplace', 'leaderboards', 'unicampus', 'open-datasets', 'runner'];
+    if (validTabs.includes(rawPath)) return rawPath;
+    return 'feed';
+  };
+
+  const [activeTab, setActiveTab] = useState(() => getTabFromPath(location.pathname));
+
+  // Sync path changes (e.g. back/forward browser buttons) to state
+  useEffect(() => {
+    const rawPath = location.pathname.startsWith('/') ? location.pathname.slice(1) : location.pathname;
+    const validTabs = ['feed', 'editor', 'profile', 'explore', 'meet', 'apps', 'freshman', 'food', 'lost-found', 'campus-hustle', 'marketplace', 'leaderboards', 'unicampus', 'open-datasets', 'runner'];
+    const authPages = ['login', 'signup', 'forgot-password', 'set-username'];
+
+    if (validTabs.includes(rawPath)) {
+      if (activeTab !== rawPath) setActiveTab(rawPath);
+      if (authPage !== null) setAuthPage(null);
+    } else if (authPages.includes(rawPath)) {
+      if (authPage !== rawPath) setAuthPage(rawPath as any);
+    } else if (!rawPath) {
+      if (activeTab !== 'feed') setActiveTab('feed');
+      if (authPage !== null) setAuthPage(null);
+    }
+  }, [location.pathname]);
+
+  // Sync activeTab to URL
+  useEffect(() => {
+    if (!authPage && getTabFromPath(location.pathname) !== activeTab) {
+      navigate(`/${activeTab}${location.search}`, { replace: true });
+    }
+  }, [activeTab, authPage]);
+
+  // Sync authPage to URL
+  useEffect(() => {
+    if (authPage && location.pathname !== `/${authPage}`) {
+      navigate(`/${authPage}${location.search}`, { replace: true });
+    } else if (!authPage && getTabFromPath(location.pathname) === activeTab && location.pathname !== `/${activeTab}`) {
+      // Return to tab path when auth modal is closed
+      navigate(`/${activeTab}${location.search}`, { replace: true });
+    }
+  }, [authPage]);
 
   const [aiIconPos, setAiIconPos] = useState(() => {
     try {
@@ -194,7 +239,7 @@ const AppContent = () => {
     }
   }, [authPage, showOnboarding]);
 
-  const location = useLocation();
+  // location intentionally moved up for routing sync
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

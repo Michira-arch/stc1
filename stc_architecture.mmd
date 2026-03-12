@@ -1,0 +1,64 @@
+graph TD
+    %% User Layer
+    subgraph UI [User Interface Layer]
+        User((User))
+        PWA[React PWA Shell]
+        Tabs[Tab-based Navigation]
+        Modals[Modals: Feedback, Onboarding, AI Chat]
+    end
+
+    %% Application Core Layer
+    subgraph Core [Application Core]
+        AppContext[AppContext: Global State & Auth]
+        Router[React Router & Lazy Loading]
+        AppRegistry[AI App Registry: Capabilities & Actions]
+    end
+
+    %% Features & Sub-apps Layer
+    subgraph Features [Domain Features & Sub-apps]
+        Feed[Social Feed & Stories]
+        CampusEats[CampusEats: Food Delivery]
+        Marketplace[Marketplace: P2P Trading]
+        Realtime[Meet & Blind Date: WebRTC]
+        Games[Runner Game: Zustand Store]
+        STCApps[Apps Launcher: Custom Utilities]
+    end
+
+    %% AI Logic Layer
+    subgraph AI [AI Intelligence Layer]
+        ChatModal[AI Chat Window]
+        AIService[AI Service: Edge Function Proxy]
+        TrustManager[Trust Manager: Security/Permissions]
+        AgentActions[Agent Action Pipeline: Execute/Confirm]
+    end
+
+    %% Infrastructure Layer
+    subgraph Infra [Infrastructure & Backend]
+        SupabaseDB[(Supabase: PostgreSQL & Realtime)]
+        SupabaseEdge[Supabase Edge Functions: AI & R2 Upload]
+        Firebase[Firebase: Push Notifications/FCM]
+        R2[Cloudflare R2: Media/Video Storage]
+    end
+
+    %% Relationships
+    User --> PWA
+    PWA --> Tabs
+    Tabs --> Feed
+    Tabs --> STCApps
+    STCApps --> CampusEats
+    STCApps --> Marketplace
+    
+    PWA --> AppContext
+    AppContext <--> SupabaseDB
+    AppContext <--> Firebase
+    
+    Features --> AppRegistry
+    AppRegistry <--> ChatModal
+    ChatModal --> AIService
+    AIService --> SupabaseEdge
+    SupabaseEdge --> AgentActions
+    AgentActions --> TrustManager
+    TrustManager --> Features
+    
+    Feed --> R2
+    Realtime --> SupabaseDB

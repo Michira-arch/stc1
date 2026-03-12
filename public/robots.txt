@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /feed
+Allow: /app
+Allow: /login
+
+# Disallow private/user-specific routes to prevent bots from crashing or logging dead ends
+Disallow: /*?token=
+Disallow: /*?auth_token=
+
+Sitemap: https://yourdomain.co.ke/sitemap.xml
